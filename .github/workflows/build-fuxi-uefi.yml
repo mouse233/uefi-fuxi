@@ -15,6 +15,11 @@ name: build-fuxi-uefi
 
 on:
   workflow_dispatch:
+    inputs:
+      boot_stage_markers:
+        description: 'Opt-in fuxi DEBUG framebuffer stage markers'
+        type: boolean
+        default: false
   push:
     paths:
       - 'Platforms/Xiaomi/fuxiPkg/**'
@@ -88,13 +93,18 @@ jobs:
         env:
           UNIXNU_ROOT: ${{ github.workspace }}/UniXNU
           DARWINBOOT_REPO: https://github.com/UniXNU/DarwinBoot
+          STAGE_MARKERS: ${{ inputs.boot_stage_markers }}
         run: |
           # UniXNUPkg comes from package/, DarwinBootPkg from drivers/DarwinBoot.
           git clone --depth 1 "$UNIXNU_REPO" "$UNIXNU_ROOT"
           mkdir -p "$UNIXNU_ROOT/drivers"
           git clone --depth 1 "$DARWINBOOT_REPO" "$UNIXNU_ROOT/drivers/DarwinBoot"
           set -o pipefail
-          ./build_uefi.py -d fuxi -r DEBUG -c 2>&1 | tee build-fuxi-debug.log
+          marker_args=()
+          if [[ "$STAGE_MARKERS" == "true" ]]; then
+            marker_args+=(--boot-stage-markers)
+          fi
+          ./build_uefi.py -d fuxi -r DEBUG -c "${marker_args[@]}" 2>&1 | tee build-fuxi-debug.log
 
       - name: Inspect and record result
         run: |
