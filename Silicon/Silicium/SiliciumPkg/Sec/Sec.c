@@ -18,6 +18,7 @@
 #include <Library/HobLib.h>
 
 #include "Sec.h"
+#include "SecFdt.h"
 
 // First argument (x0) of the previous stage, saved by ModuleEntryPoint.S
 extern UINT64  gSecEntryArg0;
@@ -173,7 +174,11 @@ SecMain (VOID)
   // Pass on what the previous stage handed over in x0 (a DT address for a
   // Linux-style boot loader), so a DXE driver can use it.
   {
-    UINT64  EntryArg = gSecEntryArg0;
+    UINT64                        EntryArg = gSecEntryArg0;
+    EFI_MEMORY_REGION_DESCRIPTOR  *Regions;
+    UINT8                         RegionCount;
+
+    GetMemoryMap (&Regions, &RegionCount);
 
     //
     // Reserve the device tree the previous stage handed over in x0.
@@ -184,24 +189,38 @@ SecMain (VOID)
     // destroyed the tree and made FuxiBootMemoryDxe walk garbage ranges and
     // take a second-level translation fault.
     //
-    if ((EntryArg != 0) && ((EntryArg & 3) == 0)) {
+    // InitializeMemory has already enabled the MMU. Even reading the magic
+    // faults if x0 is outside this platform's page tables (on fuxi, the live
+    // FDT was at 0xC5B1D0). Reserving a HOB cannot make that address readable.
+    if ((EntryArg != 0) && ((EntryArg & 3) == 0) &&
+        IsMappedFdtRange (Regions, RegionCount, EntryArg, 2 * sizeof (UINT32))) {
       UINT32  DtMagic = SwapBytes32 (*(UINT32 *)(UINTN)EntryArg);
       UINT32  DtSize  = SwapBytes32 (*(UINT32 *)(UINTN)(EntryArg + 4));
 
       if ((DtMagic == 0xD00DFEED) && (DtSize > 0x1000) && (DtSize < 0x400000)) {
         //
-        // BuildMemoryAllocationHob asserts that the base is page aligned and
-        // that the length is a power-of-two multiple of it; the ABL drops the
-        // tree at 0xC5B1D0, which is not page aligned, so round outwards.
+        // BuildMemoryAllocationHob requires a page-aligned base and a length
+        // that is a multiple of EFI_PAGE_SIZE. Round the range outwards and
+        // verify the entire reservation, not just the two header words.
         //
         UINT64  DtBase = EntryArg & ~(UINT64)(EFI_PAGE_SIZE - 1);
         UINT64  DtEnd  = (EntryArg + DtSize + EFI_PAGE_SIZE - 1) & ~(UINT64)(EFI_PAGE_SIZE - 1);
 
-        BuildMemoryAllocationHob (DtBase, DtEnd - DtBase, EfiReservedMemoryType);
-        DEBUG ((EFI_D_WARN, "SEC: reserved DT 0x%lx..0x%lx\n", DtBase, DtEnd));
+        if (IsMappedFdtRange (Regions, RegionCount, DtBase, DtEnd - DtBase)) {
+          BuildMemoryAllocationHob (DtBase, DtEnd - DtBase, EfiReservedMemoryType);
+          DEBUG ((EFI_D_WARN, "SEC: reserved DT 0x%lx..0x%lx\n", DtBase, DtEnd));
+        } else {
+          DEBUG ((EFI_D_WARN, "SEC: DT range 0x%lx..0x%lx outside mapped RAM; not reserved\n", DtBase, DtEnd));
+        }
       }
     }
 
+    if ((EntryArg != 0) && !IsMappedFdtRange (Regions, RegionCount, EntryArg, 2 * sizeof (UINT32))) {
+      DEBUG ((EFI_D_WARN, "SEC: DT header 0x%lx outside mapped RAM; not dereferenced\n", EntryArg));
+    }
+
+    // This HOB retains the raw boot argument for diagnostics. Consumers still
+    // need to validate/map or copy it before use; it is not an FDT mapping.
     BuildGuidDataHob (&gSiliciumEntryArgHobGuid, &EntryArg, sizeof (EntryArg));
   }
 
