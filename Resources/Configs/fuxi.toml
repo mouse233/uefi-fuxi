@@ -21,10 +21,11 @@ requires_kernel_header = true
 # UEFI FD Configs
 #
 # Source: this device's own `uefiplatLA.cfg`, extracted from xbl_config_a:
-#     0xA7000000, 0x00400000, "UEFI FD"
-#
-# Do NOT copy sheng's 0xA7100000 / 0x300000. sheng places a 3 MiB image inside
-# the shared 4 MiB window; fuxi uses the whole window from its base.
+#     0xA7100000, 0x00300000, "UEFI FD"
+# The adjacent 1 MiB at 0xA7000000 is "FD Reserved", not part of this FD.
+# Keep these values consistent with fuxiPkg/Library/MemoryMapLib; validate_pkg.py
+# checks that agreement. This is the captured fuxi layout, not a cross-device
+# rule for other SM8550 boards.
 [uefi_fd]
 base = 0xA7100000
 size = 0x300000
@@ -50,7 +51,8 @@ append_dtb         = true
 # fuxi, and SM8550 Mu releases ship v3, so v3 is the evidenced choice.
 #
 # With header v3 the base / kernel_offset / tags_offset / pagesize fields do
-# not exist; mkbootimg ignores them. If the build script rejects
-# header_version = 3, fall back to 0 and re-run the ABL probe first.
+# not exist; mkbootimg ignores them. Keep header_version = 3 and fix the
+# packaging pipeline if it rejects this configuration; do not silently fall
+# back to an unverified container version.
 [boot_image]
 header_version = 3

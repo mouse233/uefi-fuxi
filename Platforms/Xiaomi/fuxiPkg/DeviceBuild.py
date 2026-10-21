@@ -134,10 +134,10 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         #
         # Confirmed against this device's own firmware: the `uefiplatLA.cfg`
         # inside xbl_config_a declares
-        #     0xA7000000, 0x00400000, "UEFI FD"
-        # so fuxi uses the full 4 MiB window at 0xA7000000. sheng instead puts a
-        # 3 MiB image at 0xA7100000 inside the same window; do not copy its
-        # numbers.
+        #     0xA7100000, 0x00300000, "UEFI FD"
+        # The preceding 1 MiB at 0xA7000000 is "FD Reserved". BootShim and the
+        # FV must agree with MemoryMapLib; tools/validate_pkg.py checks this.
+        # These values describe this fuxi capture, not every SM8550 device.
         self.env.SetValue("PRODUCT_NAME", "fuxi", "Platform Hardcoded")
         self.env.SetValue("ACTIVE_PLATFORM", "fuxiPkg/fuxi.dsc", "Platform Hardcoded")
         self.env.SetValue("TARGET_ARCH", "AARCH64", "Platform Hardcoded")

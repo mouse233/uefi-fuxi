@@ -4,14 +4,10 @@
 #  Derived from UniXNU/uefi-sheng shengPkg/sheng.dsc (branch: sheng).
 #  参考基线：Mu-Silicium 的 Platforms/Xiaomi/nuwaPkg（小米 13 Pro，同 SM8550）。
 #
-#  STATUS: 骨架（scaffold）。除 dsc 本身外，以下文件尚未建立：
-#    - fuxiPkg/fuxi.fdf
-#    - fuxiPkg/DeviceBuild.py
-#    - fuxiPkg/Library/MemoryMapLib/  (必须按 device-facts.md 第 6 节重写)
-#    - fuxiPkg/Library/ConfigurationMapLib/
-#    - fuxiPkg/Include/{APRIORI,DXE,RAW}.inc
-#    - fuxiPkg/FdtBlob/sm8550-xiaomi-fuxi.dtb
-#  在该目录可用前，本文件不能参与构建。
+#  STATUS: stage-1 bring-up. DEBUG builds use the captured fuxi memory map,
+#  ABL framebuffer and SPMI keys. DarwinBoot and FuxiBootMemoryDxe remain
+#  disabled until the handed-over DT is safely mapped/copied and validated.
+#  A successful build is not evidence that the hardware boot reached BDS.
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 ##
@@ -68,7 +64,7 @@
 
   #
   # UEFI Stack
-  # TODO: 0xA760D000 是 sheng/nuwa 的值，fuxi 需按 MemoryMapLib 实测重新落位。
+  # Matches the captured fuxi "UEFI Stack" descriptor; statically checked.
   #
   gArmPlatformTokenSpaceGuid.PcdCPUCoresStackBase|0xA760D000
   gArmPlatformTokenSpaceGuid.PcdCPUCorePrimaryStackSize|0x40000

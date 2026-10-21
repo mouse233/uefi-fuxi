@@ -20,6 +20,34 @@ on:
       - 'Platforms/Xiaomi/fuxiPkg/**'
       - 'Resources/Configs/fuxi.toml'
       - 'Resources/DTBs/fuxi.dtb'
+      - 'Resources/Scripts/**'
+      - 'Silicon/**'
+      - 'Common/**'
+      - 'Mu_Basecore'
+      - 'Silicium-ACPI'
+      - 'BootShim/**'
+      - 'tools/**'
+      - 'build_uefi.py'
+      - 'setup_env.sh'
+      - 'pip-requirements.txt'
+      - '.gitmodules'
+      - '.github/workflows/build-fuxi-uefi.yml'
+  pull_request:
+    paths:
+      - 'Platforms/Xiaomi/fuxiPkg/**'
+      - 'Resources/Configs/fuxi.toml'
+      - 'Resources/DTBs/fuxi.dtb'
+      - 'Resources/Scripts/**'
+      - 'Silicon/**'
+      - 'Common/**'
+      - 'Mu_Basecore'
+      - 'Silicium-ACPI'
+      - 'BootShim/**'
+      - 'tools/**'
+      - 'build_uefi.py'
+      - 'setup_env.sh'
+      - 'pip-requirements.txt'
+      - '.gitmodules'
       - '.github/workflows/build-fuxi-uefi.yml'
 
 env:
@@ -44,7 +72,10 @@ jobs:
             Silicon/Silicium/OpensslPkg/Library/OpensslLib/openssl
 
       - name: Static pre-flight
-        run: python3 tools/validate_pkg.py .
+        run: |
+          python3 tools/validate_pkg.py .
+          python3 -m unittest discover -s tools/tests -p 'test_*.py' -v
+          bash tools/test_sec_fdt_range.sh
 
       - name: Install toolchain
         run: ./setup_env.sh -p apt
@@ -58,19 +89,13 @@ jobs:
           git clone --depth 1 "$UNIXNU_REPO" "$UNIXNU_ROOT"
           mkdir -p "$UNIXNU_ROOT/drivers"
           git clone --depth 1 "$DARWINBOOT_REPO" "$UNIXNU_ROOT/drivers/DarwinBoot"
-          ./build_uefi.py -d fuxi -r DEBUG -c
+          set -o pipefail
+          ./build_uefi.py -d fuxi -r DEBUG -c 2>&1 | tee build-fuxi-debug.log
 
-      - name: Inspect result
+      - name: Inspect and record result
         run: |
-          echo "--- artefacts ---"
-          ls -l Mu-fuxi*.img Build/fuxiPkg/DEBUG_CLANGPDB/FV/ 2>/dev/null || true
-          img=$(ls Mu-fuxi*.img 2>/dev/null | head -1)
-          if [ -n "$img" ]; then
-            python3 tools/mkbootimg_v3.py info --image "$img"
-          else
-            echo "::error::no boot image produced"
-            exit 1
-          fi
+          python3 tools/mkbootimg_v3.py info --image Mu-fuxi.img
+          python3 tools/record_fuxi_build.py --output BuildEvidence
 
       - uses: actions/upload-artifact@v4
         with:
@@ -79,3 +104,12 @@ jobs:
             Mu-fuxi*.img
             Build/fuxiPkg/DEBUG_CLANGPDB/FV/SILICIUM_UEFI.fd
           if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fuxi-build-evidence
+          path: |
+            build-fuxi-debug.log
+            BuildEvidence/
+          if-no-files-found: warn

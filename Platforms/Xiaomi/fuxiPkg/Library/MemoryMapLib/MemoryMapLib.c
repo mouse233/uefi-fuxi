@@ -8,8 +8,9 @@
 // are that section verbatim. Unlike sheng's map, nothing here is reconstructed
 // from Linux DTS reservations — it is the vendor's own firmware table.
 //
-// The UEFI allocation block is identical to sheng's at 0xA7000000, confirming
-// it is a platform-wide SM8550 convention rather than a per-board choice:
+// The UEFI allocation block in this capture matches sheng's. This is not
+// evidence that all SM8550 boards, fuxi RAM variants or firmware revisions
+// share the same layout. Validate a new device capture before changing it:
 //
 //   0xA7000000  1 MiB  FD Reserved
 //   0xA7400000  2 MiB  UEFI FD Reserved
@@ -74,7 +75,6 @@ STATIC EFI_MEMORY_REGION_DESCRIPTOR gMemoryDescriptor[] = {
   // sheng's hand-patched dtb_node. SimpleFbDxe publishes a GOP on top of it.
   {"Display Reserved",  0xB8000000, 0x02B00000, AddMem,   MEM_RES, SYS_MEM_CAP, Reserv, WRITE_THROUGH_XN},
 
-  // ---- 209 MiB of general-purpose RAM for DXE ----
   // ---- MMIO register regions ----
   // uefiplatLA.cfg only lists DDR in [MemoryMap]; the register apertures live
   // in a separate section and have to be mapped here, or every device driver

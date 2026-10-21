@@ -9,3 +9,9 @@ BootShim.elf
 
 Mu-*.*
 *:Zone.Identifier
+
+# Local fuxi development dependencies and evidence
+UniXNU/
+.venv/
+BuildEvidence/
+build-fuxi-debug.log
