@@ -1,0 +1,701 @@
+{
+  "scope": "Static ABL/XBL analysis after normal Android recovery; no new firmware execution.",
+  "reference_repository": "https://github.com/CodeLinaro-mirror/la_abl_tianocore_edk2",
+  "reference_commit": "99532df4b02e16f9ecdbf9ddd6c910fe0be58a5d",
+  "reference_branch": "uefi.lnx.3.0.r17-rel",
+  "reference_is_exact_xiaomi_source": false,
+  "abl_partition_sha256": "78595f9a5fbaba528b894fa7f3991db37fe1bcd03be3036e5cb3c254405655f3",
+  "xbl_config_partition_sha256": "351e7c164208350cf2aa81817eaf13d9af3b4299bf86057b2b95dc851ecac2b7",
+  "linuxloader_pe_sha256": "b5ccae26a30febeb6c303dde9c141eee2241f0046c27e5918667f1d7d316e954",
+  "linuxloader_pe_bytes": 1142784,
+  "machine": "AArch64",
+  "image_base": "0x0",
+  "snippets": {
+    "v3_v4_vendor_dtb_buffer_and_offset": [
+      {
+        "rva": "0xae7c",
+        "bytes": "e80b41f9",
+        "instruction": "ldr x8, [sp, #0x210]"
+      },
+      {
+        "rva": "0xae80",
+        "bytes": "081140f9",
+        "instruction": "ldr x8, [x8, #0x20]"
+      },
+      {
+        "rva": "0xae84",
+        "bytes": "e8df00f9",
+        "instruction": "str x8, [sp, #0x1b8]"
+      },
+      {
+        "rva": "0xae88",
+        "bytes": "e80b41f9",
+        "instruction": "ldr x8, [sp, #0x210]"
+      },
+      {
+        "rva": "0xae8c",
+        "bytes": "009540b9",
+        "instruction": "ldr w0, [x8, #0x94]"
+      },
+      {
+        "rva": "0xae90",
+        "bytes": "016d40b9",
+        "instruction": "ldr w1, [x8, #0x6c]"
+      },
+      {
+        "rva": "0xae94",
+        "bytes": "ef160094",
+        "instruction": "bl #0x10a50"
+      },
+      {
+        "rva": "0xae98",
+        "bytes": "e0a701b9",
+        "instruction": "str w0, [sp, #0x1a4]"
+      },
+      {
+        "rva": "0xae9c",
+        "bytes": "e90b41f9",
+        "instruction": "ldr x9, [sp, #0x210]"
+      },
+      {
+        "rva": "0xaea0",
+        "bytes": "286d40b9",
+        "instruction": "ldr w8, [x9, #0x6c]"
+      },
+      {
+        "rva": "0xaea4",
+        "bytes": "eab741b9",
+        "instruction": "ldr w10, [sp, #0x1b4]"
+      },
+      {
+        "rva": "0xaea8",
+        "bytes": "eba741b9",
+        "instruction": "ldr w11, [sp, #0x1a4]"
+      },
+      {
+        "rva": "0xaeac",
+        "bytes": "4a010b0b",
+        "instruction": "add w10, w10, w11"
+      },
+      {
+        "rva": "0xaeb0",
+        "bytes": "087d0a1b",
+        "instruction": "mul w8, w8, w10"
+      },
+      {
+        "rva": "0xaeb4",
+        "bytes": "288500b9",
+        "instruction": "str w8, [x9, #0x84]"
+      },
+      {
+        "rva": "0xaeb8",
+        "bytes": "e8df40f9",
+        "instruction": "ldr x8, [sp, #0x1b8]"
+      },
+      {
+        "rva": "0xaebc",
+        "bytes": "0add6039",
+        "instruction": "ldrb w10, [x8, #0x837]"
+      },
+      {
+        "rva": "0xaec0",
+        "bytes": "09d96039",
+        "instruction": "ldrb w9, [x8, #0x836]"
+      },
+      {
+        "rva": "0xaec4",
+        "bytes": "491d1833",
+        "instruction": "bfi w9, w10, #8, #8"
+      },
+      {
+        "rva": "0xaec8",
+        "bytes": "0ad56039",
+        "instruction": "ldrb w10, [x8, #0x835]"
+      },
+      {
+        "rva": "0xaecc",
+        "bytes": "08d16039",
+        "instruction": "ldrb w8, [x8, #0x834]"
+      },
+      {
+        "rva": "0xaed0",
+        "bytes": "481d1833",
+        "instruction": "bfi w8, w10, #8, #8"
+      },
+      {
+        "rva": "0xaed4",
+        "bytes": "283d1033",
+        "instruction": "bfi w8, w9, #0x10, #0x10"
+      },
+      {
+        "rva": "0xaed8",
+        "bytes": "e90b41f9",
+        "instruction": "ldr x9, [sp, #0x210]"
+      },
+      {
+        "rva": "0xaedc",
+        "bytes": "298540b9",
+        "instruction": "ldr w9, [x9, #0x84]"
+      },
+      {
+        "rva": "0xaee0",
+        "bytes": "0801090b",
+        "instruction": "add w8, w8, w9"
+      },
+      {
+        "rva": "0xaee4",
+        "bytes": "e89701b9",
+        "instruction": "str w8, [sp, #0x194]"
+      },
+      {
+        "rva": "0xaee8",
+        "bytes": "e80b41f9",
+        "instruction": "ldr x8, [sp, #0x210]"
+      },
+      {
+        "rva": "0xaeec",
+        "bytes": "081140f9",
+        "instruction": "ldr x8, [x8, #0x20]"
+      },
+      {
+        "rva": "0xaef0",
+        "bytes": "e8cf00f9",
+        "instruction": "str x8, [sp, #0x198]"
+      },
+      {
+        "rva": "0xaef4",
+        "bytes": "01000014",
+        "instruction": "b #0xaef8"
+      }
+    ],
+    "device_tree_load_address_calculation": [
+      {
+        "rva": "0xa204",
+        "bytes": "e92740f9",
+        "instruction": "ldr x9, [sp, #0x48]"
+      },
+      {
+        "rva": "0xa208",
+        "bytes": "282940f9",
+        "instruction": "ldr x8, [x9, #0x50]"
+      },
+      {
+        "rva": "0xa20c",
+        "bytes": "2a6d40b9",
+        "instruction": "ldr w10, [x9, #0x6c]"
+      },
+      {
+        "rva": "0xa210",
+        "bytes": "4a014811",
+        "instruction": "add w10, w10, #0x200, lsl #12"
+      },
+      {
+        "rva": "0xa214",
+        "bytes": "08010aeb",
+        "instruction": "subs x8, x8, x10"
+      },
+      {
+        "rva": "0xa218",
+        "bytes": "282d00f9",
+        "instruction": "str x8, [x9, #0x58]"
+      },
+      {
+        "rva": "0xa21c",
+        "bytes": "e92740f9",
+        "instruction": "ldr x9, [sp, #0x48]"
+      },
+      {
+        "rva": "0xa220",
+        "bytes": "282d40f9",
+        "instruction": "ldr x8, [x9, #0x58]"
+      },
+      {
+        "rva": "0xa224",
+        "bytes": "292140f9",
+        "instruction": "ldr x9, [x9, #0x40]"
+      },
+      {
+        "rva": "0xa228",
+        "bytes": "080109eb",
+        "instruction": "subs x8, x8, x9"
+      }
+    ],
+    "aarch64_payload_call": [
+      {
+        "rva": "0x8ce4",
+        "bytes": "e84b41f9",
+        "instruction": "ldr x8, [sp, #0x290]"
+      },
+      {
+        "rva": "0x8ce8",
+        "bytes": "e8ef00f9",
+        "instruction": "str x8, [sp, #0x1d8]"
+      },
+      {
+        "rva": "0x8cec",
+        "bytes": "e8ef40f9",
+        "instruction": "ldr x8, [sp, #0x1d8]"
+      },
+      {
+        "rva": "0x8cf0",
+        "bytes": "e05741f9",
+        "instruction": "ldr x0, [sp, #0x2a8]"
+      },
+      {
+        "rva": "0x8cf4",
+        "bytes": "e3031faa",
+        "instruction": "mov x3, xzr"
+      },
+      {
+        "rva": "0x8cf8",
+        "bytes": "e10303aa",
+        "instruction": "mov x1, x3"
+      },
+      {
+        "rva": "0x8cfc",
+        "bytes": "e20303aa",
+        "instruction": "mov x2, x3"
+      },
+      {
+        "rva": "0x8d00",
+        "bytes": "00013fd6",
+        "instruction": "blr x8"
+      }
+    ],
+    "cmd_boot_slot_helper_and_auth": [
+      {
+        "rva": "0x8973c",
+        "bytes": "c94cfe97",
+        "instruction": "bl #0x1ca60"
+      },
+      {
+        "rva": "0x89740",
+        "bytes": "1f1c0072",
+        "instruction": "tst w0, #0xff"
+      },
+      {
+        "rva": "0x89744",
+        "bytes": "e0230039",
+        "instruction": "strb w0, [sp, #8]"
+      },
+      {
+        "rva": "0x89748",
+        "bytes": "c0000054",
+        "instruction": "b.eq #0x89760"
+      },
+      {
+        "rva": "0x8974c",
+        "bytes": "116cfe97",
+        "instruction": "bl #0x24790"
+      },
+      {
+        "rva": "0x89750",
+        "bytes": "800000b4",
+        "instruction": "cbz x0, #0x89760"
+      },
+      {
+        "rva": "0x89754",
+        "bytes": "e00000b0",
+        "instruction": "adrp x0, #0xa6000"
+      },
+      {
+        "rva": "0x89758",
+        "bytes": "00f82891",
+        "instruction": "add x0, x0, #0xa3e"
+      },
+      {
+        "rva": "0x8975c",
+        "bytes": "0f000014",
+        "instruction": "b #0x89798"
+      },
+      {
+        "rva": "0x89760",
+        "bytes": "f00e0094",
+        "instruction": "bl #0x8d320"
+      },
+      {
+        "rva": "0x89764",
+        "bytes": "000100b4",
+        "instruction": "cbz x0, #0x89784"
+      }
+    ],
+    "gzip_skips_text_offset_addition": [
+      {
+        "rva": "0x9eb8",
+        "bytes": "e82740f9",
+        "instruction": "ldr x8, [sp, #0x48]"
+      },
+      {
+        "rva": "0x9ebc",
+        "bytes": "08094339",
+        "instruction": "ldrb w8, [x8, #0xc2]"
+      },
+      {
+        "rva": "0x9ec0",
+        "bytes": "a8010035",
+        "instruction": "cbnz w8, #0x9ef4"
+      },
+      {
+        "rva": "0x9ec4",
+        "bytes": "01000014",
+        "instruction": "b #0x9ec8"
+      },
+      {
+        "rva": "0x9ec8",
+        "bytes": "e82340f9",
+        "instruction": "ldr x8, [sp, #0x40]"
+      },
+      {
+        "rva": "0x9ecc",
+        "bytes": "080940f9",
+        "instruction": "ldr x8, [x8, #0x10]"
+      },
+      {
+        "rva": "0x9ed0",
+        "bytes": "280100b4",
+        "instruction": "cbz x8, #0x9ef4"
+      },
+      {
+        "rva": "0x9ed4",
+        "bytes": "01000014",
+        "instruction": "b #0x9ed8"
+      },
+      {
+        "rva": "0x9ed8",
+        "bytes": "e82340f9",
+        "instruction": "ldr x8, [sp, #0x40]"
+      },
+      {
+        "rva": "0x9edc",
+        "bytes": "0a0540f9",
+        "instruction": "ldr x10, [x8, #8]"
+      },
+      {
+        "rva": "0x9ee0",
+        "bytes": "e92740f9",
+        "instruction": "ldr x9, [sp, #0x48]"
+      },
+      {
+        "rva": "0x9ee4",
+        "bytes": "282140f9",
+        "instruction": "ldr x8, [x9, #0x40]"
+      },
+      {
+        "rva": "0x9ee8",
+        "bytes": "08010a8b",
+        "instruction": "add x8, x8, x10"
+      },
+      {
+        "rva": "0x9eec",
+        "bytes": "282100f9",
+        "instruction": "str x8, [x9, #0x40]"
+      },
+      {
+        "rva": "0x9ef0",
+        "bytes": "06000014",
+        "instruction": "b #0x9f08"
+      },
+      {
+        "rva": "0x9ef4",
+        "bytes": "e92740f9",
+        "instruction": "ldr x9, [sp, #0x48]"
+      },
+      {
+        "rva": "0x9ef8",
+        "bytes": "282140f9",
+        "instruction": "ldr x8, [x9, #0x40]"
+      },
+      {
+        "rva": "0x9efc",
+        "bytes": "08014291",
+        "instruction": "add x8, x8, #0x80, lsl #12"
+      },
+      {
+        "rva": "0x9f00",
+        "bytes": "282100f9",
+        "instruction": "str x8, [x9, #0x40]"
+      }
+    ]
+  },
+  "vendor_port_address_extent_comparisons": [
+    {
+      "region": "Kernel",
+      "vendor": [
+        "0xa8000000",
+        "0x10000000"
+      ],
+      "port": [
+        "0xa8000000",
+        "0x10000000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "DXE Heap",
+      "vendor": [
+        "0xbab00000",
+        "0xd1c0000"
+      ],
+      "port": [
+        "0xbab00000",
+        "0xd1c0000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "Display Reserved",
+      "vendor": [
+        "0xb8000000",
+        "0x2b00000"
+      ],
+      "port": [
+        "0xb8000000",
+        "0x2b00000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "UEFI Stack",
+      "vendor": [
+        "0xa760d000",
+        "0x40000"
+      ],
+      "port": [
+        "0xa760d000",
+        "0x40000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "CPU Vectors",
+      "vendor": [
+        "0xa7600000",
+        "0x1000"
+      ],
+      "port": [
+        "0xa7600000",
+        "0x1000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "MMU PageTables",
+      "vendor": [
+        "0xa7602000",
+        "0x3000"
+      ],
+      "port": [
+        "0xa7602000",
+        "0x3000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "IMEM Base",
+      "vendor": [
+        "0x14680000",
+        "0x2a000"
+      ],
+      "port": [
+        "0x14680000",
+        "0x2a000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "IMEM Cookie Base",
+      "vendor": [
+        "0x146aa000",
+        "0x16000"
+      ],
+      "port": [
+        "0x146aa000",
+        "0x16000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "IPC_ROUTER_TOP",
+      "vendor": [
+        "0x400000",
+        "0x100000"
+      ],
+      "port": [
+        "0x400000",
+        "0x100000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "SECURITY CONTROL",
+      "vendor": [
+        "0x780000",
+        "0x7000"
+      ],
+      "port": [
+        "0x780000",
+        "0x7000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "QUP",
+      "vendor": [
+        "0x800000",
+        "0x300000"
+      ],
+      "port": [
+        "0x800000",
+        "0x300000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "PRNG_CFG_PRNG",
+      "vendor": [
+        "0x10c0000",
+        "0xc000"
+      ],
+      "port": [
+        "0x10c0000",
+        "0xc000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "CRYPTO0 CRYPTO",
+      "vendor": [
+        "0x1dc0000",
+        "0x40000"
+      ],
+      "port": [
+        "0x1dc0000",
+        "0x40000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "CORE_TOP_CSR",
+      "vendor": [
+        "0x1f00000",
+        "0x100000"
+      ],
+      "port": [
+        "0x1f00000",
+        "0x100000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "PERIPH_SS",
+      "vendor": [
+        "0x8800000",
+        "0x100000"
+      ],
+      "port": [
+        "0x8800000",
+        "0x100000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "USB",
+      "vendor": [
+        "0xa600000",
+        "0x200000"
+      ],
+      "port": [
+        "0xa600000",
+        "0x200000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "AOSS",
+      "vendor": [
+        "0xb000000",
+        "0x4000000"
+      ],
+      "port": [
+        "0xb000000",
+        "0x4000000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "TLMM",
+      "vendor": [
+        "0xf000000",
+        "0x1000000"
+      ],
+      "port": [
+        "0xf000000",
+        "0x1000000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "SMMU",
+      "vendor": [
+        "0x15000000",
+        "0x200000"
+      ],
+      "port": [
+        "0x15000000",
+        "0x200000"
+      ],
+      "equal": true
+    },
+    {
+      "region": "APSS_HM",
+      "vendor": [
+        "0x17000000",
+        "0x2000000"
+      ],
+      "port": [
+        "0x17000000",
+        "0x2000000"
+      ],
+      "equal": true
+    }
+  ],
+  "fd_split": {
+    "vendor": [
+      "0xa7000000",
+      "0x400000"
+    ],
+    "port_low_reserved": [
+      "0xa7000000",
+      "0x100000"
+    ],
+    "port_fd": [
+      "0xa7100000",
+      "0x300000"
+    ],
+    "combined_span_matches": true
+  },
+  "illustrative_v3_gzip_load_model": {
+    "assumptions": [
+      "KernelBaseAddr/KernelSize equal the named XBL config region.",
+      "The v3 path uses current vendor ramdisk and the 5-byte test ramdisk.",
+      "No Xiaomi-specific runtime override changes these values."
+    ],
+    "kernel_base": "0xa8000000",
+    "kernel_size": "0x10000000",
+    "decompressed_shim_entry": "0xa8080000",
+    "ramdisk": "0xb73c5000",
+    "dtb_x0": "0xb71c4000",
+    "is_observed_failed_boot_register_dump": false
+  },
+  "unresolved": [
+    "No PC or register trace proves that the failed test reached the final ABL call or BootShim.",
+    "Actual failed-run x0, EL, KernelBaseAddr/KernelSize and selected slot remain unrecorded.",
+    "Static dataflow does not identify the cause of the red screen.",
+    "The historical upstream 0x00c5b1d0 report is not a register observation from this phone."
+  ],
+  "phone_writes_or_reboots_performed": false,
+  "phone_after_reads": {
+    "boot_completed": "1",
+    "slot_suffix": "_b"
+  }
+}

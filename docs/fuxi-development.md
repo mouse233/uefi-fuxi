@@ -261,3 +261,12 @@ are not independent proof of model, firmware provenance or unlock state.
 The original capture path exercised the binary-copy operations on hardware;
 the reusable collector additionally passed PowerShell syntax and permission
 guard checks. None of this validates a new UEFI image on hardware.
+
+
+## ABL handoff follow-up
+
+The current b-slot ABL and XBL configuration were read and inspected offline.
+See [the ABL handoff audit](fuxi-abl-handoff.md) for the exact PE hash/RVAs,
+vendor_boot DTB path, x0 calling convention and the distinction between static
+dataflow and the unobserved failed-run register state. The DEBUG SEC banner
+now reports saved x0 before enabling the MMU, without dereferencing it.
