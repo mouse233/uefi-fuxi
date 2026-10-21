@@ -82,7 +82,7 @@ def check_memory_map():
         if fd and (config["uefi_fd"]["base"], config["uefi_fd"]["size"]) != fd[:2]:
             errors.append("fuxi.toml FD base/size disagree with MemoryMapLib UEFI FD")
         if config["boot_image"]["header_version"] != 3:
-            errors.append("fuxi requires Android boot image header version 3")
+            errors.append("current fuxi profile expects header version 3; this does not prove ABL acceptance")
     except (OSError, ValueError, KeyError, TypeError) as exc:
         errors.append(f"invalid fuxi.toml: {exc}")
 

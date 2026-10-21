@@ -43,16 +43,15 @@ append_dtb         = true
 #
 # Android Boot Image Configs
 #
-# header_version = 3, NOT sheng's 0.
+# Current bring-up profile: header v3, following the qrd8550 reference.
+# This is a configuration choice, not proof of successful fuxi execution.
+# The 2026-10-21 ad4b4dd3...43c0cfa test did not produce UEFI logs: it showed
+# a bootloader warning and b was later reported unbootable with a active.
+# Do not use "Booting OKAY" alone as evidence of ABL/UEFI compatibility.
 #
-# Measured on this device 2026-10-21: `fastboot boot` of Mu-Silicium's
-# Mu-qrd8550.img (an ANDROID! header_version 3 container, kernel at 0x1000,
-# gzip + appended FDT) returned "Booting OKAY". No v0 image has been tested on
-# fuxi, and SM8550 Mu releases ship v3, so v3 is the evidenced choice.
-#
-# With header v3 the base / kernel_offset / tags_offset / pagesize fields do
-# not exist; mkbootimg ignores them. Keep header_version = 3 and fix the
-# packaging pipeline if it rejects this configuration; do not silently fall
-# back to an unverified container version.
+# UniXNU's generic guide and verifier currently use v0. Changing the device
+# profile to v0 needs explicit load-address/bootloader evidence and a separate
+# hardware test; this audit does not silently change the shipping profile.
+# With v3 the base/kernel_offset/tags_offset/pagesize header fields do not exist.
 [boot_image]
 header_version = 3

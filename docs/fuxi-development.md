@@ -172,3 +172,34 @@ does not build or demonstrate native XNU/iPadOS.
 
 M4: introduce UFS, USB, clocks and power support in small, separately verified
 changes. The initial build deliberately excludes vendor binary drivers.
+
+## 2026-10-21 hardware result and boot-contract audit
+
+The `55b06fef` image with SHA256
+`ad4b4dd30af6736c9c0e6e3e38fe9989715208f7042820d2c1b8759dd43c0cfa`
+failed its first hardware test. Transfer succeeded, the host lost USB during
+`Booting`, and the screen displayed the bootloader's corrupt-device warning.
+No UEFI stage/menu was observed. Initial slot b was later reported unbootable
+with a active. The user separately approved restoring b with `set_active b`,
+then reported Android recovered after normal reboot. No partition image was
+flashed or erased. Temporary boot must not be described as incapable of
+changing boot-control state through the bootloader's own failure handling.
+
+UniXNU's overview and current generic `scripts/unixnu/bootimg.py` describe v0.
+The fuxi profile is v3; its ABL acceptance is unverified. Do not silently switch
+versions or infer the red-screen cause from this difference alone. Verify the
+Android container, uncompressed ARM64 shim header, FD and DTB as separate
+contracts. BootShim preserves x0 but does not locate/parse the appended DTB.
+
+The tested AOSP-produced v3 image has the correct page-aligned `dummy` ramdisk.
+It is five bytes, not the empty ramdisk in the guide's smoke-test workflow.
+This discrepancy is unproven as a cause. The auxiliary `mkbootimg_v3.py` packer
+and unpacker did have independent ramdisk alignment defects, now covered by
+byte-for-byte comparisons with the separate AOSP writer. Fixing that tool does
+not change the old tested image or establish a hardware fix.
+
+The bundled DTB capture has a `ddr_size` field of 12, while this user reports
+a 24 GB fuxi and Android exposed about 22.6 GiB of RAM. Its memory description
+must be recollected/validated for this particular phone before it is used as
+physical ownership evidence. Static self-consistency is insufficient. This
+input discrepancy has not been established as the cause of the warning.

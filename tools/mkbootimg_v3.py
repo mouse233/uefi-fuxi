@@ -17,11 +17,14 @@ Measured on the reference image:
     decompressed       3,145,840 bytes   (~3 MiB firmware volume)
     appended FDT         776,668 bytes   (starts with 0xd00dfeed)
 
-This is why UniXNU's documentation says "the device tree follows the gzip
-stream": BootShim locates it there, not in a separate boot-image field.
+The Android bootloader decompresses the kernel field and hands control to
+BootShim. BootShim copies the FD and preserves x0; it does not parse gzip or
+locate the DTB. The DTB handoff is a separate platform/bootloader contract.
 
-The fuxi ABL accepts this container (`fastboot boot` -> "Booting OKAY") and
-rejects the legacy v0 container, so `unixnu bootimg` cannot be used as-is.
+This tool handles the current fuxi v3 container profile. A syntactically valid
+container, a reference qrd8550 image, or a fastboot acknowledgement does not
+establish that this device's ABL accepts or successfully executes the payload.
+The generic UniXNU overview/verifier currently describes a v0 pipeline.
 
 Usage:
     python mkbootimg_v3.py pack   --kernel K [--dtb D] [--ramdisk R] --out boot.img
@@ -32,6 +35,7 @@ import argparse
 import os
 import struct
 import zlib
+from pathlib import Path
 
 MAGIC = b"ANDROID!"
 FDT_MAGIC = b"\xd0\x0d\xfe\xed"
@@ -57,27 +61,29 @@ def _header(kernel_size, ramdisk_size, os_version, cmdline):
 
 
 def pack(kernel, dtb, ramdisk, out, cmdline="", os_version=0):
-    k = open(kernel, "rb").read()
-    t = open(dtb, "rb").read() if dtb else b""
-    r = open(ramdisk, "rb").read() if ramdisk else b""
+    k = Path(kernel).read_bytes()
+    t = Path(dtb).read_bytes() if dtb else b""
+    r = Path(ramdisk).read_bytes() if ramdisk else b""
 
     if k[:2] != b"\x1f\x8b":
-        print("warning: kernel is not gzip; BootShim expects a gzip stream", flush=True)
+        print("warning: kernel is not gzip; this profile expects a gzip kernel field", flush=True)
     if t and t[:4] != FDT_MAGIC:
         print("warning: dtb does not start with the FDT magic", flush=True)
     if not t:
-        print("warning: no dtb given; BootShim will not find a device tree", flush=True)
+        print("warning: no dtb given; the image has no appended device tree", flush=True)
 
     field = k + t
     hdr = _header(len(field), len(r), os_version, cmdline)
-    pad = (-(len(hdr) + len(field) + len(r))) % PAGE
+    kernel_pad = (-len(field)) % PAGE
+    ramdisk_pad = (-len(r)) % PAGE
 
     with open(out, "wb") as f:
         f.write(hdr)
         f.write(b"\x00" * ((-len(hdr)) % PAGE))
         f.write(field)
+        f.write(b"\x00" * kernel_pad)
         f.write(r)
-        f.write(b"\x00" * pad)
+        f.write(b"\x00" * ramdisk_pad)
 
     print(f"packed {out}")
     print(f"  header        {len(hdr)} (kernel at {(len(hdr) + PAGE - 1) // PAGE * PAGE:#x})")
@@ -85,23 +91,29 @@ def pack(kernel, dtb, ramdisk, out, cmdline="", os_version=0):
     print(f"  dtb           {len(t)}")
     print(f"  kernel_size   {len(field)}")
     print(f"  ramdisk       {len(r)}")
-    print(f"  padding       {pad}")
-    print(f"  total         {len(hdr) + ((-len(hdr)) % PAGE) + len(field) + len(r) + pad}")
+    print(f"  padding       kernel={kernel_pad} ramdisk={ramdisk_pad}")
+    print(f"  total         {len(hdr) + ((-len(hdr)) % PAGE) + len(field) + kernel_pad + len(r) + ramdisk_pad}")
 
 
 def parse(path):
-    d = open(path, "rb").read()
-    if d[:8] != MAGIC:
-        raise SystemExit("not an ANDROID! image")
+    d = Path(path).read_bytes()
+    if len(d) < HEADER_SIZE or d[:8] != MAGIC:
+        raise ValueError("missing or truncated Android v3 header")
     ks, = struct.unpack_from("<I", d, 8)
     rs, = struct.unpack_from("<I", d, 12)
     osv, = struct.unpack_from("<I", d, 16)
     hs, = struct.unpack_from("<I", d, 20)
     hv, = struct.unpack_from("<I", d, 40)
+    if hv != VERSION or hs != HEADER_SIZE:
+        raise ValueError(f"expected v3 header size {HEADER_SIZE}, got version={hv} size={hs}")
+    ramdisk_at = PAGE + ((ks + PAGE - 1) // PAGE) * PAGE
+    required_size = ramdisk_at + ((rs + PAGE - 1) // PAGE) * PAGE
+    if len(d) < required_size:
+        raise ValueError(f"truncated boot image: need {required_size} bytes, got {len(d)}")
     cmdline = d[44:44 + 1536].split(b"\x00")[0].decode("utf-8", "replace")
     return dict(file_size=len(d), kernel_size=ks, ramdisk_size=rs, os_version=osv,
                 header_size=hs, header_version=hv, cmdline=cmdline,
-                kernel_at=((hs + PAGE - 1) // PAGE) * PAGE, data=d)
+                kernel_at=PAGE, ramdisk_at=ramdisk_at, data=d)
 
 
 def split_field(buf):
@@ -119,11 +131,11 @@ def unpack(image, outdir):
     os.makedirs(outdir, exist_ok=True)
     d, off = i["data"], i["kernel_at"]
     field = d[off:off + i["kernel_size"]]
-    off += i["kernel_size"]
+    off = i["ramdisk_at"]
     gz, dtb = split_field(field)
-    open(os.path.join(outdir, "kernel"), "wb").write(gz)
-    open(os.path.join(outdir, "dtb"), "wb").write(dtb)
-    open(os.path.join(outdir, "ramdisk"), "wb").write(d[off:off + i["ramdisk_size"]])
+    (Path(outdir) / "kernel").write_bytes(gz)
+    (Path(outdir) / "dtb").write_bytes(dtb)
+    (Path(outdir) / "ramdisk").write_bytes(d[off:off + i["ramdisk_size"]])
     print(f"unpacked to {outdir}: gzip={len(gz)} dtb={len(dtb)} ramdisk={i['ramdisk_size']}")
 
 
@@ -136,6 +148,7 @@ def info(image):
     print(f"  {'header_size':16}: {i['header_size']}  (kernel at {i['kernel_at']:#x})")
     print(f"  {'kernel_size':16}: {i['kernel_size']}  = gzip {len(gz)} + dtb {len(dtb)}")
     print(f"  {'ramdisk_size':16}: {i['ramdisk_size']}")
+    print(f"  {'ramdisk_at':16}: {i['ramdisk_at']:#x}")
     print(f"  {'file_size':16}: {i['file_size']}")
     if gz:
         dec = zlib.decompressobj(16 + zlib.MAX_WBITS)
@@ -144,7 +157,7 @@ def info(image):
     if dtb:
         m, tot = struct.unpack_from(">II", dtb, 0)[0], struct.unpack_from(">I", dtb, 4)[0]
         print(f"  {'dtb':16}: magic {m:#x} totalsize {tot} "
-              f"({'valid' if m == 0xd00dfeed and tot == len(dtb) else 'MISMATCH'})")
+              f"({'header matches' if m == 0xd00dfeed and tot == len(dtb) else 'MISMATCH'})")
 
 
 def main():
