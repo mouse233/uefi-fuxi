@@ -66,10 +66,10 @@ class SettingsManager(UpdateSettingsManager, SetupSettingsManager,
         # NOTE: sheng also requires "Binaries". fuxi has no vendor binary
         # import yet, and FUXI_VENDOR_HW = 0 builds without it, so it is
         # intentionally omitted. Re-add it once the vendor blobs are staged.
-        # Only the firmware's required Mu_Basecore leaves are initialized by
-        # the documented/CI preflight. Recursing here also downloads SPDM,
-        # OpenSSL and other libraries' own test dependencies, none of which
-        # are linked into this stage-1 image.
+        # The documented/CI preflight initializes Mu_Basecore's direct
+        # children, including headers required by DEC [Includes]. Recursing
+        # further downloads SPDM/OpenSSL and other libraries' own test trees,
+        # none of which are linked into this stage-1 image.
         return [
             RequiredSubmodule("Common/Mu", False),
             RequiredSubmodule("Common/Mu_OEM_Sample", False),

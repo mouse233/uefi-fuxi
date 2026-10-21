@@ -59,13 +59,10 @@ git submodule update --init --depth 1 \
   Common/Mu Common/Mu_OEM_Sample Mu_Basecore Silicium-ACPI \
   Silicon/Silicium/OpensslPkg/Library/OpensslLib/openssl
 
-# Only these four Mu_Basecore leaves are needed by this firmware build.
-# Do not recursively initialize unrelated SPDM/OpenSSL test dependencies.
-git -C Mu_Basecore submodule update --init --depth 1 --jobs 4 \
-  BaseTools/Source/C/BrotliCompress/brotli \
-  MdeModulePkg/Library/BrotliCustomDecompressLib/brotli \
-  MdeModulePkg/Universal/RegularExpressionDxe/oniguruma \
-  MdePkg/Library/BaseFdtLib/libfdt
+# DEC [Includes] requires MipiSysT/SPDM/unit-test header directories even
+# when their implementations are not linked. Initialize the nine direct Mu
+# children, without recursively downloading their test dependencies.
+git -C Mu_Basecore submodule update --init --depth 1 --jobs 8
 
 sudo apt-get update
 sudo apt-get install -y python3-venv device-tree-compiler
@@ -94,6 +91,17 @@ to an unavailable `127.0.0.1:7897`. Direct access worked after unsetting
 `HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy` **in the
 build shell only**. Do this only if the same failure occurs; no global proxy
 configuration needs changing.
+
+If an initial environment setup was interrupted, an existing `Build/` can
+make `build_uefi.py` skip setup and report missing Mu external dependencies.
+After activating the venv and exporting UNIXNU_ROOT, recover with:
+
+```bash
+python3 Platforms/Xiaomi/fuxiPkg/DeviceBuild.py --setup -t DEBUG
+python3 Platforms/Xiaomi/fuxiPkg/DeviceBuild.py --update -t DEBUG
+```
+
+These update the build environment, not your repository branch.
 
 `setup_env.sh` exports its toolchain prefix in a child shell, so the explicit
 `export CLANGPDB_AARCH64_PREFIX=...` above is intentional. Do not use the build
