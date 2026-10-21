@@ -44,7 +44,7 @@ def main():
         "source_commit": command("git", "rev-parse", "HEAD", cwd=root),
         "source_branch": command("git", "branch", "--show-current", cwd=root),
         "working_tree_status": command("git", "status", "--porcelain", "--untracked-files=no", cwd=root),
-        "submodules": command("git", "submodule", "status", cwd=root).splitlines(),
+        "submodules": command("git", "submodule", "status", "--recursive", cwd=root).splitlines(),
         "unixnu_commit": command("git", "rev-parse", "HEAD", cwd=unixnu),
         "darwinboot_commit": command("git", "rev-parse", "HEAD", cwd=unixnu / "drivers/DarwinBoot"),
         "clang_version": command("clang", "--version"),

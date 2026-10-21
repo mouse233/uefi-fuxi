@@ -66,12 +66,16 @@ class SettingsManager(UpdateSettingsManager, SetupSettingsManager,
         # NOTE: sheng also requires "Binaries". fuxi has no vendor binary
         # import yet, and FUXI_VENDOR_HW = 0 builds without it, so it is
         # intentionally omitted. Re-add it once the vendor blobs are staged.
+        # Only the firmware's required Mu_Basecore leaves are initialized by
+        # the documented/CI preflight. Recursing here also downloads SPDM,
+        # OpenSSL and other libraries' own test dependencies, none of which
+        # are linked into this stage-1 image.
         return [
-            RequiredSubmodule("Common/Mu", True),
-            RequiredSubmodule("Common/Mu_OEM_Sample", True),
-            RequiredSubmodule("Mu_Basecore", True),
-            RequiredSubmodule("Silicium-ACPI", True),
-            RequiredSubmodule("Silicon/Silicium/OpensslPkg/Library/OpensslLib/openssl", True),
+            RequiredSubmodule("Common/Mu", False),
+            RequiredSubmodule("Common/Mu_OEM_Sample", False),
+            RequiredSubmodule("Mu_Basecore", False),
+            RequiredSubmodule("Silicium-ACPI", False),
+            RequiredSubmodule("Silicon/Silicium/OpensslPkg/Library/OpensslLib/openssl", False),
         ]
 
     def SetArchitectures(self, list_of_requested_architectures):

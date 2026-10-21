@@ -71,6 +71,12 @@ jobs:
             Silicium-ACPI \
             Silicon/Silicium/OpensslPkg/Library/OpensslLib/openssl
 
+          git -C Mu_Basecore submodule update --init --depth 1 --jobs 4 \
+            BaseTools/Source/C/BrotliCompress/brotli \
+            MdeModulePkg/Library/BrotliCustomDecompressLib/brotli \
+            MdeModulePkg/Universal/RegularExpressionDxe/oniguruma \
+            MdePkg/Library/BaseFdtLib/libfdt
+
       - name: Static pre-flight
         run: |
           python3 tools/validate_pkg.py .

@@ -59,6 +59,14 @@ git submodule update --init --depth 1 \
   Common/Mu Common/Mu_OEM_Sample Mu_Basecore Silicium-ACPI \
   Silicon/Silicium/OpensslPkg/Library/OpensslLib/openssl
 
+# Only these four Mu_Basecore leaves are needed by this firmware build.
+# Do not recursively initialize unrelated SPDM/OpenSSL test dependencies.
+git -C Mu_Basecore submodule update --init --depth 1 --jobs 4 \
+  BaseTools/Source/C/BrotliCompress/brotli \
+  MdeModulePkg/Library/BrotliCustomDecompressLib/brotli \
+  MdeModulePkg/Universal/RegularExpressionDxe/oniguruma \
+  MdePkg/Library/BaseFdtLib/libfdt
+
 sudo apt-get update
 sudo apt-get install -y python3-venv device-tree-compiler
 python3 -m venv ~/work/fuxi-venv
