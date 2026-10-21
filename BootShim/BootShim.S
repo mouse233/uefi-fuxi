@@ -1,3 +1,5 @@
+#include "StageMarkers.inc"
+
 _Head:
   adr   x1, _Payload    /* Set _Entry address */
   b     _Start          /* Jump to the real code */
@@ -17,6 +19,10 @@ _StackSize:
 #endif
 
 _Start:
+#if BOOT_STAGE_MARKERS
+_Stage1Marker:
+  FuxiStageMarker 0, 0xffffffff
+#endif
   mov   x4, x1
   ldr   x5, =FD_BASE
   cmp   x4, x5
@@ -51,6 +57,10 @@ _CleanLoop:
   ic    iallu
   dsb   sy
   isb
+#if BOOT_STAGE_MARKERS
+_Stage2Marker:
+  FuxiStageMarker MARKER_BAND_SIZE, 0x80808080
+#endif
   br    x5
 
 _Dead:

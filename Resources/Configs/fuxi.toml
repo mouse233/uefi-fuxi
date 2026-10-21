@@ -17,6 +17,13 @@
 [boot_shim]
 requires_kernel_header = true
 
+# Opt-in only: --boot-stage-markers is accepted solely for fuxi DEBUG.
+# Reservation confirmed from this phone's live FDT and xbl_config_b.
+[boot_shim.stage_markers]
+framebuffer_base = 0xB8000000
+framebuffer_size = 0x02B00000
+band_size = 0x40000
+
 #
 # UEFI FD Configs
 #
@@ -38,7 +45,7 @@ size = 0x300000
 # Xiaomi v3/v4 ABL path, vendor_boot/DTBO supply the primary handoff tree;
 # appended bytes alone do not identify x0. See docs/fuxi-abl-handoff.md.
 # Container layout: the device tree goes after the gzip stream, inside the kernel
-# field. BootShim/MemoryMapLib both expect it there.
+# field. See the ABL handoff audit for the actual vendor_boot DTB path.
 [boot_image_kernel]
 kernel_compression = "gzip"
 append_dtb         = true

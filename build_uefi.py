@@ -46,6 +46,7 @@ class BuildContext:
     enable_secureboot: bool
     cleanup:           bool
     update:            bool
+    boot_stage_markers: bool = False
 
 def setup_logger ():
     global logger
@@ -81,8 +82,13 @@ def parse_arguments () -> BuildContext:
     parser.add_argument ("-c", "--clean",             action="store_true",                                       help="Removes Old Build Files and Starts a Clean Build.")
     parser.add_argument ("-u", "--update",            action="store_true",                                       help="Updates your Local Repo before Building.")
 
+    parser.add_argument ("--boot-stage-markers", action="store_true", help="Opt-in framebuffer stage markers; fuxi DEBUG only.")
+
     # Parse Script Arguments
     args = parser.parse_args ()
+
+    if args.boot_stage_markers and (args.device != "fuxi" or args.release != "DEBUG"):
+        parser.error ("--boot-stage-markers requires -d fuxi -r DEBUG")
 
     # Return Class
     return BuildContext (
@@ -91,7 +97,8 @@ def parse_arguments () -> BuildContext:
         build_mode        = args.release,
         enable_secureboot = args.enable_secureboot,
         cleanup           = args.clean,
-        update            = args.update
+        update            = args.update,
+        boot_stage_markers = args.boot_stage_markers
     )
 
 def get_device_package_path (device: str) -> Path | None:
@@ -180,7 +187,18 @@ def update_local_repo () -> bool:
 
     return True
 
-def compile_boot_shim (boot_shim_config: dict, fd_config: dict) -> bool:
+def get_boot_stage_marker_config (ctx: BuildContext, config: dict) -> dict | None:
+    if not ctx.boot_stage_markers:
+        return None
+    if ctx.device != "fuxi" or ctx.build_mode != "DEBUG":
+        raise ValueError ("stage markers require fuxi DEBUG")
+    marker = config.get ("boot_shim", {}).get ("stage_markers", {})
+    expected = {"framebuffer_base": 0xB8000000, "framebuffer_size": 0x02B00000, "band_size": 0x40000}
+    if marker != expected or any(type(value) is not int for value in marker.values()):
+        raise ValueError ("stage markers require the audited fuxi framebuffer and band limits")
+    return marker
+
+def compile_boot_shim (boot_shim_config: dict, fd_config: dict, marker_config: dict | None = None) -> bool:
     # Get FD Details
     fd_base = hex (fd_config.get ("base"))
     fd_size = hex (fd_config.get ("size"))
@@ -195,6 +213,12 @@ def compile_boot_shim (boot_shim_config: dict, fd_config: dict) -> bool:
         f"FD_BASE={fd_base}",
         f"FD_SIZE={fd_size}"
     ]
+
+    cmd.append (f"BOOT_STAGE_MARKERS={int (marker_config is not None)}")
+    if marker_config is not None:
+        cmd.extend ([f"MARKER_FB_BASE={hex (marker_config['framebuffer_base'])}",
+                     f"MARKER_FB_SIZE={hex (marker_config['framebuffer_size'])}",
+                     f"MARKER_BAND_SIZE={hex (marker_config['band_size'])}"])
 
     # Compile Boot Shim
     return subprocess.run (cmd, cwd=BOOT_SHIM_PATH).returncode == 0
@@ -481,6 +505,13 @@ def main ():
         logger.error (f"The Device Build Script isn't Present in \"{device_package_path}\"!")
         sys.exit (1)
 
+    # Validate diagnostic scope before removing files or changing submodule patches.
+    try:
+        marker_config = get_boot_stage_marker_config (ctx, config_data)
+    except ValueError as exc:
+        logger.error (str (exc))
+        sys.exit (1)
+
     # Delete Old Build Files
     cleanup_old_build (ctx.device, ctx.device_model, ctx.cleanup)
 
@@ -498,7 +529,7 @@ def main ():
 
     # Compile Boot Shim
     if boot_shim_present:
-        if not compile_boot_shim (config_data.get ("boot_shim"), config_data.get ("uefi_fd")):
+        if not compile_boot_shim (config_data.get ("boot_shim"), config_data.get ("uefi_fd"), marker_config):
             sys.exit (1)
 
     # Prepare UEFI Environment

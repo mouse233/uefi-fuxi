@@ -39,6 +39,13 @@ def main():
     if fd.stat().st_size != config["uefi_fd"]["size"]:
         raise ValueError("firmware volume size disagrees with fuxi.toml")
     unixnu = Path(os.environ.get("UNIXNU_ROOT", str(root / "UniXNU"))).resolve()
+    shim = root / "BootShim/BootShim.bin"
+    symbols = command("llvm-nm", "-n", "BootShim/BootShim.elf", cwd=root)
+    stage_labels = [any(line.split()[-1:] == [name] for line in symbols.splitlines())
+                    for name in ("_Stage1Marker", "_Stage2Marker")]
+    if stage_labels[0] != stage_labels[1]:
+        raise ValueError("incomplete BootShim stage-marker symbols")
+    markers = all(stage_labels)
     manifest = {
         "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
         "source_commit": command("git", "rev-parse", "HEAD", cwd=root),
@@ -50,7 +57,10 @@ def main():
         "clang_version": command("clang", "--version"),
         "python_version": command("python3", "--version"),
         "pip_freeze": command("python3", "-m", "pip", "freeze").splitlines(),
-        "build_command": 'UNIXNU_ROOT="$PWD/UniXNU" ./build_uefi.py -d fuxi -r DEBUG -c',
+        "build_command": 'UNIXNU_ROOT="$PWD/UniXNU" ./build_uefi.py -d fuxi -r DEBUG -c' + (' --boot-stage-markers' if markers else ''),
+        "boot_shim": {"size": shim.stat().st_size, "sha256": hashlib.sha256(shim.read_bytes()).hexdigest(),
+                      "stage_markers": markers,
+                      "marker_config": config["boot_shim"]["stage_markers"] if markers else None},
         "fd_base": config["uefi_fd"]["base"],
         "fd_size": config["uefi_fd"]["size"],
         "android_header": {"version": version, "header_size": header_size, "kernel_size": kernel_size, "ramdisk_size": ramdisk_size},

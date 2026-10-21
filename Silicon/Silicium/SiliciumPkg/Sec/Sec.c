@@ -147,7 +147,7 @@ SecMain (VOID)
 
   // Report the saved entry argument before InitializeMemory changes page
   // tables. This is a raw diagnostic value; do not dereference it here.
-  DEBUG ((EFI_D_WARN, "SEC: entry x0=0x%lx (not dereferenced)\n", gSecEntryArg0));
+  DEBUG ((EFI_D_WARN, "SEC: stage 3 entry x0=0x%lx (not dereferenced)\n", gSecEntryArg0));
 
   // Initialize Debug Agent
   InitializeDebugAgent (DEBUG_AGENT_INIT_POSTMEM_SEC, NULL, NULL);
