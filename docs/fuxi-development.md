@@ -203,3 +203,61 @@ a 24 GB fuxi and Android exposed about 22.6 GiB of RAM. Its memory description
 must be recollected/validated for this particular phone before it is used as
 physical ownership evidence. Static self-consistency is insufficient. This
 input discrepancy has not been established as the cause of the warning.
+
+
+## 2026-10-21 read-only evidence from the recovered 24 GB device
+
+The phone completed a normal Android boot on slot b. After explicit user
+permission, root reads copied boot_b (192 MiB), vendor_boot_b (96 MiB),
+init_boot_b (8 MiB), dtbo_b (24 MiB), the live FDT, iomem and kernel logs directly
+to the host. No phone-side temporary files, reboot, test boot or boot-control
+write were used. Raw captures stay private; only allowlisted metadata, address
+ranges and SHA256 values are in `docs/evidence/fuxi-24gb-20261021.json`.
+
+Working Android uses boot header v4: boot_b has a 48,228,864-byte uncompressed
+ARM64 kernel and zero ramdisk, init_boot_b supplies the generic ramdisk, and
+vendor_boot_b contains 17 concatenated DTBs plus its vendor ramdisk. dtbo_b has
+12 entries. This is concrete device evidence, but does not establish whether
+ABL also supports the port's v3 temporary boot profile. Do not change the
+profile to the generic guide's v0, or to v4, solely because they differ.
+
+Android reports DTB and DTBO index 11. Standard `fdtoverlay` accepts that pair,
+but the result still has memory `reg = <0 0 0 0>`, board ID `<0 0>`, and a generic
+Kalama v2 model. The live tree contains the fuxi model, board ID and real banks.
+Therefore offline overlay success does not reproduce all bootloader fixups.
+Do not replace the port DTB with this merged placeholder tree.
+
+The live FDT is 828,811 bytes with `ddr_size = 24`; the bundled capture is
+815,093 bytes with `ddr_size = 12`. High bank ranges differ substantially.
+One memory bank has zero size in both captures and must not become usable RAM.
+Android MemTotal is 23,729,968 KiB (about 22.63 GiB). The root-read FDT SHA256
+was independently verified on the phone and matches the binary host copy.
+These observations support the reported RAM variant, but are not a license
+to expose the high banks to GCD without reservation and handoff analysis.
+
+The live splash reservation matches the current display descriptor exactly:
+0xB8000000 + 0x02B00000. This validates that reservation's address/extent for
+this capture; pixel format and stride still need their own verification.
+Android ramoops occupies 0xA7000000 + 0x00400000, overlapping the port's FD
+at 0xA7100000 + 0x00300000. This reflects different stage ownership and alone
+does not prove an unsafe allocation. A UEFI persistent logger must not reuse
+that Android ramoops range while the FD occupies it. No persistent logger was
+enabled. The pstore directory was empty after recovery, so this capture does
+not supply the failed UEFI run's early bootloader/SEC trace.
+
+For a new explicitly authorized read-only session on Windows PowerShell 7:
+
+```powershell
+# Obtain permission for root reads first; keep the output folder private.
+./tools/collect_fuxi_readonly.ps1 -Adb 'C:/path/to/adb.exe' `
+  -OutputParent 'D:/private-existing-folder' -ExpectedSlot b -AllowRootReads
+```
+
+The collector requires one authorized device, binds operations to its ADB
+transport, checks the expected slot before and after, copies binary stdout
+without text conversion, and records per-file exit status, size and SHA256.
+Android properties serve as routing guards; modules can spoof them, so they
+are not independent proof of model, firmware provenance or unlock state.
+The original capture path exercised the binary-copy operations on hardware;
+the reusable collector additionally passed PowerShell syntax and permission
+guard checks. None of this validates a new UEFI image on hardware.

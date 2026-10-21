@@ -1,0 +1,1253 @@
+{
+  "captured_utc": "2026-10-21T13:43:21Z",
+  "source_commit": "ac8c4906a2258ae36e4a1d2cdfc162cbb6fac03e",
+  "upstream_fuxi_commit": "7b7ec153fa41258a5b320ca579afc6e136b11483",
+  "device": {
+    "product": "fuxi",
+    "model": "2211133C",
+    "android_boot_completed": "1",
+    "slot_suffix": "_b",
+    "memtotal_kib": 23729968,
+    "reported_dtb_index": 11,
+    "reported_dtbo_index": 11,
+    "fingerprints_trusted": false
+  },
+  "authorization": "User explicitly approved root reads for this session. No new firmware boot or boot-control write was authorized or performed.",
+  "images": [
+    {
+      "file": "boot_b.img",
+      "bytes": 201326592,
+      "sha256": "b3e7a8e027b8d17e9e4173adfa66a7b39dd7bc5848d4c7a7d27b8aa3223caf76",
+      "header_version": 4,
+      "header_size": 1584,
+      "kernel_size": 48228864,
+      "ramdisk_size": 0,
+      "os_version_raw": "0x220001a7",
+      "kernel_at": 4096,
+      "ramdisk_at": 48234496,
+      "signature_size": 0,
+      "kernel_magic_hex": "4d5a40faff7fa4140000000000000000"
+    },
+    {
+      "file": "vendor_boot_b.img",
+      "bytes": 100663296,
+      "sha256": "9b6724c8618c8a2bb8969fe00aba3693be3c60ea0a669d5fbdb8980e32d6dae9",
+      "header_version": 4,
+      "header_size": 2128,
+      "page_size": 4096,
+      "kernel_address": "0x8000",
+      "ramdisk_address": "0x1000000",
+      "tags_address": "0x100",
+      "dtb_address": "0x1f00000",
+      "vendor_ramdisk_size": 12819489,
+      "dtb_size": 8144740,
+      "dtb_at": 12824576,
+      "vendor_dtb_trees": [
+        {
+          "offset": 0,
+          "size": 456609,
+          "sha256": "e1e3154ed129fb9ae2338a7bb05d5b49be2a4efdc0185bd60ce5c5e1d199c96c"
+        },
+        {
+          "offset": 456609,
+          "size": 457054,
+          "sha256": "976414db3ba879298cade63f60ff644fc83e7a06aa077c4dfdbcfc6fd1241c8a"
+        },
+        {
+          "offset": 913663,
+          "size": 457054,
+          "sha256": "976414db3ba879298cade63f60ff644fc83e7a06aa077c4dfdbcfc6fd1241c8a"
+        },
+        {
+          "offset": 1370717,
+          "size": 459227,
+          "sha256": "f7dbe66c9c64e8eaa878be73e7fee33dc657467f735f2522ca2b1891d90051df"
+        },
+        {
+          "offset": 1829944,
+          "size": 459227,
+          "sha256": "c0724eff494002eca401beb83786df1b57e0203db9ff385fa200d681fbfc376f"
+        },
+        {
+          "offset": 2289171,
+          "size": 459227,
+          "sha256": "c0724eff494002eca401beb83786df1b57e0203db9ff385fa200d681fbfc376f"
+        },
+        {
+          "offset": 2748398,
+          "size": 458158,
+          "sha256": "628dba0d0c9fc00c0c78cc17a1d8d4a63edb1a4d58bdfbddd95c1c762e940e86"
+        },
+        {
+          "offset": 3206556,
+          "size": 416735,
+          "sha256": "4f3515f3353828fe285e163274b50fee54f208668bf87bc1c65066b1e499604e"
+        },
+        {
+          "offset": 3623291,
+          "size": 414881,
+          "sha256": "fbb256d91e0fce555b66d301d687e3e66463ae5bd7ea5860aa4d42398d0a8230"
+        },
+        {
+          "offset": 4038172,
+          "size": 538069,
+          "sha256": "2f5f5f28e0ae2202a9f59745f8378e092fb6da2a1aa4ffcf7a6bb07fe2006a24"
+        },
+        {
+          "offset": 4576241,
+          "size": 458696,
+          "sha256": "ad17fc7f515e647d6987d332d1ae8a827ce859cb0be01a162e49873ca5276e63"
+        },
+        {
+          "offset": 5034937,
+          "size": 522587,
+          "sha256": "3bc672a3f96fb110ff1e55e5768ba6d9907681ce2fee471537ba025c3b5028a7"
+        },
+        {
+          "offset": 5557524,
+          "size": 540991,
+          "sha256": "00c9e4c2ef86f4db1e1eb84f26f601ec39794b1c297c5a3e06a28c7ce4029bee"
+        },
+        {
+          "offset": 6098515,
+          "size": 536279,
+          "sha256": "c3fe7f0a8d09460cb15e574cc7a8b18951b63de073027fe724c80593d938b79d"
+        },
+        {
+          "offset": 6634794,
+          "size": 454833,
+          "sha256": "5a284b72a0fd9dd565d21f2842843f52bd2dcd3d28a676e2b0d5cb5d757ed80e"
+        },
+        {
+          "offset": 7089627,
+          "size": 518724,
+          "sha256": "e461219d758fa6a3a6fd922392f3a10ba427f579fc1b55d52a1d28a6168218e5"
+        },
+        {
+          "offset": 7608351,
+          "size": 536389,
+          "sha256": "ef785fc0603f76446179beb60699324721131a4262e31ea1d73e3436d1b3c6f2"
+        }
+      ],
+      "ramdisk_table_size": 108,
+      "ramdisk_table_entries": 1,
+      "ramdisk_table_entry_size": 108,
+      "bootconfig_size": 113
+    },
+    {
+      "file": "init_boot_b.img",
+      "bytes": 8388608,
+      "sha256": "555065aa672e3c82ef46c72442e4de084ab6f71a3761dc1233c0ab7a6d88aadc",
+      "header_version": 4,
+      "header_size": 1584,
+      "kernel_size": 0,
+      "ramdisk_size": 2124573,
+      "os_version_raw": "0x220001a7",
+      "kernel_at": 4096,
+      "ramdisk_at": 4096,
+      "signature_size": 0,
+      "kernel_magic_hex": ""
+    },
+    {
+      "file": "dtbo_b.img",
+      "bytes": 25165824,
+      "sha256": "c9c793b6242f652446225bf8d7572b746a7b83e80c0dd4a670a4bd4304d8156f",
+      "dtbo_total_size": 2667410,
+      "header_size": 32,
+      "entry_size": 32,
+      "entry_count": 12,
+      "entries_offset": 32,
+      "page_size": 4096,
+      "version": 0
+    }
+  ],
+  "live_tree": {
+    "bytes": 828811,
+    "sha256": "77ca50008b74062b62446f7b81a9341313439741bff11218314f045f94497b19",
+    "model": "Qualcomm Technologies, Inc. 8550 fuxi",
+    "ddr_size": [
+      24
+    ],
+    "banks": [
+      [
+        "0x80000000",
+        "0xe00000"
+      ],
+      [
+        "0x811d0000",
+        "0x56e30000"
+      ],
+      [
+        "0xd8140000",
+        "0x20000"
+      ],
+      [
+        "0xd8800000",
+        "0x0"
+      ],
+      [
+        "0xe7cb0000",
+        "0x18350000"
+      ],
+      [
+        "0x880000000",
+        "0x35b00000"
+      ],
+      [
+        "0x8c0000000",
+        "0x140000000"
+      ],
+      [
+        "0xa00000000",
+        "0x400000000"
+      ],
+      [
+        "0x8b5d00000",
+        "0x1e00000"
+      ]
+    ],
+    "bank_bytes_sum": 25359417344,
+    "zero_size_bank_count": 1,
+    "reserved": {
+      "/reserved-memory/gunyah_hyp_region@80000000": {
+        "reg": [
+          [
+            "0x80000000",
+            "0xa00000"
+          ]
+        ]
+      },
+      "/reserved-memory/cpusys_vm_region@80a00000": {
+        "reg": [
+          [
+            "0x80a00000",
+            "0x400000"
+          ]
+        ]
+      },
+      "/reserved-memory/xbl_dt_log_merged@81a00000": {
+        "reg": []
+      },
+      "/reserved-memory/aop_cmd_db_region@81c60000": {
+        "reg": [
+          [
+            "0x81c60000",
+            "0x20000"
+          ]
+        ]
+      },
+      "/reserved-memory/aop_config_merged_region@81c80000": {
+        "reg": [
+          [
+            "0x81c80000",
+            "0x74000"
+          ]
+        ]
+      },
+      "/reserved-memory/chipinfo_region@81cf4000": {
+        "reg": [
+          [
+            "0x81cf4000",
+            "0x1000"
+          ]
+        ]
+      },
+      "/reserved-memory/smem_region@81d00000": {
+        "reg": [
+          [
+            "0x81d00000",
+            "0x200000"
+          ]
+        ]
+      },
+      "/reserved-memory/adsp_mhi_region@81f00000": {
+        "reg": [
+          [
+            "0x81f00000",
+            "0x20000"
+          ]
+        ]
+      },
+      "/reserved-memory/global_sync_region@82600000": {
+        "reg": [
+          [
+            "0x82600000",
+            "0x100000"
+          ]
+        ]
+      },
+      "/reserved-memory/tz_stat_region@82700000": {
+        "reg": [
+          [
+            "0x82700000",
+            "0x100000"
+          ]
+        ]
+      },
+      "/reserved-memory/mpss_region@89800000": {
+        "reg": [
+          [
+            "0x8a800000",
+            "0x10800000"
+          ]
+        ]
+      },
+      "/reserved-memory/q6_mpss_dtb_region@9b000000": {
+        "reg": [
+          [
+            "0x9b000000",
+            "0x80000"
+          ]
+        ]
+      },
+      "/reserved-memory/ipa_fw_region@9b080000": {
+        "reg": [
+          [
+            "0x9b080000",
+            "0x10000"
+          ]
+        ]
+      },
+      "/reserved-memory/ipa_gsi_region@9b090000": {
+        "reg": [
+          [
+            "0x9b090000",
+            "0xa000"
+          ]
+        ]
+      },
+      "/reserved-memory/gpu_micro_code_region@9b09a000": {
+        "reg": [
+          [
+            "0x9b09a000",
+            "0x2000"
+          ]
+        ]
+      },
+      "/reserved-memory/spss_region_region@9b100000": {
+        "reg": [
+          [
+            "0x9b100000",
+            "0x180000"
+          ]
+        ]
+      },
+      "/reserved-memory/spu_tz_shared_mem@9b280000": {
+        "reg": [
+          [
+            "0x9b280000",
+            "0x60000"
+          ]
+        ]
+      },
+      "/reserved-memory/spu_modem_shared_mem@9b2e0000": {
+        "reg": [
+          [
+            "0x9b2e0000",
+            "0x20000"
+          ]
+        ]
+      },
+      "/reserved-memory/camera_region@9b300000": {
+        "reg": [
+          [
+            "0x9b300000",
+            "0x800000"
+          ]
+        ]
+      },
+      "/reserved-memory/video_region@9bb00000": {
+        "reg": [
+          [
+            "0x9bb00000",
+            "0x700000"
+          ]
+        ]
+      },
+      "/reserved-memory/cvp_region@9c200000": {
+        "reg": [
+          [
+            "0x9c200000",
+            "0x700000"
+          ]
+        ]
+      },
+      "/reserved-memory/cdsp_region@9c900000": {
+        "reg": [
+          [
+            "0x9c900000",
+            "0x2000000"
+          ]
+        ]
+      },
+      "/reserved-memory/q6_cdsp_dtb_region@9e900000": {
+        "reg": [
+          [
+            "0x9e900000",
+            "0x80000"
+          ]
+        ]
+      },
+      "/reserved-memory/q6_adsp_dtb_region@9e980000": {
+        "reg": [
+          [
+            "0x9e980000",
+            "0x80000"
+          ]
+        ]
+      },
+      "/reserved-memory/adspslpi_region@9ea00000": {
+        "reg": [
+          [
+            "0x9ea00000",
+            "0x4680000"
+          ]
+        ]
+      },
+      "/reserved-memory/dump_display_region@a4a80000": {
+        "reg": [
+          [
+            "0xa4a80000",
+            "0x800"
+          ]
+        ]
+      },
+      "/reserved-memory/mpss_dsm_region@d4d00000": {
+        "reg": [
+          [
+            "0xd4d00000",
+            "0x3300000"
+          ]
+        ]
+      },
+      "/reserved-memory/xbl_sc_region@d8100000": {
+        "reg": [
+          [
+            "0xd8100000",
+            "0x40000"
+          ]
+        ]
+      },
+      "/reserved-memory/cpucp_fw_region@d8140000": {
+        "reg": [
+          [
+            "0xd8140000",
+            "0x1c0000"
+          ]
+        ]
+      },
+      "/reserved-memory/qtee_region@d8300000": {
+        "reg": [
+          [
+            "0xd8300000",
+            "0x500000"
+          ]
+        ]
+      },
+      "/reserved-memory/hwfence-shmem": {
+        "reg": [
+          [
+            "0xe6440000",
+            "0x2dd000"
+          ]
+        ]
+      },
+      "/reserved-memory/trust_ui_vm_region@f3800000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_dump@0xf78ee000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_qrtr@0xf78ef000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_vblk0_ring@0xf78f8000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_vblk1_ring@0xf78fc000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_swiotlb@0xf7900000": {
+        "reg": []
+      },
+      "/reserved-memory/oem_vm_vblk0_ring@f7afc000": {
+        "reg": []
+      },
+      "/reserved-memory/oem_vm_swiotlb@f7b00000": {
+        "reg": []
+      },
+      "/reserved-memory/oem_vm_region@f7c00000": {
+        "reg": []
+      },
+      "/reserved-memory/llcc_lpi_region@ff800000": {
+        "reg": [
+          [
+            "0xff800000",
+            "0x600000"
+          ]
+        ]
+      },
+      "/reserved-memory/va_md_mem_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000000"
+        ]
+      },
+      "/reserved-memory/sp_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000000"
+        ]
+      },
+      "/reserved-memory/cdsp_eva_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x400000"
+        ]
+      },
+      "/reserved-memory/adsp_heap_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0xc00000"
+        ]
+      },
+      "/reserved-memory/user_contig_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000000"
+        ]
+      },
+      "/reserved-memory/qseecom_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x4000000"
+        ]
+      },
+      "/reserved-memory/secure_cdsp_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x4800000"
+        ]
+      },
+      "/reserved-memory/non_secure_display_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0xa400000"
+        ]
+      },
+      "/reserved-memory/demura_heap_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x2800000"
+        ]
+      },
+      "/reserved-memory/qseecom_ta_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x3800000"
+        ]
+      },
+      "/reserved-memory/qmc_dma_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000000"
+        ]
+      },
+      "/reserved-memory/ramoops_region": {
+        "reg": []
+      },
+      "/reserved-memory/audio_cma_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1c00000"
+        ]
+      },
+      "/reserved-memory/sdsp_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x800000"
+        ]
+      },
+      "/reserved-memory/linux,cma": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x2000000"
+        ]
+      },
+      "/reserved-memory/debug_kinfo_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000"
+        ]
+      },
+      "/reserved-memory/mem_dump_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x3400000"
+        ]
+      },
+      "/reserved-memory/cnss_wlan_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x2000000"
+        ]
+      },
+      "/reserved-memory/ramoops@0xa7000000": {
+        "reg": [
+          [
+            "0xa7000000",
+            "0x400000"
+          ]
+        ]
+      },
+      "/reserved-memory/xbl_dt_log@81a00000": {
+        "reg": [
+          [
+            "0x81a00000",
+            "0x40000"
+          ]
+        ]
+      },
+      "/reserved-memory/aop_image_region@81c00000": {
+        "reg": [
+          [
+            "0x81c00000",
+            "0x60000"
+          ]
+        ]
+      },
+      "/reserved-memory/xbl_ramdump_region@81200000": {
+        "reg": [
+          [
+            "0x81200000",
+            "0x280000"
+          ]
+        ]
+      },
+      "/reserved-memory/splash_region": {
+        "reg": [
+          [
+            "0xb8000000",
+            "0x2b00000"
+          ]
+        ]
+      },
+      "/reserved-memory/demura_region_0": {
+        "reg": [
+          [
+            "0x0",
+            "0x0"
+          ]
+        ]
+      },
+      "/reserved-memory/demura_region_1": {
+        "reg": [
+          [
+            "0x0",
+            "0x0"
+          ]
+        ]
+      }
+    }
+  },
+  "bundled_tree": {
+    "bytes": 815093,
+    "sha256": "0590a46ca03be8de4cdf273f4ba4bc884e41555e771f55d2601ba9df121b5d5c",
+    "model": "Qualcomm Technologies, Inc. 8550 fuxi",
+    "ddr_size": [
+      12
+    ],
+    "banks": [
+      [
+        "0x80000000",
+        "0xe00000"
+      ],
+      [
+        "0x811d0000",
+        "0x56e30000"
+      ],
+      [
+        "0xd8140000",
+        "0x20000"
+      ],
+      [
+        "0xd8800000",
+        "0x0"
+      ],
+      [
+        "0xe7cb0000",
+        "0x18350000"
+      ],
+      [
+        "0x880000000",
+        "0x39d00000"
+      ],
+      [
+        "0x8c0000000",
+        "0xc0000000"
+      ],
+      [
+        "0x980000000",
+        "0x180000000"
+      ],
+      [
+        "0x8b9f00000",
+        "0x1e00000"
+      ]
+    ],
+    "bank_bytes_sum": 12543721472,
+    "zero_size_bank_count": 1,
+    "reserved": {
+      "/reserved-memory/gunyah_hyp_region@80000000": {
+        "reg": [
+          [
+            "0x80000000",
+            "0xa00000"
+          ]
+        ]
+      },
+      "/reserved-memory/cpusys_vm_region@80a00000": {
+        "reg": [
+          [
+            "0x80a00000",
+            "0x400000"
+          ]
+        ]
+      },
+      "/reserved-memory/xbl_dt_log_merged@81a00000": {
+        "reg": []
+      },
+      "/reserved-memory/aop_cmd_db_region@81c60000": {
+        "reg": [
+          [
+            "0x81c60000",
+            "0x20000"
+          ]
+        ]
+      },
+      "/reserved-memory/aop_config_merged_region@81c80000": {
+        "reg": [
+          [
+            "0x81c80000",
+            "0x74000"
+          ]
+        ]
+      },
+      "/reserved-memory/smem_region@81d00000": {
+        "reg": [
+          [
+            "0x81d00000",
+            "0x200000"
+          ]
+        ]
+      },
+      "/reserved-memory/adsp_mhi_region@81f00000": {
+        "reg": [
+          [
+            "0x81f00000",
+            "0x20000"
+          ]
+        ]
+      },
+      "/reserved-memory/global_sync_region@82600000": {
+        "reg": [
+          [
+            "0x82600000",
+            "0x100000"
+          ]
+        ]
+      },
+      "/reserved-memory/tz_stat_region@82700000": {
+        "reg": [
+          [
+            "0x82700000",
+            "0x100000"
+          ]
+        ]
+      },
+      "/reserved-memory/mpss_region@89800000": {
+        "reg": [
+          [
+            "0x8a800000",
+            "0x10800000"
+          ]
+        ]
+      },
+      "/reserved-memory/q6_mpss_dtb_region@9b000000": {
+        "reg": [
+          [
+            "0x9b000000",
+            "0x80000"
+          ]
+        ]
+      },
+      "/reserved-memory/ipa_fw_region@9b080000": {
+        "reg": [
+          [
+            "0x9b080000",
+            "0x10000"
+          ]
+        ]
+      },
+      "/reserved-memory/ipa_gsi_region@9b090000": {
+        "reg": [
+          [
+            "0x9b090000",
+            "0xa000"
+          ]
+        ]
+      },
+      "/reserved-memory/gpu_micro_code_region@9b09a000": {
+        "reg": [
+          [
+            "0x9b09a000",
+            "0x2000"
+          ]
+        ]
+      },
+      "/reserved-memory/spss_region_region@9b100000": {
+        "reg": [
+          [
+            "0x9b100000",
+            "0x180000"
+          ]
+        ]
+      },
+      "/reserved-memory/spu_tz_shared_mem@9b280000": {
+        "reg": [
+          [
+            "0x9b280000",
+            "0x60000"
+          ]
+        ]
+      },
+      "/reserved-memory/spu_modem_shared_mem@9b2e0000": {
+        "reg": [
+          [
+            "0x9b2e0000",
+            "0x20000"
+          ]
+        ]
+      },
+      "/reserved-memory/camera_region@9b300000": {
+        "reg": [
+          [
+            "0x9b300000",
+            "0x800000"
+          ]
+        ]
+      },
+      "/reserved-memory/video_region@9bb00000": {
+        "reg": [
+          [
+            "0x9bb00000",
+            "0x700000"
+          ]
+        ]
+      },
+      "/reserved-memory/cvp_region@9c200000": {
+        "reg": [
+          [
+            "0x9c200000",
+            "0x700000"
+          ]
+        ]
+      },
+      "/reserved-memory/cdsp_region@9c900000": {
+        "reg": [
+          [
+            "0x9c900000",
+            "0x2000000"
+          ]
+        ]
+      },
+      "/reserved-memory/q6_cdsp_dtb_region@9e900000": {
+        "reg": [
+          [
+            "0x9e900000",
+            "0x80000"
+          ]
+        ]
+      },
+      "/reserved-memory/q6_adsp_dtb_region@9e980000": {
+        "reg": [
+          [
+            "0x9e980000",
+            "0x80000"
+          ]
+        ]
+      },
+      "/reserved-memory/adspslpi_region@9ea00000": {
+        "reg": [
+          [
+            "0x9ea00000",
+            "0x4680000"
+          ]
+        ]
+      },
+      "/reserved-memory/dump_display_region@a4a80000": {
+        "reg": [
+          [
+            "0xa4a80000",
+            "0x800"
+          ]
+        ]
+      },
+      "/reserved-memory/mpss_dsm_region@d4d00000": {
+        "reg": [
+          [
+            "0xd4d00000",
+            "0x3300000"
+          ]
+        ]
+      },
+      "/reserved-memory/xbl_sc_region@d8100000": {
+        "reg": [
+          [
+            "0xd8100000",
+            "0x40000"
+          ]
+        ]
+      },
+      "/reserved-memory/cpucp_fw_region@d8140000": {
+        "reg": [
+          [
+            "0xd8140000",
+            "0x1c0000"
+          ]
+        ]
+      },
+      "/reserved-memory/qtee_region@d8300000": {
+        "reg": [
+          [
+            "0xd8300000",
+            "0x500000"
+          ]
+        ]
+      },
+      "/reserved-memory/hwfence-shmem": {
+        "reg": [
+          [
+            "0xe6440000",
+            "0x2dd000"
+          ]
+        ]
+      },
+      "/reserved-memory/trust_ui_vm_region@f3800000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_dump@0xf78ee000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_qrtr@0xf78ef000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_vblk0_ring@0xf78f8000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_vblk1_ring@0xf78fc000": {
+        "reg": []
+      },
+      "/reserved-memory/trust_ui_vm_swiotlb@0xf7900000": {
+        "reg": []
+      },
+      "/reserved-memory/oem_vm_vblk0_ring@f7afc000": {
+        "reg": []
+      },
+      "/reserved-memory/oem_vm_swiotlb@f7b00000": {
+        "reg": []
+      },
+      "/reserved-memory/oem_vm_region@f7c00000": {
+        "reg": []
+      },
+      "/reserved-memory/llcc_lpi_region@ff800000": {
+        "reg": [
+          [
+            "0xff800000",
+            "0x600000"
+          ]
+        ]
+      },
+      "/reserved-memory/va_md_mem_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000000"
+        ]
+      },
+      "/reserved-memory/sp_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000000"
+        ]
+      },
+      "/reserved-memory/cdsp_eva_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x400000"
+        ]
+      },
+      "/reserved-memory/adsp_heap_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0xc00000"
+        ]
+      },
+      "/reserved-memory/user_contig_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000000"
+        ]
+      },
+      "/reserved-memory/qseecom_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x4000000"
+        ]
+      },
+      "/reserved-memory/secure_cdsp_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x4800000"
+        ]
+      },
+      "/reserved-memory/non_secure_display_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0xa400000"
+        ]
+      },
+      "/reserved-memory/demura_heap_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x2800000"
+        ]
+      },
+      "/reserved-memory/qseecom_ta_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0xc800000"
+        ]
+      },
+      "/reserved-memory/qmc_dma_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000000"
+        ]
+      },
+      "/reserved-memory/ramoops_region": {
+        "reg": []
+      },
+      "/reserved-memory/audio_cma_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1c00000"
+        ]
+      },
+      "/reserved-memory/sdsp_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x800000"
+        ]
+      },
+      "/reserved-memory/linux,cma": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x2000000"
+        ]
+      },
+      "/reserved-memory/debug_kinfo_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x1000"
+        ]
+      },
+      "/reserved-memory/mem_dump_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x3400000"
+        ]
+      },
+      "/reserved-memory/cnss_wlan_region": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x2000000"
+        ]
+      },
+      "/reserved-memory/ramoops@0xa7000000": {
+        "reg": [
+          [
+            "0xa7000000",
+            "0x400000"
+          ]
+        ]
+      },
+      "/reserved-memory/xbl_dt_log@81a00000": {
+        "reg": [
+          [
+            "0x81a00000",
+            "0x40000"
+          ]
+        ]
+      },
+      "/reserved-memory/aop_image_region@81c00000": {
+        "reg": [
+          [
+            "0x81c00000",
+            "0x60000"
+          ]
+        ]
+      },
+      "/reserved-memory/xbl_ramdump_region@81200000": {
+        "reg": [
+          [
+            "0x81200000",
+            "0x280000"
+          ]
+        ]
+      },
+      "/reserved-memory/splash_region": {
+        "reg": [
+          [
+            "0xb8000000",
+            "0x2b00000"
+          ]
+        ]
+      },
+      "/reserved-memory/demura_region_0": {
+        "reg": [
+          [
+            "0x0",
+            "0x0"
+          ]
+        ]
+      },
+      "/reserved-memory/demura_region_1": {
+        "reg": [
+          [
+            "0x0",
+            "0x0"
+          ]
+        ]
+      }
+    }
+  },
+  "reserved_reg_or_size_changes": {
+    "/reserved-memory/chipinfo_region@81cf4000": {
+      "bundled": null,
+      "live": {
+        "reg": [
+          [
+            "0x81cf4000",
+            "0x1000"
+          ]
+        ]
+      }
+    },
+    "/reserved-memory/qseecom_ta_region": {
+      "bundled": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0xc800000"
+        ]
+      },
+      "live": {
+        "reg": [],
+        "dynamic_size_cells": [
+          "0x0",
+          "0x3800000"
+        ]
+      }
+    }
+  },
+  "selected_static_map_reserved_overlaps": [
+    {
+      "map_region": "UEFI FD",
+      "map_range": [
+        "0xa7100000",
+        "0x300000"
+      ],
+      "dt_node": "/reserved-memory/ramoops@0xa7000000",
+      "dt_range": [
+        "0xa7000000",
+        "0x400000"
+      ]
+    },
+    {
+      "map_region": "Display Reserved",
+      "map_range": [
+        "0xb8000000",
+        "0x2b00000"
+      ],
+      "dt_node": "/reserved-memory/splash_region",
+      "dt_range": [
+        "0xb8000000",
+        "0x2b00000"
+      ]
+    }
+  ],
+  "fdt_sha256_independently_checked_on_phone": true,
+  "pstore_file_count": 0,
+  "selected_dtb_overlay": {
+    "selection_source": "Android ro.boot.dtb_idx=11 and ro.boot.dtbo_idx=11; not independently observed at ABL execution.",
+    "merge_exit_code": 0,
+    "base_dtb_sha256": "3bc672a3f96fb110ff1e55e5768ba6d9907681ce2fee471537ba025c3b5028a7",
+    "overlay_sha256": "194a7d54b94e64d3fcc544fa5dfaa46bd124fce92c24d5a183807432ce88702b",
+    "merged_model": "Qualcomm Technologies, Inc. Kalama v2 SoC",
+    "merged_compatible": "qcom,kalama",
+    "merged_memory_reg_cells": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "merged_board_id_cells": [
+      0,
+      0
+    ],
+    "conclusion": "Applying the reported index pair succeeds, but the result still contains placeholders and differs from the live tree. This is not a reconstruction of every bootloader fixup."
+  },
+  "limitations": [
+    "Android live FDT reflects Linux-time ownership, not proof of ownership at ABL handoff.",
+    "An overlap with Android ramoops alone does not establish an unsafe UEFI allocation.",
+    "No phone reboot, boot command, image flash, or boot-control write occurred in this capture.",
+    "This capture is from a normal Android boot after recovery, not the failed UEFI run.",
+    "Live FDT was not substituted into the firmware, and no extra RAM was published.",
+    "Header v4 in working Android does not prove that v3 temporary boot is unsupported.",
+    "Raw images/FDT/cmdline/dmesg remain private and are not committed."
+  ]
+}
