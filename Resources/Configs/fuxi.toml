@@ -34,7 +34,10 @@ size = 0x300000
 # Android Boot Image Kernel Configs
 #
 # gzip: BootShim + firmware volume, exactly as the UniXNU overview describes.
-# append_dtb: the device tree goes after the gzip stream, inside the kernel
+# append_dtb: packs the tree after gzip inside the kernel field. On the audited
+# Xiaomi v3/v4 ABL path, vendor_boot/DTBO supply the primary handoff tree;
+# appended bytes alone do not identify x0. See docs/fuxi-abl-handoff.md.
+# Container layout: the device tree goes after the gzip stream, inside the kernel
 # field. BootShim/MemoryMapLib both expect it there.
 [boot_image_kernel]
 kernel_compression = "gzip"

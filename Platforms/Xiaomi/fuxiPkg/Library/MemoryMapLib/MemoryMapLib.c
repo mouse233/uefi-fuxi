@@ -2,11 +2,13 @@
 //
 // fuxiPkg/Library/MemoryMapLib — Xiaomi 13 (SM8550 / kalama)
 //
-// Source of truth: `uefiplatLA.cfg`, extracted from this device's
-// `xbl_config_a` partition (HyperOS OS3.0.319.0.WPCCNXM). The file carries
-// `MaxMemoryRegions = 74` and a `[MemoryMap]` section; the 28 regions below
-// are that section verbatim. Unlike sheng's map, nothing here is reconstructed
-// from Linux DTS reservations — it is the vendor's own firmware table.
+// Initial reference: `uefiplatLA.cfg`, extracted upstream from a fuxi
+// `xbl_config_a` (HyperOS OS3.0.319.0.WPCCNXM). This phone's xbl_config_b
+// now independently confirms the low address/extent pairs; see
+// docs/fuxi-abl-handoff.md. The reference file carries
+// `MaxMemoryRegions = 74` and 28 original `[MemoryMap]` entries. This port
+// splits the FD window and changes allocation/HOB policy; it is not a verbatim
+// copy of every attribute. The source is the vendor firmware table, not Linux DTS.
 //
 // The UEFI allocation block in this capture matches sheng's. This is not
 // evidence that all SM8550 boards, fuxi RAM variants or firmware revisions
@@ -21,7 +23,7 @@
 //
 // This file covers 0x80000000..0x100000000 only. The DRAM banks above 4 GiB
 // (0x880000000 + 925 MiB, 0x8C0000000 + 3 GiB, 0x980000000 + 6 GiB, seen in
-// the live FDT) are deliberately omitted: the first bring-up fits entirely in
+// the upstream 12 GB FDT; this phone has different 24 GB banks) are omitted: the first bring-up fits entirely in
 // the 209 MiB DXE Heap at 0xBAB00000. They are added in stage 2, when the XNU
 // kernel window needs real RAM.
 //
@@ -66,8 +68,8 @@ STATIC EFI_MEMORY_REGION_DESCRIPTOR gMemoryDescriptor[] = {
   {"UEFI RESV",         0xA7ED9000, 0x00127000, AddMem,   SYS_MEM, SYS_MEM_CAP, BsData, WRITE_BACK_XN},
 
   // ---- handed to the next payload ----
-  // 0xA8000000..0xB8000000 is where BootShim relocates the firmware volume and
-  // where the XNU kernel window goes later.
+  // 0xA8000000..0xB8000000 is the vendor kernel loading window. BootShim
+  // relocates the FD to 0xA7100000; later XNU ownership needs its own audit.
   {"Kernel",            0xA8000000, 0x10000000, AddMem,   SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
 
   // ---- the ABL frame buffer fuxi keeps scanning out ----

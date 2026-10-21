@@ -145,6 +145,10 @@ SecMain (VOID)
   // Print Firmware Version
   PrintFirmwareVersion ();
 
+  // Report the saved entry argument before InitializeMemory changes page
+  // tables. This is a raw diagnostic value; do not dereference it here.
+  DEBUG ((EFI_D_WARN, "SEC: entry x0=0x%lx (not dereferenced)\n", gSecEntryArg0));
+
   // Initialize Debug Agent
   InitializeDebugAgent (DEBUG_AGENT_INIT_POSTMEM_SEC, NULL, NULL);
   SaveAndSetDebugTimerInterrupt (TRUE);
@@ -184,14 +188,14 @@ SecMain (VOID)
     // Reserve the device tree the previous stage handed over in x0.
     //
     // Nothing else marks those bytes as owned, so DXE treats them as free
-    // memory and maps images straight over them. On fuxi the tree sits at
-    // 0xC5B1D0 and DarwinBoot was loaded at exactly that address, which
-    // destroyed the tree and made FuxiBootMemoryDxe walk garbage ranges and
-    // take a second-level translation fault.
+    // memory and may map images over them. Historical upstream reports used
+    // 0xC5B1D0 for both a tree and DarwinBoot; that value is not a measured
+    // entry register from this phone. Validate the actual entry argument
+    // rather than assuming the same location on another boot.
     //
     // InitializeMemory has already enabled the MMU. Even reading the magic
-    // faults if x0 is outside this platform's page tables (on fuxi, the live
-    // FDT was at 0xC5B1D0). Reserving a HOB cannot make that address readable.
+    // faults if x0 is outside this platform's page tables. A historical
+    // address report is not a mapping. Reserving a HOB cannot make it readable.
     if ((EntryArg != 0) && ((EntryArg & 3) == 0) &&
         IsMappedFdtRange (Regions, RegionCount, EntryArg, 2 * sizeof (UINT32))) {
       UINT32  DtMagic = SwapBytes32 (*(UINT32 *)(UINTN)EntryArg);
