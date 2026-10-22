@@ -1,5 +1,17 @@
 # Project Silicium UEFI for ARM64-Based Devices
 
+> [!IMPORTANT]
+> **This is a personal fork, not upstream.** It forks
+> [hanzi123-bilp/uefi-fuxi](https://github.com/hanzi123-bilp/uefi-fuxi), which carries the
+> history of [Project-Silicium/Mu-Silicium](https://github.com/Project-Silicium/Mu-Silicium).
+>
+> Only the **Xiaomi 13 (`fuxi`, SM8550)** port is worked on here, as an experimental
+> bring-up of UniXNU (XNU/Darwin) on that device. Every other device package is
+> inherited from upstream unchanged and is **not** maintained in this fork.
+>
+> The status page, porting guides and Discord linked below describe upstream, not this
+> fork. For this fork, start with [`docs/fuxi-development.md`](docs/fuxi-development.md).
+
 [![Documentation](https://img.shields.io/badge/docs-unixnu.com-2A5BD7?logo=readthedocs&logoColor=white)](https://unixnu.com)
 
 UniXNU device documentation: [unixnu.com](https://unixnu.com).
