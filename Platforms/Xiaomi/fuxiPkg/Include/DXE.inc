@@ -28,11 +28,12 @@
   INF MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf
 
   # XNU 加载器必须编进固件卷：从外部卷加载的驱动会被本 build 的镜像校验拒绝。
-  # DarwinBoot is the XNU loader; stage 1 only needs the boot manager UI.
-  # It is also the driver that walks the handed-over device tree, which the
-  # SEC MMU never maps (the tree sits at 0xC5B1D0, outside every
-  # MemoryMapLib descriptor), so touching it faults at FAR 0xC5B1D48.
-  #INF DarwinBootPkg/Driver/DarwinBoot.inf
+  # DarwinBoot is the XNU loader. Stage 2a loads it for its entry point only:
+  # it installs UNIXNU_LOADER_PROTOCOL and prints the exception level. It does
+  # not walk the handed-over tree until UniXNU calls Boot() for an `xnu` entry.
+  # The driver still refuses a request whose device tree is non-NULL, so it
+  # never dereferences the tree the SEC MMU leaves unmapped.
+  INF DarwinBootPkg/Driver/DarwinBoot.inf
 
   INF MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
   INF MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
@@ -56,6 +57,9 @@
   # That aborted with a second-level translation fault at 0xC5B1D48.
   # MemoryMapLib already gives DXE a 209 MiB heap, which is enough for the menu.
   #INF fuxiPkg/Drivers/FuxiBootMemoryDxe/FuxiBootMemoryDxe.inf
+!if $(FUXI_PAYLOAD_DIAGNOSTIC) == 1
+  INF fuxiPkg/Drivers/FuxiPayloadDxe/FuxiPayloadDxe.inf
+!endif
 
   #   把电源/音量键发布成 SimpleTextIn，并把自己挂进 ConIn；
   #   没有它 UniXNU 菜单能显示、不能导航。

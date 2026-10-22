@@ -15,3 +15,13 @@ UniXNU/
 .venv/
 BuildEvidence/
 build-fuxi-debug.log
+
+# Payload diagnostic outputs (tools/make_fuxi_payload.py,
+# tools/package_fuxi_payload.py). Mu-fuxi-readonly-payload.* is already
+# covered by Mu-*.* above.
+payload.img
+payload.json
+
+# Descriptor backup left in the repository root by
+# tools/build_fuxi_native_arm64.sh if the run is interrupted.
+.fuxi-nasm.*

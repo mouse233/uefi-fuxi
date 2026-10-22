@@ -23,6 +23,9 @@ APRIORI DXE {
 
   INF MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
 
+!if $(FUXI_PAYLOAD_DIAGNOSTIC) == 1
+  INF fuxiPkg/Drivers/FuxiPayloadDxe/FuxiPayloadDxe.inf
+!endif
   INF MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
   INF MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
   INF MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf

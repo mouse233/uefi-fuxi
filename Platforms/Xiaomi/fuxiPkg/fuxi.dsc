@@ -42,6 +42,8 @@
   #
   USE_CUSTOM_DISPLAY_DRIVER      = 0
   FUXI_VENDOR_HW                 = 0
+  # Opt-in only: publish an identified FAT payload without adding DRAM to GCD.
+  FUXI_PAYLOAD_DIAGNOSTIC        = 0
 
   #
   # 0 = SM8550-AB
@@ -120,10 +122,11 @@
   UniXNUPkg/Driver/UniXNUDxe/UniXNUDxe.inf
 
   #
-  # DarwinBoot（本阶段不加载内核，保留以便第二阶段的 FV 结构一致）
+  # DarwinBoot（XNU 加载器；见 Include/DXE.inc）
   #
-  # disabled for stage 1, see Include/DXE.inc
-  #DarwinBootPkg/Driver/DarwinBoot.inf
+  # stage 2a: 只加载驱动入口。它的 Boot() 仍拒绝非空设备树，因此不会触碰
+  # SEC MMU 未映射的那棵 handed-over tree。
+  DarwinBootPkg/Driver/DarwinBoot.inf
 
   #
   # 板级驱动
@@ -136,4 +139,7 @@
   #
   # disabled for bring-up, see Include/DXE.inc
   #fuxiPkg/Drivers/FuxiBootMemoryDxe/FuxiBootMemoryDxe.inf
+!if $(FUXI_PAYLOAD_DIAGNOSTIC) == 1
+  fuxiPkg/Drivers/FuxiPayloadDxe/FuxiPayloadDxe.inf
+!endif
   fuxiPkg/Drivers/FuxiKeyInputDxe/FuxiKeyInputDxe.inf

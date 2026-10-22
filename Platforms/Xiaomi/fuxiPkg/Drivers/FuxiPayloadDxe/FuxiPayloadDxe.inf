@@ -1,0 +1,41 @@
+## @file
+# Read-only diagnostic payload; no GCD RAM additions or hardware setup.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+[Defines]
+  INF_VERSION = 0x0001001B
+  BASE_NAME = FuxiPayloadDxe
+  FILE_GUID = BF1816A2-090B-4B20-A5DD-23B4316FA847
+  MODULE_TYPE = DXE_DRIVER
+  VERSION_STRING = 1.0
+  ENTRY_POINT = FuxiPayloadDxeEntry
+
+[Sources]
+  FuxiPayloadDxe.c
+  PayloadBounds.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  SiliciumPkg/SiliciumPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  FdtLib
+  HobLib
+  MemoryAllocationLib
+  MemoryMapLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Guids]
+  gSiliciumEntryArgHobGuid
+
+[Protocols]
+  gEfiBlockIoProtocolGuid
+  gEfiDevicePathProtocolGuid
+
+[Depex]
+  TRUE

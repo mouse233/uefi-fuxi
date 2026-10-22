@@ -21,11 +21,12 @@
 //   0xA7601000  ...    Info Blk / MMU PageTables / Log Buffer
 //   0xA760D000  ...    UEFI Stack   (matches fuxi.dsc PcdCPUCoresStackBase)
 //
-// This file covers 0x80000000..0x100000000 only. The DRAM banks above 4 GiB
-// (0x880000000 + 925 MiB, 0x8C0000000 + 3 GiB, 0x980000000 + 6 GiB, seen in
-// the upstream 12 GB FDT; this phone has different 24 GB banks) are omitted: the first bring-up fits entirely in
-// the 209 MiB DXE Heap at 0xBAB00000. They are added in stage 2, when the XNU
-// kernel window needs real RAM.
+// The vendor table above stops at 4 GiB. The banks above 4 GiB are not in it,
+// and they are not a property of the SM8550 reference either: ABL rewrites
+// /memory from the detected DDR size at boot. This unit is the 24 GB variant,
+// and its live tree reports 23.62 GiB in nine banks (see the block further
+// down). The 12 GB banks the upstream tree carries are a template, not this
+// phone's layout.
 //
 // SPDX header above; original table from Qualcomm's uefiplatLA.cfg.
 #include <Library/MemoryMapLib.h>
@@ -76,6 +77,33 @@ STATIC EFI_MEMORY_REGION_DESCRIPTOR gMemoryDescriptor[] = {
   // Identical to /reserved-memory/splash_region in the live device tree, and to
   // sheng's hand-patched dtb_node. SimpleFbDxe publishes a GOP on top of it.
   {"Display Reserved",  0xB8000000, 0x02B00000, AddMem,   MEM_RES, SYS_MEM_CAP, Reserv, WRITE_THROUGH_XN},
+
+  // ---- DRAM above 4 GiB: the XNU kernel window ----
+  // Measured 2026-10-22 from /memory/reg of this unit's live device tree
+  // (boot-tests/2026-10-22-darwinboot-stage/device-adb/). Nine banks, 23.62 GiB:
+  //
+  //   0x80000000  + 0x00E00000     0x811D0000  + 0x56E30000
+  //   0xD8140000  + 0x00020000     0xD8800000  + 0x0        (degenerate)
+  //   0xE7CB0000  + 0x18350000     0x880000000 + 0x35B00000
+  //   0x8C0000000 + 0x140000000    0xA00000000 + 0x400000000
+  //   0x8B5D00000 + 0x001E00000
+  //
+  // Only the 5 GiB bank at 0x8C0000000 is published, and as conventional
+  // memory. DarwinBoot's AllocateWindow needs a single EfiConventionalMemory
+  // run of at least the requested window plus the low bits of the kernel link
+  // address (0x4000). This bank is the first that is big enough, and
+  // /proc/iomem on the same unit shows its whole span as System RAM with no
+  // reservation inside it. The low 4 GiB cannot supply that run: the vendor
+  // "Kernel" window below is exactly 256 MiB, which is 16 KiB short of what
+  // the 0x4000 offset requires.
+  //
+  // Deliberately not published yet -- nothing here needs them, and each
+  // carries reservations that would have to be subtracted first:
+  //   0xA00000000 + 0x400000000   reserved from 0xDDB900000 upward
+  //   0x880000000 + 0x35B00000    free, but separate and smaller
+  //   0x8B5D00000 + 0x001E00000   free, 30 MiB
+  // An XNU window larger than 5 GiB has to bring them in.
+  {"XNU Window",        0x8C0000000, 0x140000000, AddMem,  SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
 
   // ---- MMIO register regions ----
   // uefiplatLA.cfg only lists DDR in [MemoryMap]; the register apertures live

@@ -65,3 +65,8 @@ append_dtb         = true
 # With v3 the base/kernel_offset/tags_offset/pagesize header fields do not exist.
 [boot_image]
 header_version = 3
+
+# Compatibility metadata measured from this phone's normal boot_b header.
+# Recheck on firmware/device changes; these are Android container metadata.
+os_version = "17.0.0"
+os_patch_level = "2026-07"

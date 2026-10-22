@@ -47,6 +47,7 @@ class BuildContext:
     cleanup:           bool
     update:            bool
     boot_stage_markers: bool = False
+    payload_diagnostic: bool = False
 
 def setup_logger ():
     global logger
@@ -83,12 +84,15 @@ def parse_arguments () -> BuildContext:
     parser.add_argument ("-u", "--update",            action="store_true",                                       help="Updates your Local Repo before Building.")
 
     parser.add_argument ("--boot-stage-markers", action="store_true", help="Opt-in framebuffer stage markers; fuxi DEBUG only.")
+    parser.add_argument ("--payload-diagnostic", action="store_true", help="Opt-in read-only initrd FAT diagnostic driver; fuxi DEBUG only.")
 
     # Parse Script Arguments
     args = parser.parse_args ()
 
     if args.boot_stage_markers and (args.device != "fuxi" or args.release != "DEBUG"):
         parser.error ("--boot-stage-markers requires -d fuxi -r DEBUG")
+    if args.payload_diagnostic and (args.device != "fuxi" or args.release != "DEBUG"):
+        parser.error ("--payload-diagnostic requires -d fuxi -r DEBUG")
 
     # Return Class
     return BuildContext (
@@ -98,7 +102,8 @@ def parse_arguments () -> BuildContext:
         enable_secureboot = args.enable_secureboot,
         cleanup           = args.clean,
         update            = args.update,
-        boot_stage_markers = args.boot_stage_markers
+        boot_stage_markers = args.boot_stage_markers,
+        payload_diagnostic = args.payload_diagnostic
     )
 
 def get_device_package_path (device: str) -> Path | None:
@@ -254,6 +259,8 @@ def compile_uefi (ctx: BuildContext, fd_config: dict, script_path: Path) -> bool
         f"FD_BLOCKS={fd_blocks}",
         f"DEVICE_MODEL={ctx.device_model}"
     ]
+    if ctx.payload_diagnostic:
+        cmd.append ("FUXI_PAYLOAD_DIAGNOSTIC=1")
 
     # Compile UEFI
     return subprocess.run (cmd).returncode == 0
