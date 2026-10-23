@@ -14,10 +14,72 @@ STATIC FUA32 SmmuRead(VOID *Context,FUA32 Offset);
 STATIC VOID SmmuWrite(VOID *Context,FUA32 Offset,FUA32 Value);
 #define FUXI_DWC3 0x0a600000ULL
 
+// The live DT of this unit describes the high-speed PHY as
+// "qcom,usb-snps-eusb2-phy" at 0x88e3000 with a PMIC eUSB2 repeater, so the
+// DWC3 UTMI port is driven by an eUSB2 PHY that firmware must initialise.
+// Offsets and values follow the upstream qcom-snps-eusb2 driver; the PMIC
+// repeater, regulators and ref clock are still inherited from ABL.
+#define FUXI_EUSB2_PHY 0x088e3000ULL
+STATIC UINT32 PhyPre[8];
+STATIC UINT32 PhyPost[8];
+STATIC VOID PhySnapshot(UINT32 *V) {
+  V[0]=MmioRead32(FUXI_EUSB2_PHY+0x3C);V[1]=MmioRead32(FUXI_EUSB2_PHY+0x50);
+  V[2]=MmioRead32(FUXI_EUSB2_PHY+0x54);V[3]=MmioRead32(FUXI_EUSB2_PHY+0x64);
+  V[4]=MmioRead32(FUXI_EUSB2_PHY+0x94);V[5]=MmioRead32(FUXI_EUSB2_PHY+0xB8);
+  V[6]=MmioRead32(FUXI_EUSB2_PHY+0x130);V[7]=MmioRead32(FUXI_EUSB2_PHY+0x64);
+}
+STATIC VOID PhyPrint(CONST CHAR8 *Stage,CONST UINT32 *V) {
+  DEBUG((DEBUG_ERROR,"FUXI PHY %a UTMI0=%08x UTMI5=%08x COMMON0=%08x CTRL2=%08x CFG0=%08x FSEL=%08x APBCMD=%08x\n",
+    Stage,V[0],V[1],V[2],V[3],V[4],V[5],V[6]));
+}
+#if defined(FUXI_USB_EUSB2_INIT)
+STATIC VOID PhyMask(UINT32 Off,UINT32 Mask,UINT32 Value) {
+  UINT32 Reg=(MmioRead32(FUXI_EUSB2_PHY+Off)&~Mask)|(Value&Mask);
+  MmioWrite32(FUXI_EUSB2_PHY+Off,Reg);
+  (VOID)MmioRead32(FUXI_EUSB2_PHY+Off);
+}
+// Mirrors qcom_snps_eusb2_hsphy_init for a 19.2 MHz reference clock. It does
+// not touch the PMIC repeater, the vdd/vdda12 rails or the ref clock, because
+// this firmware has no driver for any of them and ABL leaves them running.
+STATIC VOID FuxiEusb2PhyInit(VOID) {
+  DEBUG((DEBUG_ERROR,"FUXI PHY eUSB2 init sequence applied\n"));
+  PhyMask(0x94,1u<<1,1u<<1);
+  PhyMask(0x50,1u<<1,1u<<1);
+  PhyMask(0x54,(1u<<0)|(1u<<3),(1u<<0)|(1u<<3));
+  PhyMask(0x130,1u<<2,1u<<2);
+  PhyMask(0x98,1u<<6,0);
+  PhyMask(0xB8,1u<<0,1u<<0);
+  PhyMask(0x54,0x70,0x00);
+  PhyMask(0x5C,0xFF,0x90);
+  PhyMask(0x60,0x0F,0x01);
+  PhyMask(0x60,0xF0,0x00);
+  PhyMask(0x58,0xFE,0x02);
+  PhyMask(0x68,0xFC,0x20);
+  PhyMask(0x68,0x03,0x01);
+  PhyMask(0x6C,0x1F,0x10);
+  PhyMask(0x70,0x07,0x00);
+  PhyMask(0x6C,0xC0,0x40);
+  PhyMask(0x64,1u<<4,1u<<4);
+  PhyMask(0x7C,0x07,0x00);
+  PhyMask(0x7C,0x60,0x40);
+  PhyMask(0x7C,0x18,0x08);
+  PhyMask(0x78,0x38,0x18);
+  PhyMask(0x78,0xC0,0x00);
+  PhyMask(0x64,(1u<<3)|(1u<<2),(1u<<3)|(1u<<2));
+  PhyMask(0x3C,1u<<0,1u<<0);
+  PhyMask(0x54,1u<<1,1u<<1);
+  PhyMask(0x54,1u<<2,0);
+  PhyMask(0x50,1u<<1,0);
+  PhyMask(0x64,1u<<3,0);
+}
+#endif
+
 // Read-only comparison point: lets the bootloader state, which does reach the
 // host, be diffed against the state this firmware programs. The bootloader
-// values are captured early and reprinted after the audit clears the screen.
+// values are captured early and reprinted once the link should be up, which is
+// late enough that the console scroll has not discarded them yet.
 STATIC UINT32 AblSnap[11];
+STATIC UINT32 PostSnap[11];
 STATIC BOOLEAN AblSnapValid;
 STATIC VOID FuxiDwc3Capture(UINT32 *V) {
   V[0]=MmioRead32(FUXI_DWC3+DWC3_GSNPSID);V[1]=MmioRead32(FUXI_DWC3+DWC3_GCTL);
@@ -57,6 +119,11 @@ EFI_STATUS UsbfnPlatformPhyInit(VOID) {
   UINT32 Phy=MmioRead32(FUXI_DWC3+DWC3_GUSB2PHYCFG(0));
   DEBUG((DEBUG_ERROR,"FUXI USB: inherited SNPS=%08x USB2PHY=%08x\n",Id,Phy));
   FuxiDwc3Capture(AblSnap);AblSnapValid=TRUE;FuxiDwc3Print("ABL",AblSnap);
+  PhySnapshot(PhyPre);
+#if defined(FUXI_USB_EUSB2_INIT)
+  FuxiEusb2PhyInit();
+#endif
+  PhySnapshot(PhyPost);
   if((Id&DWC3_GSNPSID_MASK)!=DWC3_GSNPSID_USB3 &&
      (Id&DWC3_GSNPSID_MASK)!=DWC3_GSNPSID_USB31) return EFI_UNSUPPORTED;
   if(Phy&DWC3_GUSB2PHYCFG_PHYSOFTRST) return EFI_NOT_READY;
@@ -89,10 +156,8 @@ STATIC VOID SmmuWrite(VOID *Context,FUA32 Offset,FUA32 Value) {
 }
 EFI_STATUS FuxiUsbAuditDma(VOID) {
   FUA_REPORT R;
-  UINT32 Post[11];
   DEBUG((DEBUG_ERROR,"\fUSBRAM SMMU AUDIT before first DMA; SID=0040 (read only)\n"));
-  if(AblSnapValid) FuxiDwc3Print("ABL",AblSnap);
-  FuxiDwc3Capture(Post);FuxiDwc3Print("POST",Post);
+  FuxiDwc3Capture(PostSnap);
   FuaCapture(SmmuRead,NULL,0x100000,0x40,&R);
   DEBUG((DEBUG_ERROR,"SMMU ID0=%08x ID1=%08x CR0=%08x GFSR=%08x\n",R.Id0,R.Id1,R.Cr0,R.Gfsr));
   DEBUG((DEBUG_ERROR,"SMMU groups=%u scanned=%u matches=%u stored=%u partial=%u unsupported=%u invalidCB=%u\n",
@@ -127,6 +192,14 @@ EFI_STATUS FuxiUsbAuditDma(VOID) {
   // Qualcomm hypervisor. Do not change routes or issue DMA on that assumption.
   DEBUG((DEBUG_ERROR,"USBRAM AUDIT STOP: no STARTTRANSFER issued; retain this screen\n"));
   return EFI_NOT_READY;
+}
+// Prints both snapshots. Called once the link should be up, because the console
+// keeps only the most recent screen and earlier lines are overwritten.
+VOID FuxiUsbSnapshotReport(VOID) {
+  PhyPrint("PRE",PhyPre);
+  PhyPrint("POST",PhyPost);
+  if(AblSnapValid) FuxiDwc3Print("ABL",AblSnap);
+  FuxiDwc3Print("POST",PostSnap);
 }
 // Read-only failure snapshot: separates "this stream still aborts" from a
 // controller-side rejection. It writes nothing and does not clear any fault.

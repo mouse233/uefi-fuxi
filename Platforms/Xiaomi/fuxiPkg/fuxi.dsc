@@ -47,6 +47,9 @@
   # Explicit receiver-only image: USB2 warm handoff, no BDS/XNU continuation.
   FUXI_USB_RAM_RECEIVER          = 0
   FUXI_USB_TRY_SID_ROUTE         = 0
+  # Opt-in: keep the USB2 PHY state inherited from ABL instead of pulsing
+  # GUSB2PHYCFG.PHYSOFTRST, which this firmware cannot re-initialize.
+  FUXI_USB_KEEP_PHY              = 0
 
   #
   # 0 = SM8550-AB
@@ -129,6 +132,9 @@
   SamsungPkg/Drivers/UsbfnDwc3Dxe/UsbfnDwc3Dxe.inf {
     <BuildOptions>
       *_*_*_CC_FLAGS = -DFUXI_USB_DMA32=1
+!if $(FUXI_USB_KEEP_PHY) == 1
+      *_*_*_CC_FLAGS = -DFUXI_USB_KEEP_PHY=1
+!endif
   }
   fuxiPkg/Drivers/FuxiUsbRamDxe/FuxiUsbRamDxe.inf
 !endif

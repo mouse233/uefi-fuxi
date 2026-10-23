@@ -328,6 +328,7 @@ Dwc3ConfigureEnableEndpoints (
     return Status;
   }
 #if defined(FUXI_USB_DMA32)
+  FuxiUsbSnapshotReport ();
   FuxiSampleLink (Dev);
 #endif
 

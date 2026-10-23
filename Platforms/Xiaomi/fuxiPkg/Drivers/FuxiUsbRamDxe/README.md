@@ -83,3 +83,13 @@ The next build reprints a read-only DWC3 register snapshot taken while ABL
 still owns the controller (the only state proven to reach the host) next to the
 post-init snapshot, so the difference shows which register this firmware
 changed or skipped.
+
+The live DT identifies the high-speed PHY as "qcom,usb-snps-eusb2-phy"
+(hsphy@88e3000) with a PMIC eUSB2 repeater, so the DWC3 UTMI port is driven by
+an eUSB2 PHY. The route-trial library now initialises it from the upstream
+qcom-snps-eusb2 19.2 MHz sequence before DWC3 core init, and the build must
+also skip the GUSB2PHYCFG.PHYSOFTRST pulse, which would undo that init.
+Regulators, the PHY reference clock and the PMIC repeater are still inherited
+from ABL; firmware has no driver for them. PRE/POST register snapshots are
+printed read-only so a failed sequence can be told apart from a PHY that never
+got its supplies or repeater.

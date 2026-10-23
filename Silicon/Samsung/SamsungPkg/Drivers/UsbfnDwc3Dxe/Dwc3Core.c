@@ -79,12 +79,19 @@ Dwc3SoftReset (IN DWC3_DEV *Dev)
     MmioWrite32 (Dev->Base + DWC3_GUSB3PIPECTL (0), Register);
   }
 
+#if defined(FUXI_USB_KEEP_PHY)
+  // The external USB2 PHY is owned by ABL, which leaves it initialized for the
+  // handoff. Pulsing PHYSOFTRST would reset a PHY this firmware cannot
+  // re-initialize, so this opt-in build keeps the inherited PHY state.
+  DEBUG ((DEBUG_ERROR, "FUXI USB: skip USB2 PHY soft reset; keep inherited PHY state\n"));
+#else
   FUXI_TRACE ("S4 assert USB2 PHY reset");
   Register  = MmioRead32 (Dev->Base + DWC3_GUSB2PHYCFG (0));
   Register |= DWC3_GUSB2PHYCFG_PHYSOFTRST;
   MmioWrite32 (Dev->Base + DWC3_GUSB2PHYCFG (0), Register);
 
   gBS->Stall (100);
+#endif
 
   if (!Dev->Platform.SuperSpeedPhyDisabled) {
     Register  = MmioRead32 (Dev->Base + DWC3_GUSB3PIPECTL (0));
@@ -92,12 +99,14 @@ Dwc3SoftReset (IN DWC3_DEV *Dev)
     MmioWrite32 (Dev->Base + DWC3_GUSB3PIPECTL (0), Register);
   }
 
+#if !defined(FUXI_USB_KEEP_PHY)
   FUXI_TRACE ("S5 release USB2 PHY reset");
   Register  = MmioRead32 (Dev->Base + DWC3_GUSB2PHYCFG (0));
   Register &= ~DWC3_GUSB2PHYCFG_PHYSOFTRST;
   MmioWrite32 (Dev->Base + DWC3_GUSB2PHYCFG (0), Register);
 
   gBS->Stall (100);
+#endif
 
   FUXI_TRACE ("S6 assert core reset");
   Register  = MmioRead32 (Dev->Base + DWC3_DCTL);
