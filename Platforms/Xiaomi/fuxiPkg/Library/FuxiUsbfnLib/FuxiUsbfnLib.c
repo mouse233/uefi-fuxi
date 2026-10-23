@@ -20,7 +20,10 @@ STATIC VOID SmmuWrite(VOID *Context,FUA32 Offset,FUA32 Value);
 // Offsets and values follow the upstream qcom-snps-eusb2 driver; the PMIC
 // repeater, regulators and ref clock are still inherited from ABL.
 #define FUXI_EUSB2_PHY 0x088e3000ULL
-#define FUXI_QSCRATCH 0x0a600000ULL
+// Qualcomm puts the USB wrapper (QSCRATCH) at core_base + 0xF8800; the DWC3
+// core itself only starts at +0xC100, so the two do not overlap.
+#define FUXI_QSCRATCH 0x0a6f8800ULL
+#define FUXI_CORE_PROBE 0x0a600000ULL
 STATIC UINT32 PhyPre[16];
 STATIC UINT32 PhyPost[16];
 STATIC VOID PhySnapshot(UINT32 *V) {
@@ -38,8 +41,9 @@ STATIC VOID PhyPrint(CONST CHAR8 *Stage,CONST UINT32 *V) {
     Stage,V[0],V[1],V[2],V[3],V[4],V[5],V[6]));
   DEBUG((DEBUG_ERROR,"FUXI PHY %a CTL4=%08x CTL5=%08x CTL6=%08x CTL8=%08x CTL9=%08x CFG0=%08x CMN0=%08x FSEL=%08x APBCMD=%08x\n",
     Stage,V[7],V[8],V[9],V[10],V[11],V[12],V[13],V[14],V[15]));
-  DEBUG((DEBUG_ERROR,"FUXI PHY %a QSCRATCH GEN=%08x HS=%08x SS=%08x\n",Stage,
-    MmioRead32(FUXI_QSCRATCH+0x08),MmioRead32(FUXI_QSCRATCH+0x10),MmioRead32(FUXI_QSCRATCH+0x30)));
+  DEBUG((DEBUG_ERROR,"FUXI PHY %a QSCRATCH GEN=%08x HS=%08x SS=%08x core+10=%08x core+30=%08x\n",Stage,
+    MmioRead32(FUXI_QSCRATCH+0x08),MmioRead32(FUXI_QSCRATCH+0x10),MmioRead32(FUXI_QSCRATCH+0x30),
+    MmioRead32(FUXI_CORE_PROBE+0x10),MmioRead32(FUXI_CORE_PROBE+0x30)));
 }
 #if defined(FUXI_USB_EUSB2_INIT)
 STATIC VOID PhyMask(UINT32 Off,UINT32 Mask,UINT32 Value) {
