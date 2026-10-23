@@ -20,17 +20,26 @@ STATIC VOID SmmuWrite(VOID *Context,FUA32 Offset,FUA32 Value);
 // Offsets and values follow the upstream qcom-snps-eusb2 driver; the PMIC
 // repeater, regulators and ref clock are still inherited from ABL.
 #define FUXI_EUSB2_PHY 0x088e3000ULL
-STATIC UINT32 PhyPre[8];
-STATIC UINT32 PhyPost[8];
+#define FUXI_QSCRATCH 0x0a600000ULL
+STATIC UINT32 PhyPre[16];
+STATIC UINT32 PhyPost[16];
 STATIC VOID PhySnapshot(UINT32 *V) {
   V[0]=MmioRead32(FUXI_EUSB2_PHY+0x3C);V[1]=MmioRead32(FUXI_EUSB2_PHY+0x50);
-  V[2]=MmioRead32(FUXI_EUSB2_PHY+0x54);V[3]=MmioRead32(FUXI_EUSB2_PHY+0x64);
-  V[4]=MmioRead32(FUXI_EUSB2_PHY+0x94);V[5]=MmioRead32(FUXI_EUSB2_PHY+0xB8);
-  V[6]=MmioRead32(FUXI_EUSB2_PHY+0x130);V[7]=MmioRead32(FUXI_EUSB2_PHY+0x64);
+  V[2]=MmioRead32(FUXI_EUSB2_PHY+0x54);V[3]=MmioRead32(FUXI_EUSB2_PHY+0x58);
+  V[4]=MmioRead32(FUXI_EUSB2_PHY+0x5C);V[5]=MmioRead32(FUXI_EUSB2_PHY+0x60);
+  V[6]=MmioRead32(FUXI_EUSB2_PHY+0x64);V[7]=MmioRead32(FUXI_EUSB2_PHY+0x68);
+  V[8]=MmioRead32(FUXI_EUSB2_PHY+0x6C);V[9]=MmioRead32(FUXI_EUSB2_PHY+0x70);
+  V[10]=MmioRead32(FUXI_EUSB2_PHY+0x78);V[11]=MmioRead32(FUXI_EUSB2_PHY+0x7C);
+  V[12]=MmioRead32(FUXI_EUSB2_PHY+0x94);V[13]=MmioRead32(FUXI_EUSB2_PHY+0x98);
+  V[14]=MmioRead32(FUXI_EUSB2_PHY+0xB8);V[15]=MmioRead32(FUXI_EUSB2_PHY+0x130);
 }
 STATIC VOID PhyPrint(CONST CHAR8 *Stage,CONST UINT32 *V) {
-  DEBUG((DEBUG_ERROR,"FUXI PHY %a UTMI0=%08x UTMI5=%08x COMMON0=%08x CTRL2=%08x CFG0=%08x FSEL=%08x APBCMD=%08x\n",
+  DEBUG((DEBUG_ERROR,"FUXI PHY %a UTMI0=%08x UTMI5=%08x COMMON0=%08x CTL1=%08x CTL2=%08x CTL3=%08x HSCTL2=%08x\n",
     Stage,V[0],V[1],V[2],V[3],V[4],V[5],V[6]));
+  DEBUG((DEBUG_ERROR,"FUXI PHY %a CTL4=%08x CTL5=%08x CTL6=%08x CTL8=%08x CTL9=%08x CFG0=%08x CMN0=%08x FSEL=%08x APBCMD=%08x\n",
+    Stage,V[7],V[8],V[9],V[10],V[11],V[12],V[13],V[14],V[15]));
+  DEBUG((DEBUG_ERROR,"FUXI PHY %a QSCRATCH GEN=%08x HS=%08x SS=%08x\n",Stage,
+    MmioRead32(FUXI_QSCRATCH+0x08),MmioRead32(FUXI_QSCRATCH+0x10),MmioRead32(FUXI_QSCRATCH+0x30)));
 }
 #if defined(FUXI_USB_EUSB2_INIT)
 STATIC VOID PhyMask(UINT32 Off,UINT32 Mask,UINT32 Value) {
@@ -62,7 +71,7 @@ STATIC VOID FuxiEusb2PhyInit(VOID) {
     PhyMask(0x60,0x0F,0x01);
   }
   PhyMask(0x60,0xF0,0x00);
-  PhyMask(0x58,0xFE,0x02);
+  PhyMask(0x58,0xFE,0x00);
   PhyMask(0x68,0xFC,0x20);
   PhyMask(0x68,0x03,0x01);
   PhyMask(0x6C,0x1F,0x10);
@@ -80,6 +89,7 @@ STATIC VOID FuxiEusb2PhyInit(VOID) {
   PhyMask(0x54,1u<<2,0);
   PhyMask(0x50,1u<<1,0);
   PhyMask(0x64,1u<<3,0);
+  PhyMask(0x94,1u<<1,0);
 }
 #endif
 
@@ -101,7 +111,6 @@ STATIC VOID FuxiDwc3Capture(UINT32 *V) {
 // The Qualcomm wrapper shares the DWC3 window at low offsets. In device mode
 // dwc3-qcom overrides the VBUS and session signals in software; without it the
 // controller runs but never presents a connection to the host.
-#define FUXI_QSCRATCH 0x0a600000ULL
 STATIC VOID FuxiVbusOverride(VOID) {
   UINT32 Hs,Ss;
   Hs=MmioRead32(FUXI_QSCRATCH+0x10)|(1u<<20)|(1u<<28);
