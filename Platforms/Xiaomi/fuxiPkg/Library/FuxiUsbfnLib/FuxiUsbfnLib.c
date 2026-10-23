@@ -3,10 +3,15 @@
 // core through the generic driver. This is not a cold-start SM8550 PHY driver.
 #include <Library/PlatformUsbfnLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
 #include <Device/Dwc3.h>
 #include "UsbSmmuAudit.h"
+#include "UsbSmmuRoute.h"
+STATIC FUR_STATE UsbRoute;
+STATIC FUA32 SmmuRead(VOID *Context,FUA32 Offset);
+STATIC VOID SmmuWrite(VOID *Context,FUA32 Offset,FUA32 Value);
 #define FUXI_DWC3 0x0a600000ULL
 
 EFI_STATUS UsbfnPlatformGetData(USBFN_PLATFORM_DATA *Data) {
@@ -36,7 +41,11 @@ EFI_STATUS UsbfnPlatformPhyInit(VOID) {
   if(Phy&DWC3_GUSB2PHYCFG_PHYSOFTRST) return EFI_NOT_READY;
   return EFI_SUCCESS;
 }
-EFI_STATUS UsbfnPlatformPhyExit(VOID) { return EFI_SUCCESS; }
+EFI_STATUS UsbfnPlatformPhyExit(VOID) {
+  UINT32 Result=FurRemove(SmmuRead,SmmuWrite,NULL,&UsbRoute);
+  DEBUG((DEBUG_ERROR,"FUXI USB: route release result=%u restored=%u\n",Result,UsbRoute.RestoreOk));
+  return Result==FurOk?EFI_SUCCESS:EFI_DEVICE_ERROR;
+}
 BOOLEAN UsbfnPlatformIsVbusPresent(VOID) { return TRUE; }
 
 // USB SID and aperture independently confirmed in this unit's saved live DT:
@@ -50,6 +59,12 @@ STATIC FUA32 SmmuRead(VOID *Context,FUA32 Offset) {
   if(Offset==0 || Offset==0x20 || Offset==0x24 || Offset==0x48)
     DEBUG((DEBUG_ERROR,"FUXI SMMU: GR0[%x]=%08x\n",Offset,Value));
   return Value;
+}
+STATIC VOID SmmuWrite(VOID *Context,FUA32 Offset,FUA32 Value) {
+  (VOID)Context;
+  DEBUG((DEBUG_ERROR,"FUXI USB ROUTE: write offset=%x value=%08x\n",Offset,Value));
+  MmioWrite32(FUXI_APPS_SMMU+Offset,Value);
+  MemoryFence();
 }
 EFI_STATUS FuxiUsbAuditDma(VOID) {
   FUA_REPORT R;
@@ -67,6 +82,19 @@ EFI_STATUS FuxiUsbAuditDma(VOID) {
       DEBUG((DEBUG_ERROR,"TTBR0=%016lx TTBR1=%016lx FSR=%08x FAR=%016lx\n",M->Ttbr0,M->Ttbr1,M->Fsr,M->Far));
     }
   }
+#if FUXI_USB_TRY_SID_ROUTE
+  if(R.Matches==0 && !R.Partial && !R.Unsupported && !R.InvalidContext) {
+    UINT32 Result=FurInstall(SmmuRead,SmmuWrite,NULL,&UsbRoute);
+    DEBUG((DEBUG_ERROR,"USB ROUTE result=%u slot=%u SMR=%08x S2CR=%08x active=%u restored=%u\n",
+      Result,UsbRoute.Slot,UsbRoute.ObservedSmr,UsbRoute.ObservedS2cr,UsbRoute.Active,UsbRoute.RestoreOk));
+    DEBUG((DEBUG_ERROR,"USB ROUTE attempted readback SMR=%08x S2CR=%08x saved=%08x/%08x\n",
+      UsbRoute.TestSmr,UsbRoute.TestS2cr,UsbRoute.SavedSmr,UsbRoute.SavedS2cr));
+    if(Result==FurOk) {
+      DEBUG((DEBUG_ERROR,"USB ROUTE VERIFIED; first DMA permitted (hardware transfer unproven)\n"));
+      return EFI_SUCCESS;
+    }
+  }
+#endif
   // Neither a BYPASS encoding nor SCTLR.M=0 proves physical access under a
   // Qualcomm hypervisor. Do not change routes or issue DMA on that assumption.
   DEBUG((DEBUG_ERROR,"USBRAM AUDIT STOP: no STARTTRANSFER issued; retain this screen\n"));

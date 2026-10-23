@@ -46,6 +46,7 @@
   FUXI_PAYLOAD_DIAGNOSTIC        = 0
   # Explicit receiver-only image: USB2 warm handoff, no BDS/XNU continuation.
   FUXI_USB_RAM_RECEIVER          = 0
+  FUXI_USB_TRY_SID_ROUTE         = 0
 
   #
   # 0 = SM8550-AB
@@ -108,7 +109,11 @@
 
 [LibraryClasses]
 !if $(FUXI_USB_RAM_RECEIVER) == 1
+!if $(FUXI_USB_TRY_SID_ROUTE) == 1
+  PlatformUsbfnLib|fuxiPkg/Library/FuxiUsbfnLib/FuxiUsbfnRouteLib.inf
+!else
   PlatformUsbfnLib|fuxiPkg/Library/FuxiUsbfnLib/FuxiUsbfnLib.inf
+!endif
 !endif
   #
   # Memory Libraries

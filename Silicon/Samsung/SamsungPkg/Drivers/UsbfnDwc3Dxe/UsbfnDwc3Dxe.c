@@ -787,14 +787,14 @@ Dwc3StopController (IN EFI_USBFN_IO_PROTOCOL *This)
   }
 
   Dwc3CoreExit (Dev);
-  UsbfnPlatformPhyExit ();
+  Status = UsbfnPlatformPhyExit ();
 
   Dev->Started     = FALSE;
   Dev->Speed       = UsbBusSpeedUnknown;
   Dev->MessageHead = 0;
   Dev->MessageTail = 0;
 
-  return EFI_SUCCESS;
+  return Status;
 }
 
 STATIC

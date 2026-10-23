@@ -10,13 +10,16 @@
   FuxiUsbfnLib.c
   UsbSmmuAudit.c
   UsbSmmuAudit.h
+  UsbSmmuRoute.c
+  UsbSmmuRoute.h
 [Packages]
   MdePkg/MdePkg.dec
   SamsungPkg/SamsungPkg.dec
 [LibraryClasses]
+  BaseLib
   BaseMemoryLib
   DebugLib
   IoLib
 
 [BuildOptions]
-  *_*_*_CC_FLAGS = -DFUXI_SMMU_UEFI=1
+  *_*_*_CC_FLAGS = -DFUXI_SMMU_UEFI=1 -DFUXI_USB_TRY_SID_ROUTE=0

@@ -32,3 +32,19 @@ with a fault on first DMA, but no DMA fault syndrome or exception PC was capture
 The audit has no MMIO-write callback and does not turn SMMU bypass encodings into
 claims of working DMA. Its 14 ASan/UBSan host cases cover bounds, normal/extended
 SMRs, masked/ambiguous matches, 4/64 KiB register pages and incomplete scans.
+
+`FUXI_USB_TRY_SID_ROUTE=1` opts into a separate library instance. It requires a
+complete normal-ID scan, CLIENTPD=0, USFCFG=1, no existing SID0040 match and a
+free SMR. It programs only that slot's S2CR/SMR, validates both readbacks and
+allows the first DMA only after success. Default mode remains read-only.
+BYPASS rejection (including Qualcomm BYPASS-to-FAULT emulation) triggers a
+verified rollback and pre-DMA park. Failed rollback retains explicit uncertain
+ownership. StopController halts USB before route removal; removal refuses a
+changed route. No global SMMU or context-bank configuration is written.
+The production route transaction has 12 additional ASan/UBSan host cases;
+register readback success alone does not qualify DMA or USB enumeration.
+
+Hardware route trial: slot 0 BYPASS request 000100ff reads back 000200ff
+(FAULT). The transaction returns FurBypassRejected, verifies restoration of
+SMR=00000060/S2CR=00020000 and parks before DMA. The encoding quirk is observed
+on this unit; a disabled, unreferenced S1/S2-bypass context is the next option.

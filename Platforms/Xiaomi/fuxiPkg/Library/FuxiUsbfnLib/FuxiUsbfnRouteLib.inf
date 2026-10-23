@@ -1,0 +1,25 @@
+## SPDX-License-Identifier: BSD-2-Clause-Patent
+[Defines]
+  INF_VERSION = 0x00010019
+  BASE_NAME = FuxiUsbfnRouteLib
+  FILE_GUID = 846EA725-5EB2-48C7-9733-7E53F5AE472F
+  MODULE_TYPE = DXE_DRIVER
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS = PlatformUsbfnLib|DXE_DRIVER
+[Sources]
+  FuxiUsbfnLib.c
+  UsbSmmuAudit.c
+  UsbSmmuAudit.h
+  UsbSmmuRoute.c
+  UsbSmmuRoute.h
+[Packages]
+  MdePkg/MdePkg.dec
+  SamsungPkg/SamsungPkg.dec
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IoLib
+
+[BuildOptions]
+  *_*_*_CC_FLAGS = -DFUXI_SMMU_UEFI=1 -DFUXI_USB_TRY_SID_ROUTE=1
