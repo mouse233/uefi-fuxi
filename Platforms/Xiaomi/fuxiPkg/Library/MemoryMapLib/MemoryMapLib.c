@@ -104,6 +104,11 @@ STATIC EFI_MEMORY_REGION_DESCRIPTOR gMemoryDescriptor[] = {
   //   0x8B5D00000 + 0x001E00000   free, 30 MiB
   // An XNU window larger than 5 GiB has to bring them in.
   {"XNU Window",        0x8C0000000, 0x140000000, AddMem,  SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
+  // The full-OS RAM-root experiment publishes the free prefix of the 16 GiB
+  // bank. The reservation starts at 0xDDB900000, so 0x3DB900000 bytes remain.
+  // This is the first UEFI description of this DRAM; touching it is the
+  // experiment. Keep it last so the firmware's own pool stays in low memory.
+  {"XNU High",          0xA00000000, 0x3DB900000, AddMem,  SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
 
   // ---- MMIO register regions ----
   // uefiplatLA.cfg only lists DDR in [MemoryMap]; the register apertures live
