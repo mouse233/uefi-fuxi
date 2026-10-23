@@ -24,3 +24,11 @@ firmware verifier and build wrapper are in the device repository:
 Receiver object allocations are retained only while this diagnostic owns the
 UEFI session. Future XNU use requires explicit reserved-memory layout and a
 loader handoff; EfiLoaderData allocations alone do not provide that contract.
+
+The pre-DMA read-only audit now parks intentionally before STARTTRANSFER.
+Hardware capture: ID0=4c017e69 ID1=60000046 CR0=00290406 GFSR=0, 105 groups,
+no nonsecure SID 0x40 match, CLIENTPD=0/USFCFG=1. The missing route is consistent
+with a fault on first DMA, but no DMA fault syndrome or exception PC was captured.
+The audit has no MMIO-write callback and does not turn SMMU bypass encodings into
+claims of working DMA. Its 14 ASan/UBSan host cases cover bounds, normal/extended
+SMRs, masked/ambiguous matches, 4/64 KiB register pages and incomplete scans.

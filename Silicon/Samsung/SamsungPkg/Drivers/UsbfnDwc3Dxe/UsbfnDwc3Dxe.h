@@ -219,4 +219,9 @@ Dwc3PopMessage (
   OUT DWC3_MESSAGE *Message
   );
 
+
+#if defined(FUXI_USB_DMA32)
+EFI_STATUS FuxiUsbAuditDma (VOID);
+#endif
+
 #endif /* _USBFNDWC3DXE_H_ */

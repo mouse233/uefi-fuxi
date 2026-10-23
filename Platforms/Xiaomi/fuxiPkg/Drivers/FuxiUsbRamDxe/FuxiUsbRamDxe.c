@@ -176,6 +176,7 @@ EFI_STATUS EFIAPI FuxiUsbRamEntry(EFI_HANDLE Image,EFI_SYSTEM_TABLE *SystemTable
   if(EFI_ERROR(Status)) goto Park;
   Status=Usb->ConfigureEnableEndpoints(Usb,&DeviceInfo);
   DEBUG((DEBUG_ERROR,"USBRAM S19 ConfigureEnableEndpoints returned %r\n",Status));
+  if(Status==EFI_NOT_READY) goto Park; // Audit intentionally parks before DMA.
   if(EFI_ERROR(Status)) goto Stop;
   DEBUG((DEBUG_ERROR,"USBRAM WAIT 1209:0001; Bulk OUT=01 IN=81; idle timeout 180s\n"));
   Last=GetPerformanceCounter();

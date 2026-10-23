@@ -241,6 +241,8 @@ Dwc3ConfigureEnableEndpoints (
 #if defined(FUXI_USB_DMA32)
   DEBUG ((DEBUG_ERROR, "FUXI DWC3: S17 arm EP0 DMA; event=%lx TRB=%lx buffer=%lx\n",
           Dev->EventBufferPhys, Dev->Endpoints[DWC3_EP0_OUT].TrbPoolPhys, Dev->Ep0BufferPhys));
+  Status = FuxiUsbAuditDma ();
+  if (EFI_ERROR (Status)) { return Status; }
 #endif
   Status = Dwc3Ep0OutStart (Dev);
   if (EFI_ERROR (Status)) {

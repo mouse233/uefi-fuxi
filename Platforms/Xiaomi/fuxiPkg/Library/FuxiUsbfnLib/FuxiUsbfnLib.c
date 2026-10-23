@@ -6,6 +6,7 @@
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
 #include <Device/Dwc3.h>
+#include "UsbSmmuAudit.h"
 #define FUXI_DWC3 0x0a600000ULL
 
 EFI_STATUS UsbfnPlatformGetData(USBFN_PLATFORM_DATA *Data) {
@@ -37,3 +38,37 @@ EFI_STATUS UsbfnPlatformPhyInit(VOID) {
 }
 EFI_STATUS UsbfnPlatformPhyExit(VOID) { return EFI_SUCCESS; }
 BOOLEAN UsbfnPlatformIsVbusPresent(VOID) { return TRUE; }
+
+// USB SID and aperture independently confirmed in this unit's saved live DT:
+// /soc/ssusb@a600000/dwc3@a600000 iommus=<apps_smmu 0x40 0>.
+#define FUXI_APPS_SMMU 0x15000000ULL
+STATIC FUA32 SmmuRead(VOID *Context,FUA32 Offset) {
+  UINT32 Value;
+  (VOID)Context;
+  if(Offset>=0x1000) DEBUG((DEBUG_ERROR,"FUXI SMMU: read offset %08x\n",Offset));
+  Value=MmioRead32(FUXI_APPS_SMMU+Offset);
+  if(Offset==0 || Offset==0x20 || Offset==0x24 || Offset==0x48)
+    DEBUG((DEBUG_ERROR,"FUXI SMMU: GR0[%x]=%08x\n",Offset,Value));
+  return Value;
+}
+EFI_STATUS FuxiUsbAuditDma(VOID) {
+  FUA_REPORT R;
+  DEBUG((DEBUG_ERROR,"\fUSBRAM SMMU AUDIT before first DMA; SID=0040 (read only)\n"));
+  FuaCapture(SmmuRead,NULL,0x100000,0x40,&R);
+  DEBUG((DEBUG_ERROR,"SMMU ID0=%08x ID1=%08x CR0=%08x GFSR=%08x\n",R.Id0,R.Id1,R.Cr0,R.Gfsr));
+  DEBUG((DEBUG_ERROR,"SMMU groups=%u scanned=%u matches=%u stored=%u partial=%u unsupported=%u invalidCB=%u\n",
+    R.Groups,R.Scanned,R.Matches,R.Stored,R.Partial,R.Unsupported,R.InvalidContext));
+  DEBUG((DEBUG_ERROR,"SMMU pageShift=%u CBbase=%08x CBcount=%u\n",R.PageShift,R.ContextBase,R.ContextCount));
+  for(UINT32 I=0;I<R.Stored;I++) {
+    FUA_MATCH *M=&R.Match[I];
+    DEBUG((DEBUG_ERROR,"USB SID0040 slot=%u SMR=%08x S2CR=%08x CB=%u read=%u\n",M->Slot,M->Smr,M->S2cr,M->Context,M->ContextRead));
+    if(M->ContextRead) {
+      DEBUG((DEBUG_ERROR,"CBAR=%08x CBA2R=%08x SCTLR=%08x TCR=%08x TCR2=%08x\n",M->Cbar,M->Cba2r,M->Sctlr,M->Tcr,M->Tcr2));
+      DEBUG((DEBUG_ERROR,"TTBR0=%016lx TTBR1=%016lx FSR=%08x FAR=%016lx\n",M->Ttbr0,M->Ttbr1,M->Fsr,M->Far));
+    }
+  }
+  // Neither a BYPASS encoding nor SCTLR.M=0 proves physical access under a
+  // Qualcomm hypervisor. Do not change routes or issue DMA on that assumption.
+  DEBUG((DEBUG_ERROR,"USBRAM AUDIT STOP: no STARTTRANSFER issued; retain this screen\n"));
+  return EFI_NOT_READY;
+}
