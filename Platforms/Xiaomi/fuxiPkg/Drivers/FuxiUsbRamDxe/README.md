@@ -74,3 +74,12 @@ reproduce), the controller reached RUN_STOP and the receiver waited for
 bring-up - not the route - is now the blocking layer. A post-RUN_STOP sampler
 reports DSTS link state, connect speed, SOF number, DCTL, GUSB2PHYCFG and
 GEVNTCOUNT for two seconds, printing only on change.
+
+Link sampling result: RUN_STOP succeeded but DSTS stayed HS_DISCONNECTED for
+the whole two-second window, with SOF number 0 and no device events, while
+GUSB2PHYCFG read back 00102400 (PHYSOFTRST released, UTMI 8-bit, USBTRDTIM 9).
+The controller is running; the USB2 termination is not visible to the host.
+The next build reprints a read-only DWC3 register snapshot taken while ABL
+still owns the controller (the only state proven to reach the host) next to the
+post-init snapshot, so the difference shows which register this firmware
+changed or skipped.

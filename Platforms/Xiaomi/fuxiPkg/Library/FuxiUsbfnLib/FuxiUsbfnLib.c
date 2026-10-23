@@ -14,6 +14,26 @@ STATIC FUA32 SmmuRead(VOID *Context,FUA32 Offset);
 STATIC VOID SmmuWrite(VOID *Context,FUA32 Offset,FUA32 Value);
 #define FUXI_DWC3 0x0a600000ULL
 
+// Read-only comparison point: lets the bootloader state, which does reach the
+// host, be diffed against the state this firmware programs. The bootloader
+// values are captured early and reprinted after the audit clears the screen.
+STATIC UINT32 AblSnap[11];
+STATIC BOOLEAN AblSnapValid;
+STATIC VOID FuxiDwc3Capture(UINT32 *V) {
+  V[0]=MmioRead32(FUXI_DWC3+DWC3_GSNPSID);V[1]=MmioRead32(FUXI_DWC3+DWC3_GCTL);
+  V[2]=MmioRead32(FUXI_DWC3+DWC3_GUSB2PHYCFG(0));V[3]=MmioRead32(FUXI_DWC3+DWC3_GUSB3PIPECTL(0));
+  V[4]=MmioRead32(FUXI_DWC3+DWC3_DCFG);V[5]=MmioRead32(FUXI_DWC3+DWC3_DCTL);
+  V[6]=MmioRead32(FUXI_DWC3+DWC3_DSTS);V[7]=MmioRead32(FUXI_DWC3+DWC3_DEVTEN);
+  V[8]=MmioRead32(FUXI_DWC3+DWC3_GEVNTADRHI(0));V[9]=MmioRead32(FUXI_DWC3+DWC3_GEVNTADRLO(0));
+  V[10]=MmioRead32(FUXI_DWC3+DWC3_GEVNTSIZ(0));
+}
+STATIC VOID FuxiDwc3Print(CONST CHAR8 *Stage,CONST UINT32 *V) {
+  DEBUG((DEBUG_ERROR,
+    "FUXI SNAP %a GSNPSID=%08x GCTL=%08x PHYCFG=%08x PIPECTL=%08x DCFG=%08x DCTL=%08x DSTS=%08x DEVTEN=%08x EVTADR=%08x%08x EVTSIZ=%08x EVTCNT=%u\n",
+    Stage,V[0],V[1],V[2],V[3],V[4],V[5],V[6],V[7],V[8],V[9],V[10],
+    MmioRead32(FUXI_DWC3+DWC3_GEVNTCOUNT(0))&DWC3_GEVNTCOUNT_MASK));
+}
+
 EFI_STATUS UsbfnPlatformGetData(USBFN_PLATFORM_DATA *Data) {
   UINT32 Config,Id;
   if(Data==NULL) return EFI_INVALID_PARAMETER;
@@ -36,6 +56,7 @@ EFI_STATUS UsbfnPlatformPhyInit(VOID) {
   UINT32 Id=MmioRead32(FUXI_DWC3+DWC3_GSNPSID);
   UINT32 Phy=MmioRead32(FUXI_DWC3+DWC3_GUSB2PHYCFG(0));
   DEBUG((DEBUG_ERROR,"FUXI USB: inherited SNPS=%08x USB2PHY=%08x\n",Id,Phy));
+  FuxiDwc3Capture(AblSnap);AblSnapValid=TRUE;FuxiDwc3Print("ABL",AblSnap);
   if((Id&DWC3_GSNPSID_MASK)!=DWC3_GSNPSID_USB3 &&
      (Id&DWC3_GSNPSID_MASK)!=DWC3_GSNPSID_USB31) return EFI_UNSUPPORTED;
   if(Phy&DWC3_GUSB2PHYCFG_PHYSOFTRST) return EFI_NOT_READY;
@@ -68,7 +89,10 @@ STATIC VOID SmmuWrite(VOID *Context,FUA32 Offset,FUA32 Value) {
 }
 EFI_STATUS FuxiUsbAuditDma(VOID) {
   FUA_REPORT R;
+  UINT32 Post[11];
   DEBUG((DEBUG_ERROR,"\fUSBRAM SMMU AUDIT before first DMA; SID=0040 (read only)\n"));
+  if(AblSnapValid) FuxiDwc3Print("ABL",AblSnap);
+  FuxiDwc3Capture(Post);FuxiDwc3Print("POST",Post);
   FuaCapture(SmmuRead,NULL,0x100000,0x40,&R);
   DEBUG((DEBUG_ERROR,"SMMU ID0=%08x ID1=%08x CR0=%08x GFSR=%08x\n",R.Id0,R.Id1,R.Cr0,R.Gfsr));
   DEBUG((DEBUG_ERROR,"SMMU groups=%u scanned=%u matches=%u stored=%u partial=%u unsupported=%u invalidCB=%u\n",
