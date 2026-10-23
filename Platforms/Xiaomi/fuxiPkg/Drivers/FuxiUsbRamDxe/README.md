@@ -48,3 +48,12 @@ Hardware route trial: slot 0 BYPASS request 000100ff reads back 000200ff
 (FAULT). The transaction returns FurBypassRejected, verifies restoration of
 SMR=00000060/S2CR=00020000 and parks before DMA. The encoding quirk is observed
 on this unit; a disabled, unreferenced S1/S2-bypass context is the next option.
+
+The current opt-in route trial uses TRANS to a pre-existing disabled context:
+all TRANS references (including invalid SMRs) reserve their bank; bank 0 is
+left alone. A candidate must be within the 1 MiB aperture, have CBAR.TYPE=1
+(S1 translation/S2 bypass), and SCTLR.M=0. No context register is modified.
+S2CR readback must preserve the exact CBNDX; context and route are rechecked
+before DMA. A changed context causes rollback, and no candidate returns code 7.
+The original BYPASS transaction remains in regression tests. Route-engine host
+coverage is now 20 scenarios; physical DMA through the context path is unproven.

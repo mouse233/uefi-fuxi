@@ -84,7 +84,9 @@ EFI_STATUS FuxiUsbAuditDma(VOID) {
   }
 #if FUXI_USB_TRY_SID_ROUTE
   if(R.Matches==0 && !R.Partial && !R.Unsupported && !R.InvalidContext) {
-    UINT32 Result=FurInstall(SmmuRead,SmmuWrite,NULL,&UsbRoute);
+    UINT32 Result=FurInstallViaContext(SmmuRead,SmmuWrite,NULL,&UsbRoute);
+    DEBUG((DEBUG_ERROR,"USB CONTEXT existing bank=%u checked=%u CBAR=%08x SCTLR=%08x desiredS2CR=%08x\n",
+      UsbRoute.Context,UsbRoute.ContextChecked,UsbRoute.ContextCbar,UsbRoute.ContextSctlr,UsbRoute.DesiredS2cr));
     DEBUG((DEBUG_ERROR,"USB ROUTE result=%u slot=%u SMR=%08x S2CR=%08x active=%u restored=%u\n",
       Result,UsbRoute.Slot,UsbRoute.ObservedSmr,UsbRoute.ObservedS2cr,UsbRoute.Active,UsbRoute.RestoreOk));
     DEBUG((DEBUG_ERROR,"USB ROUTE attempted readback SMR=%08x S2CR=%08x saved=%08x/%08x\n",
