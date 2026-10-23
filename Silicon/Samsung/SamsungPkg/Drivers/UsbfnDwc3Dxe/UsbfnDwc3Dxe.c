@@ -165,6 +165,9 @@ Dwc3ConfigureEnableEndpoints (
   }
 
   Dev = DWC3_DEV_FROM_PROTOCOL (This);
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI DWC3: S14 ConfigureEnableEndpoints entry\n"));
+#endif
 
   if (!Dev->Started) {
     return EFI_NOT_READY;
@@ -186,6 +189,9 @@ Dwc3ConfigureEnableEndpoints (
     return EFI_INVALID_PARAMETER;
   }
 
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI DWC3: S15 configure EP0; physical endpoints=%u\n", Dev->NumPhysicalEps));
+#endif
   MaxPacketSize = Dwc3MaxPacketSizeForSpeed (UsbEndpointControl, Dev->Platform.MaximumSpeed);
 
   Status = Dwc3EnableEndpoint (Dev, DWC3_EP0_OUT, DWC3_DEPCMD_TYPE_CONTROL, MaxPacketSize, FALSE);
@@ -200,6 +206,9 @@ Dwc3ConfigureEnableEndpoints (
     return Status;
   }
 
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI DWC3: S16 EP0 configured; configure Bulk endpoints\n"));
+#endif
   for (Index = 0; Index < InterfaceInfo->InterfaceDescriptor->NumEndpoints; Index++) {
     EpDesc = InterfaceInfo->EndpointDescriptorTable[Index];
 
@@ -229,8 +238,18 @@ Dwc3ConfigureEnableEndpoints (
     }
   }
 
-  Dwc3Ep0OutStart (Dev);
-
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI DWC3: S17 arm EP0 DMA; event=%lx TRB=%lx buffer=%lx\n",
+          Dev->EventBufferPhys, Dev->Endpoints[DWC3_EP0_OUT].TrbPoolPhys, Dev->Ep0BufferPhys));
+#endif
+  Status = Dwc3Ep0OutStart (Dev);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "DWC3: Failed to arm initial EP0 setup: %r\n", Status));
+    return Status;
+  }
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI DWC3: S18 EP0 armed; enable connection\n"));
+#endif
   Status = Dwc3RunStop (Dev, TRUE);
   if (EFI_ERROR (Status)) {
     return Status;

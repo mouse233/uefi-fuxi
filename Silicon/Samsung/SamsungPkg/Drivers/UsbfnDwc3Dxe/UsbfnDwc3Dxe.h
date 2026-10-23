@@ -201,7 +201,7 @@ Dwc3SetHalt (
   IN BOOLEAN   Stall
   );
 
-VOID
+EFI_STATUS
 Dwc3Ep0OutStart (IN DWC3_DEV *Dev);
 
 VOID

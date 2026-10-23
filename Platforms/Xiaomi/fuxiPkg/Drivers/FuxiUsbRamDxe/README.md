@@ -8,9 +8,13 @@ SM8550 USB initialization is not implemented.
 Hardware status, 2026-10-23: initial image reaches the receiver and reads
 GSNPSID `33313130`, then resets before successful USB enumeration. The next
 image adds S0–S12 traces around run/stop, PHY/core reset and event-ring setup.
-Its first fastboot boot attempt reports a USB disconnect; screen evidence is
-pending. No hardware data transfer has passed. Host protocol tests alone do
-not qualify the controller or PHY.
+Its first fastboot boot attempt reports a USB disconnect. A second attempt
+boots successfully; the user reports S12 (core initialization complete), then
+a black screen and reboot to Android. No hardware data transfer has passed.
+S13–S19 and bounded endpoint command/DMA-address traces now cover the next
+stages. Initial EP0 SETUP submission errors propagate instead of attaching
+after a failed arm. This does not establish the reboot cause. Host protocol
+tests alone do not qualify the controller or PHY.
 
 `RamBulk.c` is the portable protocol engine. Its allocation/hash callbacks are
 implemented by `FuxiUsbRamDxe.c`. The Python sender, production-engine tests,

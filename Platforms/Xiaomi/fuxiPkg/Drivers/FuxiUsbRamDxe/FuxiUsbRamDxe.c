@@ -171,8 +171,12 @@ EFI_STATUS EFIAPI FuxiUsbRamEntry(EFI_HANDLE Image,EFI_SYSTEM_TABLE *SystemTable
   Status=Usb->AllocateTransferBuffer(Usb,RB_CHUNK,(VOID **)&Tx);if(EFI_ERROR(Status)) goto Park;
   Status=Usb->AllocateTransferBuffer(Usb,4096,(VOID **)&Control);if(EFI_ERROR(Status)) goto Park;
   Session.Allocate=RamAllocate;Session.Release=RamRelease;Session.Hash=RamHash;
-  Status=Usb->StartController(Usb);if(EFI_ERROR(Status)) goto Park;
-  Status=Usb->ConfigureEnableEndpoints(Usb,&DeviceInfo);if(EFI_ERROR(Status)) goto Stop;
+  Status=Usb->StartController(Usb);
+  DEBUG((DEBUG_ERROR,"USBRAM S13 StartController returned %r\n",Status));
+  if(EFI_ERROR(Status)) goto Park;
+  Status=Usb->ConfigureEnableEndpoints(Usb,&DeviceInfo);
+  DEBUG((DEBUG_ERROR,"USBRAM S19 ConfigureEnableEndpoints returned %r\n",Status));
+  if(EFI_ERROR(Status)) goto Stop;
   DEBUG((DEBUG_ERROR,"USBRAM WAIT 1209:0001; Bulk OUT=01 IN=81; idle timeout 180s\n"));
   Last=GetPerformanceCounter();
   for(;;) {

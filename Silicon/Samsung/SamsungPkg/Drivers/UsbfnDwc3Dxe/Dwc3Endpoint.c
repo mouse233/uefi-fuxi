@@ -10,6 +10,11 @@
 
 #include "UsbfnDwc3Dxe.h"
 
+#if defined(FUXI_USB_DMA32)
+// Bound tracing so control/data traffic cannot flood the framebuffer.
+STATIC UINT32 FuxiCommandTraceBudget = 48;
+#endif
+
 STATIC
 VOID
 Dwc3PushMessage (
@@ -88,18 +93,32 @@ Dwc3SendEpCommand (
   UINT32 Register;
   UINT32 Timeout;
   UINT32 CommandStatus;
+#if defined(FUXI_USB_DMA32)
+  BOOLEAN Trace = (BOOLEAN)(FuxiCommandTraceBudget != 0);
+  if (Trace) {
+    FuxiCommandTraceBudget--;
+    DEBUG ((DEBUG_ERROR, "FUXI EP: submit ep=%u cmd=%x params=%08x/%08x/%08x\n",
+            PhysEpNum, Command, Param0, Param1, Param2));
+  }
+#endif
 
   MmioWrite32 (Dev->Base + DepBase + DWC3_DEPCMDPAR0, Param0);
   MmioWrite32 (Dev->Base + DepBase + DWC3_DEPCMDPAR1, Param1);
   MmioWrite32 (Dev->Base + DepBase + DWC3_DEPCMDPAR2, Param2);
 
   MmioWrite32 (Dev->Base + DepBase + DWC3_DEPCMD, Command | DWC3_DEPCMD_CMDACT);
+#if defined(FUXI_USB_DMA32)
+  if (Trace) { DEBUG ((DEBUG_ERROR, "FUXI EP: command written; polling\n")); }
+#endif
 
   for (Timeout = 0; Timeout < DWC3_CMD_TIMEOUT_US; Timeout++) {
     Register = MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMD);
 
     if ((Register & DWC3_DEPCMD_CMDACT) == 0) {
       CommandStatus = DWC3_DEPCMD_STATUS (Register);
+#if defined(FUXI_USB_DMA32)
+      if (Trace) { DEBUG ((DEBUG_ERROR, "FUXI EP: complete ep=%u reg=%08x\n", PhysEpNum, Register)); }
+#endif
 
       if (CommandRegister != NULL) {
         *CommandRegister = Register;
@@ -385,7 +404,7 @@ Dwc3SetHalt (
   return Status;
 }
 
-VOID
+EFI_STATUS
 Dwc3Ep0OutStart (IN DWC3_DEV *Dev)
 {
   Dev->Ep0State         = Dwc3Ep0StateSetup;
@@ -394,7 +413,7 @@ Dwc3Ep0OutStart (IN DWC3_DEV *Dev)
 
   Dwc3EndTransfer (Dev, DWC3_EP0_IN);
   Dwc3EndTransfer (Dev, DWC3_EP0_OUT);
-  Dwc3StartTransfer (Dev, DWC3_EP0_OUT, Dev->Ep0BufferPhys, 8, DWC3_TRBCTL_CONTROL_SETUP);
+  return Dwc3StartTransfer (Dev, DWC3_EP0_OUT, Dev->Ep0BufferPhys, 8, DWC3_TRBCTL_CONTROL_SETUP);
 }
 
 VOID
