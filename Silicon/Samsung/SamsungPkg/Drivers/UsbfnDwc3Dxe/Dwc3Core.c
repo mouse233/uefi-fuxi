@@ -8,6 +8,12 @@
 
 #include "UsbfnDwc3Dxe.h"
 
+#if defined(FUXI_USB_DMA32)
+#define FUXI_TRACE(Message) DEBUG ((DEBUG_ERROR, "FUXI DWC3: " Message "\n"))
+#else
+#define FUXI_TRACE(Message) do { } while (0)
+#endif
+
 VOID *
 Dwc3AllocateDmaBuffer (
   IN  UINTN                 Size,
@@ -17,7 +23,13 @@ Dwc3AllocateDmaBuffer (
   VOID      *Buffer;
   UINTN      Pages = EFI_SIZE_TO_PAGES (Size);
 
+#if defined(FUXI_USB_DMA32)
+  EFI_PHYSICAL_ADDRESS Dma = MAX_UINT32;
+  Status = gBS->AllocatePages (AllocateMaxAddress, EfiBootServicesData, Pages, &Dma);
+  Buffer = EFI_ERROR (Status) ? NULL : (VOID *)(UINTN)Dma;
+#else
   Buffer = AllocateAlignedPages (Pages, SIZE_4KB);
+#endif
   if (Buffer == NULL) {
     return NULL;
   }
@@ -67,6 +79,7 @@ Dwc3SoftReset (IN DWC3_DEV *Dev)
     MmioWrite32 (Dev->Base + DWC3_GUSB3PIPECTL (0), Register);
   }
 
+  FUXI_TRACE ("S4 assert USB2 PHY reset");
   Register  = MmioRead32 (Dev->Base + DWC3_GUSB2PHYCFG (0));
   Register |= DWC3_GUSB2PHYCFG_PHYSOFTRST;
   MmioWrite32 (Dev->Base + DWC3_GUSB2PHYCFG (0), Register);
@@ -79,16 +92,19 @@ Dwc3SoftReset (IN DWC3_DEV *Dev)
     MmioWrite32 (Dev->Base + DWC3_GUSB3PIPECTL (0), Register);
   }
 
+  FUXI_TRACE ("S5 release USB2 PHY reset");
   Register  = MmioRead32 (Dev->Base + DWC3_GUSB2PHYCFG (0));
   Register &= ~DWC3_GUSB2PHYCFG_PHYSOFTRST;
   MmioWrite32 (Dev->Base + DWC3_GUSB2PHYCFG (0), Register);
 
   gBS->Stall (100);
 
+  FUXI_TRACE ("S6 assert core reset");
   Register  = MmioRead32 (Dev->Base + DWC3_DCTL);
   Register |= DWC3_DCTL_CSFTRST;
   MmioWrite32 (Dev->Base + DWC3_DCTL, Register);
 
+  FUXI_TRACE ("S7 core reset written; polling");
   for (Timeout = 0; Timeout < DWC3_RESET_TIMEOUT_US; Timeout++) {
     if ((MmioRead32 (Dev->Base + DWC3_DCTL) & DWC3_DCTL_CSFTRST) == 0) {
       if (Dev->IsUsb31) {
@@ -188,7 +204,11 @@ Dwc3RunStop (
   UINT32 Register;
   UINT32 Timeout;
 
+  FUXI_TRACE ("S1 read DCTL for run/stop");
   Register = MmioRead32 (Dev->Base + DWC3_DCTL);
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI DWC3: DCTL=%08x requested run=%u\n", Register, Run));
+#endif
 
   if (Run) {
     Register |= DWC3_DCTL_RUN_STOP;
@@ -198,7 +218,12 @@ Dwc3RunStop (
 
   Register &= ~DWC3_DCTL_TSTCTRL_MASK;
 
+  FUXI_TRACE ("S2 write DCTL run/stop");
   MmioWrite32 (Dev->Base + DWC3_DCTL, Register);
+  FUXI_TRACE ("S3 DCTL written; read DSTS");
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI DWC3: DSTS=%08x\n", MmioRead32 (Dev->Base + DWC3_DSTS)));
+#endif
 
   for (Timeout = 0; Timeout < DWC3_RUNSTOP_TIMEOUT_US; Timeout++) {
     Register = MmioRead32 (Dev->Base + DWC3_DSTS);
@@ -234,11 +259,12 @@ Dwc3CoreInit (IN DWC3_DEV *Dev)
       (Register & DWC3_GSNPSID_MASK) != DWC3_GSNPSID_USB31)
   {
     DEBUG ((EFI_D_ERROR, "DWC3: Bad Synopsys ID 0x%08x!\n", Register));
-    ASSERT (FALSE);
+    return EFI_UNSUPPORTED;
   }
 
   Dev->IsUsb31 = (BOOLEAN)((Register & DWC3_GSNPSID_MASK) == DWC3_GSNPSID_USB31);
 
+  FUXI_TRACE ("S3b set GCTL device mode");
   Register  = MmioRead32 (Dev->Base + DWC3_GCTL);
   Register &= ~DWC3_GCTL_PRTCAPDIR (DWC3_GCTL_PRTCAP_OTG);
   Register |= DWC3_GCTL_PRTCAPDIR (DWC3_GCTL_PRTCAP_DEVICE);
@@ -251,7 +277,9 @@ Dwc3CoreInit (IN DWC3_DEV *Dev)
     return Status;
   }
 
+  FUXI_TRACE ("S8 core reset done; configure PHY interface");
   Dwc3PhyInterfaceSetup (Dev);
+  FUXI_TRACE ("S9 configure global controls");
 
   Register  = MmioRead32 (Dev->Base + DWC3_GCTL);
   Register &= ~DWC3_GCTL_SCALEDOWN_MASK;
@@ -273,7 +301,9 @@ Dwc3CoreInit (IN DWC3_DEV *Dev)
     Dev->NumPhysicalEps = DWC3_MAX_PHYSICAL_EP;
   }
 
+  FUXI_TRACE ("S10 program event buffer");
   Dwc3EventBufferSetup (Dev);
+  FUXI_TRACE ("S11 program device configuration");
 
   Register  = MmioRead32 (Dev->Base + DWC3_GCTL);
   Register &= ~DWC3_GCTL_PRTCAPDIR (DWC3_GCTL_PRTCAP_OTG);
@@ -323,6 +353,7 @@ Dwc3CoreInit (IN DWC3_DEV *Dev)
   Dev->LinkState = DWC3_LINK_STATE_HS_ON;
   Dev->Suspended = FALSE;
 
+  FUXI_TRACE ("S12 core initialization complete");
   return EFI_SUCCESS;
 }
 

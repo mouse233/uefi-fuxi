@@ -70,3 +70,7 @@
   INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+!if $(FUXI_USB_RAM_RECEIVER) == 1
+  INF SamsungPkg/Drivers/UsbfnDwc3Dxe/UsbfnDwc3Dxe.inf
+  INF fuxiPkg/Drivers/FuxiUsbRamDxe/FuxiUsbRamDxe.inf
+!endif

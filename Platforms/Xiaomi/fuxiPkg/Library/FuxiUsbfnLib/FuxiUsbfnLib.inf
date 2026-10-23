@@ -1,0 +1,17 @@
+## SPDX-License-Identifier: BSD-2-Clause-Patent
+[Defines]
+  INF_VERSION = 0x00010019
+  BASE_NAME = FuxiUsbfnLib
+  FILE_GUID = 6CD4A3D8-B2C5-4B0B-9C37-3D2108981638
+  MODULE_TYPE = DXE_DRIVER
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS = PlatformUsbfnLib|DXE_DRIVER
+[Sources]
+  FuxiUsbfnLib.c
+[Packages]
+  MdePkg/MdePkg.dec
+  SamsungPkg/SamsungPkg.dec
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  IoLib

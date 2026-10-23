@@ -44,6 +44,8 @@
   FUXI_VENDOR_HW                 = 0
   # Opt-in only: publish an identified FAT payload without adding DRAM to GCD.
   FUXI_PAYLOAD_DIAGNOSTIC        = 0
+  # Explicit receiver-only image: USB2 warm handoff, no BDS/XNU continuation.
+  FUXI_USB_RAM_RECEIVER          = 0
 
   #
   # 0 = SM8550-AB
@@ -105,6 +107,9 @@
 !endif
 
 [LibraryClasses]
+!if $(FUXI_USB_RAM_RECEIVER) == 1
+  PlatformUsbfnLib|fuxiPkg/Library/FuxiUsbfnLib/FuxiUsbfnLib.inf
+!endif
   #
   # Memory Libraries
   #
@@ -115,6 +120,13 @@
   FdtLib|MdePkg/Library/BaseFdtLib/BaseFdtLib.inf
 
 [Components]
+!if $(FUXI_USB_RAM_RECEIVER) == 1
+  SamsungPkg/Drivers/UsbfnDwc3Dxe/UsbfnDwc3Dxe.inf {
+    <BuildOptions>
+      *_*_*_CC_FLAGS = -DFUXI_USB_DMA32=1
+  }
+  fuxiPkg/Drivers/FuxiUsbRamDxe/FuxiUsbRamDxe.inf
+!endif
   #
   # UniXNU 启动管理器
   #

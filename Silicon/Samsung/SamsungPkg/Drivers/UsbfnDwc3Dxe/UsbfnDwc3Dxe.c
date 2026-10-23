@@ -718,6 +718,13 @@ Dwc3StartController (IN EFI_USBFN_IO_PROTOCOL *This)
     return Status;
   }
 
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI DWC3: S0 PHY adapter returned; stop inherited gadget\n"));
+  // Stop the inherited ABL gadget before replacing its event ring.
+  Status = Dwc3RunStop (Dev, FALSE);
+  DEBUG ((DEBUG_ERROR, "FUXI DWC3: stop result %r\n", Status));
+  if (EFI_ERROR (Status)) { return Status; }
+#endif
   Status = Dwc3CoreInit (Dev);
   if (EFI_ERROR (Status)) {
     UsbfnPlatformPhyExit ();
@@ -739,6 +746,7 @@ Dwc3StopController (IN EFI_USBFN_IO_PROTOCOL *This)
 {
   DWC3_DEV *Dev;
   UINT8     Index;
+  EFI_STATUS Status;
 
   if (This == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -750,7 +758,8 @@ Dwc3StopController (IN EFI_USBFN_IO_PROTOCOL *This)
     return EFI_SUCCESS;
   }
 
-  Dwc3RunStop (Dev, FALSE);
+  Status = Dwc3RunStop (Dev, FALSE);
+  if (EFI_ERROR (Status)) { return Status; }
 
   for (Index = 0; Index < Dev->NumPhysicalEps; Index++) {
     Dwc3DisableEndpoint (Dev, Index);
@@ -992,6 +1001,7 @@ InitUsbfnDwc3Driver (
   return EFI_SUCCESS;
 
 Failure:
+  DEBUG ((EFI_D_ERROR, "DWC3: driver initialization failed: %r\n", Status));
   Dwc3FreeResources (Dev);
 
   return Status;

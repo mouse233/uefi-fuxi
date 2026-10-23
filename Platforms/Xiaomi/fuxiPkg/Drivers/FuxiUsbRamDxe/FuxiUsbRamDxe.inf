@@ -1,0 +1,30 @@
+## SPDX-License-Identifier: BSD-2-Clause-Patent
+[Defines]
+  INF_VERSION = 0x00010019
+  BASE_NAME = FuxiUsbRamDxe
+  FILE_GUID = 0347D255-B049-4CDD-9A52-497DDA7AFA84
+  MODULE_TYPE = DXE_DRIVER
+  VERSION_STRING = 0.1
+  ENTRY_POINT = FuxiUsbRamEntry
+[Sources]
+  FuxiUsbRamDxe.c
+  RamBulk.c
+  RamBulk.h
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  BaseCryptLib
+  DebugLib
+  MemoryAllocationLib
+  TimerLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+[Protocols]
+  gEfiUsbFunctionIoProtocolGuid
+[Depex]
+  gEfiUsbFunctionIoProtocolGuid
+[BuildOptions]
+  *_*_*_CC_FLAGS = -DRAMBULK_UEFI=1
