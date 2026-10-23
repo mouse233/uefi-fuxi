@@ -57,3 +57,12 @@ S2CR readback must preserve the exact CBNDX; context and route are rechecked
 before DMA. A changed context causes rollback, and no candidate returns code 7.
 The original BYPASS transaction remains in regression tests. Route-engine host
 coverage is now 20 scenarios; physical DMA through the context path is unproven.
+
+Hardware result for the enabled context route: SID 0x40 was pointed at the
+disabled bank 5 (CBAR=000100FF, SCTLR=000000E0) and the S2CR readback kept the
+exact CBNDX, but the initial EP0 STARTTRANSFER was then rejected with controller
+status 1. No receiver enumerated. The failure paths now print a read-only
+snapshot (GFSR, GFSYNR0..2, route slot, context SCTLR/CBAR/FSR/FAR, DWC3
+DSTS/GSTS/DCTL/GEVNTCOUNT and pending event dwords) so an SMMU abort can be
+told apart from a controller-side rejection; the snapshot writes no register,
+clears no fault and consumes no event.

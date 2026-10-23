@@ -143,6 +143,33 @@ Dwc3DetectPort (
   return EFI_SUCCESS;
 }
 
+#if defined(FUXI_USB_DMA32)
+// Failure-only snapshot: left pending events untouched and never acknowledges
+// them, so the caller still fails the same way it would without diagnostics.
+STATIC
+VOID
+FuxiDumpFailureState (
+  IN DWC3_DEV     *Dev,
+  IN CONST CHAR8  *Stage
+  )
+{
+  UINT32 Count = MmioRead32 (Dev->Base + DWC3_GEVNTCOUNT (0)) & DWC3_GEVNTCOUNT_MASK;
+  UINT32 Event;
+  UINT32 Index;
+
+  DEBUG ((DEBUG_ERROR, "FUXI FAIL %a DSTS=%08x GSTS=%08x DCTL=%08x GEVNTCOUNT=%u EventPos=%u\n",
+          Stage, MmioRead32 (Dev->Base + DWC3_DSTS), MmioRead32 (Dev->Base + DWC3_GSTS),
+          MmioRead32 (Dev->Base + DWC3_DCTL), Count, Dev->EventPos));
+  for (Index = 0; Index < 8 && (Index + 1) * sizeof (UINT32) <= Count; Index++) {
+    CopyMem (&Event, Dev->EventBuffer + ((Dev->EventPos + Index * sizeof (UINT32)) % DWC3_EVENT_BUFFER_SIZE),
+             sizeof (UINT32));
+    DEBUG ((DEBUG_ERROR, "FUXI FAIL pending event[%u]=%08x\n", Index, Event));
+  }
+
+  FuxiUsbFaultReport ();
+}
+#endif
+
 STATIC
 EFI_STATUS
 EFIAPI
@@ -242,11 +269,17 @@ Dwc3ConfigureEnableEndpoints (
   DEBUG ((DEBUG_ERROR, "FUXI DWC3: S17 arm EP0 DMA; event=%lx TRB=%lx buffer=%lx\n",
           Dev->EventBufferPhys, Dev->Endpoints[DWC3_EP0_OUT].TrbPoolPhys, Dev->Ep0BufferPhys));
   Status = FuxiUsbAuditDma ();
-  if (EFI_ERROR (Status)) { return Status; }
+  if (EFI_ERROR (Status)) {
+    FuxiDumpFailureState (Dev, "route install");
+    return Status;
+  }
 #endif
   Status = Dwc3Ep0OutStart (Dev);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "DWC3: Failed to arm initial EP0 setup: %r\n", Status));
+#if defined(FUXI_USB_DMA32)
+    FuxiDumpFailureState (Dev, "EP0 arm");
+#endif
     return Status;
   }
 #if defined(FUXI_USB_DMA32)
@@ -254,6 +287,9 @@ Dwc3ConfigureEnableEndpoints (
 #endif
   Status = Dwc3RunStop (Dev, TRUE);
   if (EFI_ERROR (Status)) {
+#if defined(FUXI_USB_DMA32)
+    FuxiDumpFailureState (Dev, "run/stop");
+#endif
     return Status;
   }
 

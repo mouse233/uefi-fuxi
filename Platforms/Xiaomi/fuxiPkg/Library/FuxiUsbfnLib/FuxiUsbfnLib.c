@@ -92,6 +92,8 @@ EFI_STATUS FuxiUsbAuditDma(VOID) {
     DEBUG((DEBUG_ERROR,"USB ROUTE attempted readback SMR=%08x S2CR=%08x saved=%08x/%08x\n",
       UsbRoute.TestSmr,UsbRoute.TestS2cr,UsbRoute.SavedSmr,UsbRoute.SavedS2cr));
     if(Result==FurOk) {
+      DEBUG((DEBUG_ERROR,"USB ROUTE baseline GFSR=%08x (install raised no fault)\n",
+        MmioRead32(FUXI_APPS_SMMU+0x48)));
       DEBUG((DEBUG_ERROR,"USB ROUTE VERIFIED; first DMA permitted (hardware transfer unproven)\n"));
       return EFI_SUCCESS;
     }
@@ -101,4 +103,24 @@ EFI_STATUS FuxiUsbAuditDma(VOID) {
   // Qualcomm hypervisor. Do not change routes or issue DMA on that assumption.
   DEBUG((DEBUG_ERROR,"USBRAM AUDIT STOP: no STARTTRANSFER issued; retain this screen\n"));
   return EFI_NOT_READY;
+}
+// Read-only failure snapshot: separates "this stream still aborts" from a
+// controller-side rejection. It writes nothing and does not clear any fault.
+VOID FuxiUsbFaultReport(VOID) {
+  UINT32 Id1=MmioRead32(FUXI_APPS_SMMU+0x24);
+  UINT32 Shift=(Id1&(1u<<31))?16:12;
+  DEBUG((DEBUG_ERROR,"USB FAULT GFSR=%08x GFSYNR0=%08x GFSYNR1=%08x GFSYNR2=%08x\n",
+    MmioRead32(FUXI_APPS_SMMU+0x48),MmioRead32(FUXI_APPS_SMMU+0x50),
+    MmioRead32(FUXI_APPS_SMMU+0x54),MmioRead32(FUXI_APPS_SMMU+0x58)));
+  DEBUG((DEBUG_ERROR,"USB FAULT slot=%u SMR=%08x S2CR=%08x active=%u ctx=%u\n",
+    UsbRoute.Slot,MmioRead32(FUXI_APPS_SMMU+0x800+4*UsbRoute.Slot),
+    MmioRead32(FUXI_APPS_SMMU+0xc00+4*UsbRoute.Slot),UsbRoute.Active,UsbRoute.Context));
+  if(UsbRoute.ContextChecked) {
+    UINT32 Cb=UsbRoute.ContextBase;
+    DEBUG((DEBUG_ERROR,"USB FAULT ctx=%u SCTLR=%08x CBAR=%08x FSR=%08x FAR=%08x%08x\n",
+      UsbRoute.Context,MmioRead32(FUXI_APPS_SMMU+Cb),
+      MmioRead32(FUXI_APPS_SMMU+(1u<<Shift)+4*UsbRoute.Context),
+      MmioRead32(FUXI_APPS_SMMU+Cb+0x58),MmioRead32(FUXI_APPS_SMMU+Cb+0x64),
+      MmioRead32(FUXI_APPS_SMMU+Cb+0x60)));
+  }
 }
