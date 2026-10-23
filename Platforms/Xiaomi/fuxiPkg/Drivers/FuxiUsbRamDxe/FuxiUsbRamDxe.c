@@ -185,8 +185,12 @@ EFI_STATUS EFIAPI FuxiUsbRamEntry(EFI_HANDLE Image,EFI_SYSTEM_TABLE *SystemTable
     Status=Usb->EventHandler(Usb,&Message,&Size,&Payload);
     if(EFI_ERROR(Status)) break;
     if(Message==EfiUsbMsgSetupPacket) {
+      DEBUG((DEBUG_ERROR,"USBRAM: setup rt=%02x req=%02x val=%04x idx=%04x len=%u\n",
+        Payload.udr.RequestType,Payload.udr.Request,Payload.udr.Value,
+        Payload.udr.Index,Payload.udr.Length));
       Status=Setup(&Payload.udr);
       if(EFI_ERROR(Status)) {
+        DEBUG((DEBUG_ERROR,"USBRAM: setup reply failed %r\n",Status));
         Stall(0,EfiUsbEndpointDirectionDeviceRx,TRUE);
         Status=EFI_SUCCESS;
       }
@@ -194,7 +198,8 @@ EFI_STATUS EFIAPI FuxiUsbRamEntry(EFI_HANDLE Image,EFI_SYSTEM_TABLE *SystemTable
     } else if(Message==EfiUsbMsgBusEventReset || Message==EfiUsbMsgBusEventDetach) {
       Configured=FALSE;Pending=FALSE;Phase=0;
       RbClear(&Session);
-      DEBUG((DEBUG_ERROR,"USBRAM: bus reset/detach; session cleared\n"));
+      DEBUG((DEBUG_ERROR,"USBRAM: bus %a; session cleared\n",
+        Message==EfiUsbMsgBusEventReset?"reset":"detach"));
     } else if(Message==EfiUsbMsgBusEventSpeed) {
       Config.Out.MaxPacketSize=Config.In.MaxPacketSize=(UINT16)(Payload.ubs>=UsbBusSpeedHigh?512:64);
       DEBUG((DEBUG_ERROR,"USBRAM: speed=%u\n",Payload.ubs));
