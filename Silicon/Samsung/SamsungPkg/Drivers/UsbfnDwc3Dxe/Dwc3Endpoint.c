@@ -747,8 +747,11 @@ Dwc3HandleDeviceEvent (
 
       Dwc3Ep0ResetState (Dev);
 
-      /* A USB reset aborts the pending setup TRB: re-arm EP0 OUT here, as the
-         reference driver does, instead of relying on CONNECT_DONE. */
+      /* A USB reset drops the endpoint transfer resources. Rebuild the control
+         endpoints (DEPSTARTCFG plus SETTRANSFRESOURCE) before re-arming, or
+         the status stage later fails with DEPEVT_TRANSFER_NO_RESOURCE. */
+      Dwc3EnableEndpoint (Dev, DWC3_EP0_OUT, DWC3_DEPCMD_TYPE_CONTROL, 64, FALSE);
+      Dwc3EnableEndpoint (Dev, DWC3_EP0_IN, DWC3_DEPCMD_TYPE_CONTROL, 64, FALSE);
       Dwc3Ep0OutStart (Dev);
 
       Dwc3PushMessage (Dev, EfiUsbMsgBusEventReset, NULL);
