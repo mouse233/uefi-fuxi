@@ -66,3 +66,11 @@ snapshot (GFSR, GFSYNR0..2, route slot, context SCTLR/CBAR/FSR/FAR, DWC3
 DSTS/GSTS/DCTL/GEVNTCOUNT and pending event dwords) so an SMMU abort can be
 told apart from a controller-side rejection; the snapshot writes no register,
 clears no fault and consumes no event.
+
+Follow-up hardware run: the same route was accepted with GFSR=0 after install,
+the initial EP0 STARTTRANSFER succeeded (the earlier status-1 rejection did not
+reproduce), the controller reached RUN_STOP and the receiver waited for
+1209:0001. The host still saw no device and no USB attach event, so link
+bring-up - not the route - is now the blocking layer. A post-RUN_STOP sampler
+reports DSTS link state, connect speed, SOF number, DCTL, GUSB2PHYCFG and
+GEVNTCOUNT for two seconds, printing only on change.

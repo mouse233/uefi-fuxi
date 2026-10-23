@@ -168,6 +168,41 @@ FuxiDumpFailureState (
 
   FuxiUsbFaultReport ();
 }
+
+// Samples the device link after RUN_STOP so a PHY that never reaches U0 is
+// distinguishable from a controller that connects but never enumerates.
+STATIC
+VOID
+FuxiSampleLink (
+  IN DWC3_DEV  *Dev
+  )
+{
+  UINT32 Last = 0xFFFFFFFF;
+  UINT32 Register;
+  UINT32 Pending;
+  UINT32 Key;
+  UINT32 Index;
+
+  for (Index = 0; Index <= 20; Index++) {
+    Register = MmioRead32 (Dev->Base + DWC3_DSTS);
+    Pending  = MmioRead32 (Dev->Base + DWC3_GEVNTCOUNT (0)) & DWC3_GEVNTCOUNT_MASK;
+    Key      = (Register & (DWC3_DSTS_USBLNKST_MASK | DWC3_DSTS_CONNECTSPD)) |
+               ((Pending != 0) ? BIT16 : 0);
+
+    if (Key != Last) {
+      DEBUG ((DEBUG_ERROR,
+              "FUXI LINK t=%ums DSTS=%08x link=%u speed=%u sofn=%u DCTL=%08x PHYCFG=%08x GEVNTCOUNT=%u\n",
+              Index * 100, Register,
+              DWC3_DSTS_USBLNKST (Register), Register & DWC3_DSTS_CONNECTSPD,
+              (Register & DWC3_DSTS_SOFFN_MASK) >> 3,
+              MmioRead32 (Dev->Base + DWC3_DCTL),
+              MmioRead32 (Dev->Base + DWC3_GUSB2PHYCFG (0)), Pending));
+      Last = Key;
+    }
+
+    gBS->Stall (100000);
+  }
+}
 #endif
 
 STATIC
@@ -292,6 +327,9 @@ Dwc3ConfigureEnableEndpoints (
 #endif
     return Status;
   }
+#if defined(FUXI_USB_DMA32)
+  FuxiSampleLink (Dev);
+#endif
 
   return EFI_SUCCESS;
 }
