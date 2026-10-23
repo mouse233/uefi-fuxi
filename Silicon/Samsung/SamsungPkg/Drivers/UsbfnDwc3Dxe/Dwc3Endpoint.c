@@ -407,6 +407,9 @@ Dwc3SetHalt (
 EFI_STATUS
 Dwc3Ep0OutStart (IN DWC3_DEV *Dev)
 {
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI EP0: arm setup buffer\n"));
+#endif
   Dev->Ep0State         = Dwc3Ep0StateSetup;
   Dev->Ep0StatusStarted = FALSE;
   Dev->Ep0Bounced       = FALSE;
@@ -565,6 +568,11 @@ Dwc3HandleEp0Event (
 {
   DWC3_ENDPOINT *Endpoint = &Dev->Endpoints[PhysEpNum];
   UINTN          Transferred;
+
+#if defined(FUXI_USB_DMA32)
+  DEBUG ((DEBUG_ERROR, "FUXI EP0: evt=%u status=%u ep=%u state=%u\n",
+          EventType, EventStatus, PhysEpNum, Dev->Ep0State));
+#endif
 
   switch (EventType) {
     case DWC3_DEPEVT_XFERCOMPLETE:
@@ -738,6 +746,10 @@ Dwc3HandleDeviceEvent (
       Dev->Suspended = FALSE;
 
       Dwc3Ep0ResetState (Dev);
+
+      /* A USB reset aborts the pending setup TRB: re-arm EP0 OUT here, as the
+         reference driver does, instead of relying on CONNECT_DONE. */
+      Dwc3Ep0OutStart (Dev);
 
       Dwc3PushMessage (Dev, EfiUsbMsgBusEventReset, NULL);
       break;
