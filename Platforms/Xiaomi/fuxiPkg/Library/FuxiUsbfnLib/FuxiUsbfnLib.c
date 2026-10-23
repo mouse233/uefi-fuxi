@@ -42,16 +42,25 @@ STATIC VOID PhyMask(UINT32 Off,UINT32 Mask,UINT32 Value) {
 // not touch the PMIC repeater, the vdd/vdda12 rails or the ref clock, because
 // this firmware has no driver for any of them and ABL leaves them running.
 STATIC VOID FuxiEusb2PhyInit(VOID) {
-  DEBUG((DEBUG_ERROR,"FUXI PHY eUSB2 init sequence applied\n"));
+  // The inherited FSEL field selects the reference clock: ABL leaves 4 for the
+  // 38.4 MHz source. Pick the matching PLL divider instead of assuming 19.2 MHz.
+  UINT32 Fsel=(MmioRead32(FUXI_EUSB2_PHY+0x54)>>4)&7;
+  DEBUG((DEBUG_ERROR,"FUXI PHY eUSB2 init sequence applied; inherited FSEL=%u\n",Fsel));
   PhyMask(0x94,1u<<1,1u<<1);
   PhyMask(0x50,1u<<1,1u<<1);
   PhyMask(0x54,(1u<<0)|(1u<<3),(1u<<0)|(1u<<3));
   PhyMask(0x130,1u<<2,1u<<2);
   PhyMask(0x98,1u<<6,0);
   PhyMask(0xB8,1u<<0,1u<<0);
-  PhyMask(0x54,0x70,0x00);
-  PhyMask(0x5C,0xFF,0x90);
-  PhyMask(0x60,0x0F,0x01);
+  if(Fsel==4) {
+    PhyMask(0x54,0x70,0x40);   // FSEL = 38.4 MHz
+    PhyMask(0x5C,0xFF,0xC8);   // PLL FB divider 7:0
+    PhyMask(0x60,0x0F,0x00);   // PLL FB divider 11:8
+  } else {
+    PhyMask(0x54,0x70,0x00);   // FSEL = 19.2 MHz
+    PhyMask(0x5C,0xFF,0x90);
+    PhyMask(0x60,0x0F,0x01);
+  }
   PhyMask(0x60,0xF0,0x00);
   PhyMask(0x58,0xFE,0x02);
   PhyMask(0x68,0xFC,0x20);
@@ -89,6 +98,18 @@ STATIC VOID FuxiDwc3Capture(UINT32 *V) {
   V[8]=MmioRead32(FUXI_DWC3+DWC3_GEVNTADRHI(0));V[9]=MmioRead32(FUXI_DWC3+DWC3_GEVNTADRLO(0));
   V[10]=MmioRead32(FUXI_DWC3+DWC3_GEVNTSIZ(0));
 }
+// The Qualcomm wrapper shares the DWC3 window at low offsets. In device mode
+// dwc3-qcom overrides the VBUS and session signals in software; without it the
+// controller runs but never presents a connection to the host.
+#define FUXI_QSCRATCH 0x0a600000ULL
+STATIC VOID FuxiVbusOverride(VOID) {
+  UINT32 Hs,Ss;
+  Hs=MmioRead32(FUXI_QSCRATCH+0x10)|(1u<<20)|(1u<<28);
+  MmioWrite32(FUXI_QSCRATCH+0x10,Hs);(VOID)MmioRead32(FUXI_QSCRATCH+0x10);
+  Ss=MmioRead32(FUXI_QSCRATCH+0x30)|(1u<<24);
+  MmioWrite32(FUXI_QSCRATCH+0x30,Ss);(VOID)MmioRead32(FUXI_QSCRATCH+0x30);
+  DEBUG((DEBUG_ERROR,"FUXI USB: qscratch vbus/session override HS=%08x SS=%08x\n",Hs,Ss));
+}
 STATIC VOID FuxiDwc3Print(CONST CHAR8 *Stage,CONST UINT32 *V) {
   DEBUG((DEBUG_ERROR,
     "FUXI SNAP %a GSNPSID=%08x GCTL=%08x PHYCFG=%08x PIPECTL=%08x DCFG=%08x DCTL=%08x DSTS=%08x DEVTEN=%08x EVTADR=%08x%08x EVTSIZ=%08x EVTCNT=%u\n",
@@ -124,6 +145,7 @@ EFI_STATUS UsbfnPlatformPhyInit(VOID) {
   FuxiEusb2PhyInit();
 #endif
   PhySnapshot(PhyPost);
+  FuxiVbusOverride();
   if((Id&DWC3_GSNPSID_MASK)!=DWC3_GSNPSID_USB3 &&
      (Id&DWC3_GSNPSID_MASK)!=DWC3_GSNPSID_USB31) return EFI_UNSUPPORTED;
   if(Phy&DWC3_GUSB2PHYCFG_PHYSOFTRST) return EFI_NOT_READY;
