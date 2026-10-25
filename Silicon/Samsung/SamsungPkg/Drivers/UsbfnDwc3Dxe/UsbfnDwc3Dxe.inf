@@ -10,6 +10,7 @@
   UsbfnDwc3Dxe.c
   Dwc3Core.c
   Dwc3Endpoint.c
+  Dwc3Stop.c
 
 [Packages]
   ArmPkg/ArmPkg.dec

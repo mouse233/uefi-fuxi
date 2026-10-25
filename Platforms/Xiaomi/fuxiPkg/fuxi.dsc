@@ -45,6 +45,7 @@
   # Opt-in only: publish an identified FAT payload without adding DRAM to GCD.
   FUXI_PAYLOAD_DIAGNOSTIC        = 0
   # Explicit receiver-only image: USB2 warm handoff, no BDS/XNU continuation.
+  FUXI_USB_RAM_SYSTEM_HANDOFF    = 0
   FUXI_USB_RAM_RECEIVER          = 0
   FUXI_USB_TRY_SID_ROUTE         = 0
   # Opt-in: keep the USB2 PHY state inherited from ABL instead of pulsing
@@ -136,7 +137,12 @@
       *_*_*_CC_FLAGS = -DFUXI_USB_KEEP_PHY=1
 !endif
   }
-  fuxiPkg/Drivers/FuxiUsbRamDxe/FuxiUsbRamDxe.inf
+  fuxiPkg/Drivers/FuxiUsbRamDxe/FuxiUsbRamDxe.inf {
+!if $(FUXI_USB_RAM_SYSTEM_HANDOFF) == 1
+    <BuildOptions>
+      *_*_*_CC_FLAGS = -DFUXI_USB_RAM_SYSTEM_HANDOFF=1
+!endif
+  }
 !endif
   #
   # UniXNU 启动管理器
@@ -149,7 +155,11 @@
   #
   # stage 2a: 只加载驱动入口。它的 Boot() 仍拒绝非空设备树，因此不会触碰
   # SEC MMU 未映射的那棵 handed-over tree。
-  DarwinBootPkg/Driver/DarwinBoot.inf
+  DarwinBootPkg/Driver/DarwinBoot.inf {
+    <LibraryClasses>
+      # This loader uses only SHA256; no RNG operation is requested.
+      RngLib|MdePkg/Library/BaseRngLibNull/BaseRngLibNull.inf
+  }
 
   #
   # 板级驱动

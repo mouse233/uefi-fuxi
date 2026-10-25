@@ -13,10 +13,12 @@
 [Packages]
   MdePkg/MdePkg.dec
   CryptoPkg/CryptoPkg.dec
+  UniXNUPkg/UniXNUPkg.dec
 [LibraryClasses]
   BaseLib
   BaseMemoryLib
   BaseCryptLib
+  CacheMaintenanceLib
   DebugLib
   MemoryAllocationLib
   TimerLib

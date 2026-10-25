@@ -5,7 +5,19 @@ UEFI and exposes no partition-write or kernel-handoff operation. It uses the
 shared DWC3 controller with a fuxi adapter that inherits ABL PHY/clocks; cold
 SM8550 USB initialization is not implemented.
 
-Hardware status, 2026-10-23: initial image reaches the receiver and reads
+Hardware status, 2026-10-23: v22 passed configuration 1, interface ff/58/01
+enumeration and a real 1 MiB Bulk-to-RAM transfer. The END digest of the actual
+RAM bytes matched the host SHA256. A later v22 session passed full OS
+(6,077,580,800 bytes) and SystemOS (3,303,014,400 bytes) END RAM SHA256 checks;
+see the device repository's current evidence. v23 adds a stop
+transaction with END commands before clearing RUN_STOP, event acknowledgment
+while waiting for DEVCTRLHLT, and checked route removal only after halt. Failed
+stop retains DMA memory and routing. v23 subsequently passed a real 1 MiB
+regression followed by idle-timeout shutdown: IMG_6937 confirms HALTED with
+events=0, route release result=0 restored=1, and QUIESCE Success. Full objects
+and shutdown are evidence from separate v22/v23 runs; no XNU handoff exists.
+
+Historical initial bring-up: the first image reaches the receiver and reads
 GSNPSID `33313130`, then resets before successful USB enumeration. The next
 image adds S0–S12 traces around run/stop, PHY/core reset and event-ring setup.
 Its first fastboot boot attempt reports a USB disconnect. A second attempt

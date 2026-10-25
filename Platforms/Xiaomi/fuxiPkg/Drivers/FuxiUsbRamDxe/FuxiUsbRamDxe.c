@@ -12,6 +12,42 @@
 #include <Library/TimerLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include "RamBulk.h"
+#if defined(FUXI_USB_RAM_SYSTEM_HANDOFF)
+#include <Protocol/UniXNURamObjects.h>
+#include <Library/CacheMaintenanceLib.h>
+STATIC UR_HANDOFF Handoff;
+STATIC BOOLEAN ObjectAllocated[2];
+STATIC UINT32 AllocatingObject;
+STATIC EFI_GUID RamObjectsGuid=UNIXNU_RAM_OBJECTS_GUID;
+STATIC EFI_STATUS ReserveSystemWindow(VOID) {
+  EFI_PHYSICAL_ADDRESS Raw=0;
+  EFI_STATUS Status=gBS->AllocatePages(AllocateAnyPages,EfiLoaderData,
+    EFI_SIZE_TO_PAGES(UR_WINDOW+SIZE_4MB),&Raw);
+  if(EFI_ERROR(Status)) return Status;
+  Handoff.Version=1;Handoff.Bytes=sizeof(Handoff);
+  // The skew is not 2 MiB alignment padding: DarwinBoot adopts this window only
+  // when its low 21 bits equal the kernel link base's, so that the 2 MiB bootstrap
+  // blocks line up. UR_WINDOW_SKEW carries that value.
+  Handoff.Window=ALIGN_VALUE(Raw,SIZE_2MB)+UR_WINDOW_SKEW;Handoff.WindowBytes=UR_WINDOW;
+  DEBUG((DEBUG_ERROR,"USBRAM SYSTEM: window=%lx size=%lx skew=%lx; sparse preflight\n",
+    Handoff.Window,Handoff.WindowBytes,UR_WINDOW_SKEW));
+  // All pages belong to this allocation, before any OS data is received.
+  for(UINT32 Pass=0;Pass<2;Pass++) {
+    for(UINT64 At=0;At<=UR_WINDOW;At+=SIZE_2MB) {
+      UINT64 Address=Handoff.Window+(At==UR_WINDOW?UR_WINDOW-sizeof(UINT64):At);
+      *(volatile UINT64 *)(UINTN)Address=Address^(Pass?MAX_UINT64:0);
+      WriteBackInvalidateDataCacheRange((VOID *)(UINTN)Address,sizeof(UINT64));
+    }
+    for(UINT64 At=0;At<=UR_WINDOW;At+=SIZE_2MB) {
+      UINT64 Address=Handoff.Window+(At==UR_WINDOW?UR_WINDOW-sizeof(UINT64):At);
+      WriteBackInvalidateDataCacheRange((VOID *)(UINTN)Address,sizeof(UINT64));
+      if(*(volatile UINT64 *)(UINTN)Address!=(Address^(Pass?MAX_UINT64:0))) return EFI_DEVICE_ERROR;
+    }
+  }
+  DEBUG((DEBUG_ERROR,"USBRAM SYSTEM: 12 GiB sparse preflight PASS; samples are not full RAM coverage\n"));
+  return EFI_SUCCESS;
+}
+#endif
 
 #pragma pack(1)
 typedef struct {
@@ -41,14 +77,29 @@ STATIC EFI_STATUS Stall(UINT8 Endpoint,EFI_USBFN_ENDPOINT_DIRECTION Direction,BO
 }
 
 STATIC VOID *RamAllocate(VOID *Context,RB64 Bytes) {
+#if defined(FUXI_USB_RAM_SYSTEM_HANDOFF)
+  (VOID)Context;
+  if(AllocatingObject<1 || AllocatingObject>2 || Bytes!=UrBytes(AllocatingObject) ||
+     ObjectAllocated[AllocatingObject-1]) return NULL;
+  ObjectAllocated[AllocatingObject-1]=TRUE;
+  return (VOID *)(UINTN)(Handoff.Window+UrOffset(AllocatingObject));
+#else
   EFI_PHYSICAL_ADDRESS Address=0;
   (VOID)Context;
   if(Bytes>MAX_UINTN-4095 || EFI_ERROR(gBS->AllocatePages(AllocateAnyPages,
        EfiLoaderData,EFI_SIZE_TO_PAGES((UINTN)Bytes),&Address))) return NULL;
   return (VOID *)(UINTN)Address;
+#endif
 }
 STATIC VOID RamRelease(VOID *Context,VOID *Data,RB64 Bytes) {
+#if defined(FUXI_USB_RAM_SYSTEM_HANDOFF)
+  (VOID)Context;
+  for(UINT32 Id=1;Id<=2;Id++)
+    if(Data==(VOID *)(UINTN)(Handoff.Window+UrOffset(Id)) && Bytes==UrBytes(Id)) ObjectAllocated[Id-1]=FALSE;
+  // Keep the entire reserved window. Never free a slice independently.
+#else
   (VOID)Context;gBS->FreePages((EFI_PHYSICAL_ADDRESS)(UINTN)Data,EFI_SIZE_TO_PAGES((UINTN)Bytes));
+#endif
 }
 STATIC int RamHash(CONST VOID *Data,RB64 Bytes,RB8 Digest[32]) {
   VOID *Hash=AllocatePool(Sha256GetContextSize());
@@ -126,6 +177,9 @@ STATIC EFI_STATUS Setup(EFI_USB_DEVICE_REQUEST *Request) {
   return EFI_UNSUPPORTED;
 }
 STATIC VOID Process(RB32 Bytes) {
+#if defined(FUXI_USB_RAM_SYSTEM_HANDOFF)
+  AllocatingObject=(UINT32)RbRead(Header+12,4);
+#endif
   RbHandle(&Session,Header,Bytes?Rx:NULL,Bytes,Tx);
   if(RbRead(Header+10,2)==RbEnd && RbRead(Tx+28,4)==RbOk) {
     UINT32 Id=(UINT32)RbRead(Header+12,4);
@@ -165,6 +219,9 @@ EFI_STATUS EFIAPI FuxiUsbRamEntry(EFI_HANDLE Image,EFI_SYSTEM_TABLE *SystemTable
   (VOID)Image;(VOID)SystemTable;
   DEBUG((DEBUG_ERROR,"\fUSBRAM: entering USB2 Bulk receiver diagnostic\n"));
   gBS->SetWatchdogTimer(0,0,0,NULL);
+#if defined(FUXI_USB_RAM_SYSTEM_HANDOFF)
+  Status=ReserveSystemWindow();if(EFI_ERROR(Status)) goto Park;
+#endif
   Status=gBS->LocateProtocol(&gEfiUsbFunctionIoProtocolGuid,NULL,(VOID **)&Usb);
   if(EFI_ERROR(Status)) goto Park;
   Status=Usb->AllocateTransferBuffer(Usb,RB_CHUNK,(VOID **)&Rx);if(EFI_ERROR(Status)) goto Park;
@@ -207,6 +264,12 @@ EFI_STATUS EFIAPI FuxiUsbRamEntry(EFI_HANDLE Image,EFI_SYSTEM_TABLE *SystemTable
       Status=Completion(&Payload.utr);if(EFI_ERROR(Status)) break;
       if(Payload.utr.EndpointIndex==1) Last=GetPerformanceCounter();
     }
+#if defined(FUXI_USB_RAM_SYSTEM_HANDOFF)
+    // Wait for the final END ACK's IN completion before stopping the controller.
+    if(!Pending && Phase==0 && Session.Object[1].State==2 && Session.Object[2].State==2) {
+      Status=EFI_SUCCESS;break;
+    }
+#endif
     if(Configured && !Pending) {
       Size=Phase==0?RB_HEADER:Phase==1?Body:RB_HEADER;
       Status=Usb->Transfer(Usb,1,Phase==2?EfiUsbEndpointDirectionDeviceTx:
@@ -218,7 +281,27 @@ EFI_STATUS EFIAPI FuxiUsbRamEntry(EFI_HANDLE Image,EFI_SYSTEM_TABLE *SystemTable
     gBS->Stall(100);
   }
 Stop:
-  Usb->StopController(Usb);
+  {
+    EFI_STATUS StopStatus=Usb->StopController(Usb);
+    DEBUG((DEBUG_ERROR,"USBRAM QUIESCE: %r; receive status=%r; buffers retained\n",StopStatus,Status));
+    if(EFI_ERROR(StopStatus)) Status=StopStatus;
+  }
+#if defined(FUXI_USB_RAM_SYSTEM_HANDOFF)
+  if(!EFI_ERROR(Status) && Session.Object[1].State==2 && Session.Object[2].State==2) {
+    EFI_HANDLE Handle=NULL;
+    for(UINT32 Id=1;Id<=2;Id++) {
+      Handoff.Object[Id-1].Address=(UINT64)(UINTN)Session.Object[Id].Data;
+      Handoff.Object[Id-1].Bytes=Session.Object[Id].Bytes;
+      CopyMem(Handoff.Object[Id-1].Sha256,Session.Object[Id].Digest,32);
+    }
+    Handoff.Flags=3; // both END digests passed and StopController restored routing.
+    if(!UrValid(&Handoff)) {Status=EFI_COMPROMISED_DATA;goto Park;}
+    Status=gBS->InstallProtocolInterface(&Handle,&RamObjectsGuid,EFI_NATIVE_INTERFACE,&Handoff);
+    if(EFI_ERROR(Status)) goto Park;
+    DEBUG((DEBUG_ERROR,"USBRAM SYSTEM: immutable objects published; return to boot manager\n"));
+    return EFI_SUCCESS;
+  }
+#endif
 Park:
   // Retain RAM and all DMA allocations for inspection until reboot. Never
   // return to BDS and accidentally start XNU with unreserved receive buffers.

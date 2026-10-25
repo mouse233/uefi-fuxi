@@ -10,9 +10,12 @@
 
 #include "UsbfnDwc3Dxe.h"
 
+STATIC VOID Dwc3HandleDeviceEvent (IN DWC3_DEV *Dev, IN UINT32 Event);
+
 #if defined(FUXI_USB_DMA32)
 // Bound tracing so control/data traffic cannot flood the framebuffer.
 STATIC UINT32 FuxiCommandTraceBudget = 48;
+STATIC UINT32 FuxiEp0DropTraceBudget = 12;
 #endif
 
 STATIC
@@ -280,11 +283,28 @@ Dwc3StartTransfer (
 {
   DWC3_ENDPOINT *Endpoint = &Dev->Endpoints[PhysEpNum];
   DWC3_TRB      *Trb      = &Endpoint->TrbPool[0];
+
   DWC3_TRB      *Zlp      = &Endpoint->TrbPool[1];
   EFI_STATUS     Status   = EFI_DEVICE_ERROR;
   UINT32         CommandRegister;
   BOOLEAN        NeedZlp;
   UINT32         Attempt;
+
+  if (Dev->Stopping) {
+    return EFI_NOT_READY;
+  }
+
+  if (PhysEpNum <= DWC3_EP0_IN) {
+    if (Dev->Ep0RestartFailed) {
+      return EFI_DEVICE_ERROR;
+    }
+
+    // EP0 shares one TRB pool. No phase may reuse it before both ENDs finish.
+    if (Dev->Endpoints[DWC3_EP0_OUT].EndTransferPending ||
+        Dev->Endpoints[DWC3_EP0_IN].EndTransferPending || Endpoint->TransferStarted) {
+      return EFI_NOT_READY;
+    }
+  }
 
   NeedZlp = (BOOLEAN)(Endpoint->ZeroLengthTermination &&
                       (PhysEpNum & 1) != 0 &&
@@ -363,16 +383,40 @@ Dwc3EndTransfer (
 {
   DWC3_ENDPOINT *Endpoint = &Dev->Endpoints[PhysEpNum];
   UINT32         Command;
+  EFI_STATUS     Status;
 
-  if (Endpoint->ResourceIndex == 0) {
-    Endpoint->TransferStarted = FALSE;
+  if (PhysEpNum <= DWC3_EP0_IN &&
+      (Dev->Ep0RestartFailed || Endpoint->EndTransferPending)) {
+    return;
+  }
+
+  // EP0 OUT has a valid resource index of zero. Track activity separately.
+  if (!Endpoint->TransferStarted) {
     return;
   }
 
   Command = DWC3_DEPCMD_ENDTRANSFER | DWC3_DEPCMD_HIPRI_FORCERM | DWC3_DEPCMD_CMDIOC;
   Command |= DWC3_DEPCMD_PARAM (Endpoint->ResourceIndex);
 
-  Dwc3SendEpCommand (Dev, PhysEpNum, Command, 0, 0, 0, NULL);
+  if (PhysEpNum <= DWC3_EP0_IN) {
+    Endpoint->EndTransferPending = TRUE;
+  }
+
+  Status = Dwc3SendEpCommand (Dev, PhysEpNum, Command, 0, 0, 0, NULL);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "DWC3: ENDTRANSFER failed on Physical EP %u, RscIdx %u: %r\n",
+            PhysEpNum, Endpoint->ResourceIndex, Status));
+  }
+
+  if (PhysEpNum <= DWC3_EP0_IN) {
+    // CMDACT clearing acknowledges the command; END completion arrives later
+    // in EPCMDCMPLT. Keep the shared TRB and transfer bookkeeping until then.
+    if (EFI_ERROR (Status)) {
+      Dev->Ep0RestartFailed = TRUE;
+    }
+
+    return;
+  }
 
   gBS->Stall (100);
 
@@ -391,6 +435,10 @@ Dwc3SetHalt (
   DWC3_ENDPOINT *Endpoint = &Dev->Endpoints[PhysEpNum];
   EFI_STATUS     Status;
 
+  if (PhysEpNum <= DWC3_EP0_IN && Dev->Ep0RestartFailed) {
+    return EFI_DEVICE_ERROR;
+  }
+
   if (Stall) {
     Status = Dwc3SendEpCommand (Dev, PhysEpNum, DWC3_DEPCMD_SETSTALL, 0, 0, 0, NULL);
   } else {
@@ -407,16 +455,37 @@ Dwc3SetHalt (
 EFI_STATUS
 Dwc3Ep0OutStart (IN DWC3_DEV *Dev)
 {
+  EFI_STATUS Status;
+
+  if (Dev->Ep0RestartFailed) {
+    return EFI_DEVICE_ERROR;
+  }
+
 #if defined(FUXI_USB_DMA32)
   DEBUG ((DEBUG_ERROR, "FUXI EP0: arm setup buffer\n"));
 #endif
   Dev->Ep0State         = Dwc3Ep0StateSetup;
   Dev->Ep0StatusStarted = FALSE;
   Dev->Ep0Bounced       = FALSE;
+  Dev->Ep0SetupPending  = TRUE;
 
   Dwc3EndTransfer (Dev, DWC3_EP0_IN);
   Dwc3EndTransfer (Dev, DWC3_EP0_OUT);
-  return Dwc3StartTransfer (Dev, DWC3_EP0_OUT, Dev->Ep0BufferPhys, 8, DWC3_TRBCTL_CONTROL_SETUP);
+  if (Dev->Ep0RestartFailed) {
+    return EFI_DEVICE_ERROR;
+  }
+
+  if (Dev->Endpoints[DWC3_EP0_OUT].EndTransferPending ||
+      Dev->Endpoints[DWC3_EP0_IN].EndTransferPending) {
+    return EFI_SUCCESS; // Queued: EPCMDCMPLT resumes SETUP after both ENDs.
+  }
+
+  Status = Dwc3StartTransfer (Dev, DWC3_EP0_OUT, Dev->Ep0BufferPhys, 8, DWC3_TRBCTL_CONTROL_SETUP);
+  if (!EFI_ERROR (Status)) {
+    Dev->Ep0SetupPending = FALSE;
+  }
+
+  return Status;
 }
 
 VOID
@@ -432,6 +501,10 @@ Dwc3Ep0ResetState (IN DWC3_DEV *Dev)
 VOID
 Dwc3Ep0StallAndRestart (IN DWC3_DEV *Dev)
 {
+  if (Dev->Ep0RestartFailed) {
+    return;
+  }
+
   Dwc3SetHalt (Dev, DWC3_EP0_OUT, TRUE);
 
   Dev->Endpoints[DWC3_EP0_OUT].Stalled = FALSE;
@@ -529,20 +602,23 @@ Dwc3Ep0StartStatus (
   IN UINT8     PhysEpNum)
 {
   UINT32 TrbType = Dev->ThreeStageSetup ? DWC3_TRBCTL_CONTROL_STATUS3 : DWC3_TRBCTL_CONTROL_STATUS2;
+  UINT8  StatusEp = (Dev->ThreeStageSetup && Dev->Ep0ExpectIn) ? DWC3_EP0_OUT : DWC3_EP0_IN;
+  EFI_STATUS Status;
 
   if (Dev->Ep0StatusStarted) {
     return;
   }
 
-  if (Dev->Ep0State == Dwc3Ep0StateSetup) {
+  // A STATUS NOTREADY can precede data completion. Do not cancel live DATA
+  // or interpret its later completion as completion of a STATUS transfer.
+  if (Dev->Ep0State != Dwc3Ep0StateStatus || PhysEpNum != StatusEp) {
     return;
   }
 
-  Dev->Ep0State         = Dwc3Ep0StateStatus;
-  Dev->Ep0StatusStarted = TRUE;
-
-  Dwc3EndTransfer (Dev, PhysEpNum);
-  Dwc3StartTransfer (Dev, PhysEpNum, Dev->Ep0BufferPhys, 0, TrbType);
+  Status = Dwc3StartTransfer (Dev, PhysEpNum, Dev->Ep0BufferPhys, 0, TrbType);
+  if (!EFI_ERROR (Status)) {
+    Dev->Ep0StatusStarted = TRUE;
+  }
 }
 
 STATIC
@@ -568,15 +644,47 @@ Dwc3HandleEp0Event (
 {
   DWC3_ENDPOINT *Endpoint = &Dev->Endpoints[PhysEpNum];
   UINTN          Transferred;
+  UINT8          ExpectedEp;
 
 #if defined(FUXI_USB_DMA32)
-  DEBUG ((DEBUG_ERROR, "FUXI EP0: evt=%u status=%u ep=%u state=%u\n",
-          EventType, EventStatus, PhysEpNum, Dev->Ep0State));
+  DEBUG ((DEBUG_ERROR, "FUXI EP0: evt=%u status=%u ep=%u state=%u rsc=%u run=%u\n",
+          EventType, EventStatus, PhysEpNum, Dev->Ep0State, Endpoint->ResourceIndex,
+          Endpoint->TransferStarted));
 #endif
 
   switch (EventType) {
     case DWC3_DEPEVT_XFERCOMPLETE:
+      ExpectedEp = (Dev->Ep0State == Dwc3Ep0StateSetup) ? DWC3_EP0_OUT :
+                   (Dev->Ep0State == Dwc3Ep0StateData) ?
+                   (Dev->Ep0ExpectIn ? DWC3_EP0_IN : DWC3_EP0_OUT) :
+                   ((Dev->ThreeStageSetup && Dev->Ep0ExpectIn) ? DWC3_EP0_OUT : DWC3_EP0_IN);
+
+      // ENDTRANSFER/reset can leave completion events in the event ring.
+      // Ignore completions while ending the old request; event-ring END
+      // completion, not the shared TRB HWO bit, separates the next request.
+      // Waiting for STATUS is not an armed STATUS transfer.
+      if (Dev->Ep0RestartFailed || Dev->Ep0SetupPending ||
+          Dev->Endpoints[DWC3_EP0_OUT].EndTransferPending ||
+          Dev->Endpoints[DWC3_EP0_IN].EndTransferPending ||
+          !Endpoint->TransferStarted || PhysEpNum != ExpectedEp ||
+          (Dev->Ep0State == Dwc3Ep0StateStatus && !Dev->Ep0StatusStarted)) {
+#if defined(FUXI_USB_DMA32)
+        if (FuxiEp0DropTraceBudget != 0) {
+          FuxiEp0DropTraceBudget--;
+          DEBUG ((DEBUG_ERROR, "FUXI EP0: ignore COMPLETE want=%u armed=%u end=%u/%u trb=%08x/%08x\n",
+                  ExpectedEp, Dev->Ep0StatusStarted,
+                  Dev->Endpoints[DWC3_EP0_OUT].EndTransferPending,
+                  Dev->Endpoints[DWC3_EP0_IN].EndTransferPending,
+                  Endpoint->TrbPool[0].Control, Endpoint->TrbPool[0].Size));
+        }
+#endif
+        break;
+      }
+
       Endpoint->TransferStarted = FALSE;
+      // XFERCOMPLETE retires the resource; do not ENDTRANSFER a later phase
+      // using the resource index from the completed SETUP/data/status TRB.
+      Endpoint->ResourceIndex   = 0;
 
       switch (Dev->Ep0State) {
         case Dwc3Ep0StateSetup:
@@ -600,6 +708,7 @@ Dwc3HandleEp0Event (
 
           Dwc3PushTransferResult (Dev, PhysEpNum, Transferred, UsbTransferStatusComplete);
           Endpoint->TransferBuffer = NULL;
+          Dev->Ep0State = Dwc3Ep0StateStatus;
           break;
 
         case Dwc3Ep0StateStatus:
@@ -615,6 +724,10 @@ Dwc3HandleEp0Event (
     case DWC3_DEPEVT_XFERNOTREADY:
       switch (DEPEVT_STATUS_CONTROL_PHASE (EventStatus)) {
         case DEPEVT_STATUS_CONTROL_DATA:
+          if (Dev->Ep0State != Dwc3Ep0StateData) {
+            break;
+          }
+
           if ((PhysEpNum == DWC3_EP0_IN) != Dev->Ep0ExpectIn) {
             DEBUG ((EFI_D_ERROR, "DWC3: Unexpected Direction for the EP0 Data Stage!\n"));
             Dwc3EndTransfer (Dev, Dev->Ep0ExpectIn ? DWC3_EP0_IN : DWC3_EP0_OUT);
@@ -657,6 +770,36 @@ Dwc3HandleEpEvent (
   Endpoint = &Dev->Endpoints[PhysEpNum];
 
   if (PhysEpNum <= DWC3_EP0_IN) {
+    if (EventType == DWC3_DEPEVT_EPCMDCMPLT &&
+        ((DWC3_DEPEVT_PARAMETERS (Event) >> 8) & 0xF) == DWC3_DEPCMD_ENDTRANSFER &&
+        Endpoint->EndTransferPending) {
+#if defined(FUXI_USB_DMA32)
+      DEBUG ((DEBUG_ERROR, "FUXI EP0: END done ep=%u status=%u\n", PhysEpNum, EventStatus));
+#endif
+      if (EventStatus != 0) {
+        Dev->Ep0RestartFailed = TRUE;
+      }
+
+      if (!Dev->Ep0RestartFailed) {
+        Endpoint->EndTransferPending = FALSE;
+        Endpoint->TransferStarted = FALSE;
+        Endpoint->ResourceIndex = 0;
+
+        if (Dev->Started &&
+            !Dev->Endpoints[DWC3_EP0_OUT].EndTransferPending &&
+            !Dev->Endpoints[DWC3_EP0_IN].EndTransferPending) {
+          if (Dev->Ep0ConnectDonePending) {
+            Dev->Ep0ConnectDonePending = FALSE;
+            Dwc3HandleDeviceEvent (Dev, DWC3_DEVICE_EVENT_CONNECT_DONE << 8);
+          }
+
+          if (Dev->Ep0SetupPending) {
+            Dwc3Ep0OutStart (Dev);
+          }
+        }
+      }
+    }
+
     Dwc3HandleEp0Event (Dev, PhysEpNum, EventType, EventStatus);
     return;
   }
@@ -721,6 +864,11 @@ Dwc3HandleDeviceEvent (
       break;
 
     case DWC3_DEVICE_EVENT_RESET:
+      if (Dev->Ep0RestartFailed) {
+        Dwc3PushMessage (Dev, EfiUsbMsgBusEventReset, NULL);
+        break;
+      }
+
       Register  = MmioRead32 (Dev->Base + DWC3_DCTL);
       Register &= ~DWC3_DCTL_TSTCTRL_MASK;
       MmioWrite32 (Dev->Base + DWC3_DCTL, Register);
@@ -747,17 +895,24 @@ Dwc3HandleDeviceEvent (
 
       Dwc3Ep0ResetState (Dev);
 
-      /* A USB reset drops the endpoint transfer resources. Rebuild the control
-         endpoints (DEPSTARTCFG plus SETTRANSFRESOURCE) before re-arming, or
-         the status stage later fails with DEPEVT_TRANSFER_NO_RESOURCE. */
-      Dwc3EnableEndpoint (Dev, DWC3_EP0_OUT, DWC3_DEPCMD_TYPE_CONTROL, 64, FALSE);
-      Dwc3EnableEndpoint (Dev, DWC3_EP0_IN, DWC3_DEPCMD_TYPE_CONTROL, 64, FALSE);
+      /* Re-arm SETUP after bus reset without resetting endpoint resource
+         allocation while the controller is running. */
       Dwc3Ep0OutStart (Dev);
 
       Dwc3PushMessage (Dev, EfiUsbMsgBusEventReset, NULL);
       break;
 
     case DWC3_DEVICE_EVENT_CONNECT_DONE:
+      if (Dev->Ep0RestartFailed) {
+        break;
+      }
+
+      if (Dev->Endpoints[DWC3_EP0_OUT].EndTransferPending ||
+          Dev->Endpoints[DWC3_EP0_IN].EndTransferPending) {
+        Dev->Ep0ConnectDonePending = TRUE;
+        break;
+      }
+
       Register = MmioRead32 (Dev->Base + DWC3_DSTS) & DWC3_DSTS_CONNECTSPD;
 
       switch (Register) {
@@ -780,10 +935,10 @@ Dwc3HandleDeviceEvent (
           break;
       }
 
-      Ep0Rearm = (BOOLEAN)(!Dev->Endpoints[DWC3_EP0_OUT].TransferStarted);
+      Ep0Rearm = (BOOLEAN)(!Dev->Endpoints[DWC3_EP0_OUT].TransferStarted && !Dev->Ep0SetupPending);
 
-      Dwc3EnableEndpoint (Dev, DWC3_EP0_OUT, DWC3_DEPCMD_TYPE_CONTROL, Ep0MaxPacket, (BOOLEAN)!Ep0Rearm);
-      Dwc3EnableEndpoint (Dev, DWC3_EP0_IN, DWC3_DEPCMD_TYPE_CONTROL, Ep0MaxPacket, (BOOLEAN)!Ep0Rearm);
+      Dwc3EnableEndpoint (Dev, DWC3_EP0_OUT, DWC3_DEPCMD_TYPE_CONTROL, Ep0MaxPacket, Dev->Endpoints[DWC3_EP0_OUT].Enabled);
+      Dwc3EnableEndpoint (Dev, DWC3_EP0_IN, DWC3_DEPCMD_TYPE_CONTROL, Ep0MaxPacket, Dev->Endpoints[DWC3_EP0_IN].Enabled);
 
       BulkMaxPacket = (UINT16)((Dev->Speed >= UsbBusSpeedHigh) ? 512 : 64);
 

@@ -67,6 +67,7 @@ typedef struct {
   BOOLEAN                      Enabled;
   BOOLEAN                      Stalled;
   BOOLEAN                      TransferStarted;
+  BOOLEAN                      EndTransferPending;
 
   UINT8                        PhysEpNum;
   UINT8                        EpType;
@@ -93,6 +94,7 @@ typedef struct {
   UINT8                        NumPhysicalEps;
 
   BOOLEAN                      Started;
+  BOOLEAN                      Stopping;
   BOOLEAN                      Suspended;
   UINT8                        LinkState;
   EFI_USB_BUS_SPEED            Speed;
@@ -110,6 +112,9 @@ typedef struct {
 
   BOOLEAN                      Ep0ExpectIn;
   BOOLEAN                      Ep0StatusStarted;
+  BOOLEAN                      Ep0SetupPending;
+  BOOLEAN                      Ep0RestartFailed;
+  BOOLEAN                      Ep0ConnectDonePending;
   EFI_USB_DEVICE_REQUEST       SetupPacket;
   BOOLEAN                      Ep0Bounced;
   VOID                        *Ep0BounceTarget;
@@ -125,6 +130,9 @@ typedef struct {
 
 EFI_STATUS
 Dwc3CoreInit (IN DWC3_DEV *Dev);
+
+EFI_STATUS EFIAPI
+Dwc3StopController (IN EFI_USBFN_IO_PROTOCOL *This);
 
 VOID
 Dwc3CoreExit (IN DWC3_DEV *Dev);

@@ -231,7 +231,7 @@ Dwc3ConfigureEnableEndpoints (
   DEBUG ((DEBUG_ERROR, "FUXI DWC3: S14 ConfigureEnableEndpoints entry\n"));
 #endif
 
-  if (!Dev->Started) {
+  if (!Dev->Started || Dev->Stopping) {
     return EFI_NOT_READY;
   }
 
@@ -562,7 +562,7 @@ Dwc3EventHandler (
 
   Dev = DWC3_DEV_FROM_PROTOCOL (This);
 
-  if (!Dev->Started) {
+  if (!Dev->Started || Dev->Stopping) {
     return EFI_NOT_READY;
   }
 
@@ -804,6 +804,10 @@ Dwc3StartController (IN EFI_USBFN_IO_PROTOCOL *This)
 
   Dev = DWC3_DEV_FROM_PROTOCOL (This);
 
+  if (Dev->Stopping) {
+    return EFI_NOT_READY;
+  }
+
   if (Dev->Started) {
     return EFI_SUCCESS;
   }
@@ -833,43 +837,6 @@ Dwc3StartController (IN EFI_USBFN_IO_PROTOCOL *This)
   Dev->EventTraceBudget = DWC3_EVENT_TRACE_BUDGET;
 
   return EFI_SUCCESS;
-}
-
-STATIC
-EFI_STATUS
-EFIAPI
-Dwc3StopController (IN EFI_USBFN_IO_PROTOCOL *This)
-{
-  DWC3_DEV *Dev;
-  UINT8     Index;
-  EFI_STATUS Status;
-
-  if (This == NULL) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  Dev = DWC3_DEV_FROM_PROTOCOL (This);
-
-  if (!Dev->Started) {
-    return EFI_SUCCESS;
-  }
-
-  Status = Dwc3RunStop (Dev, FALSE);
-  if (EFI_ERROR (Status)) { return Status; }
-
-  for (Index = 0; Index < Dev->NumPhysicalEps; Index++) {
-    Dwc3DisableEndpoint (Dev, Index);
-  }
-
-  Dwc3CoreExit (Dev);
-  Status = UsbfnPlatformPhyExit ();
-
-  Dev->Started     = FALSE;
-  Dev->Speed       = UsbBusSpeedUnknown;
-  Dev->MessageHead = 0;
-  Dev->MessageTail = 0;
-
-  return Status;
 }
 
 STATIC
