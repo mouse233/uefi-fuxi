@@ -10,6 +10,17 @@
 
 #include "UsbfnDwc3Dxe.h"
 
+// Per-packet EP0 traces flood the boot log during host enumeration; a
+// diagnostic-first candidate silences them with FUXI_USB_EP0_TRACE=0.
+#ifndef FUXI_USB_EP0_TRACE
+#define FUXI_USB_EP0_TRACE 1
+#endif
+#if defined(FUXI_USB_DMA32) && FUXI_USB_EP0_TRACE
+#define FUXI_TRACE(Arg) DEBUG Arg
+#else
+#define FUXI_TRACE(Arg)
+#endif
+
 STATIC VOID Dwc3HandleDeviceEvent (IN DWC3_DEV *Dev, IN UINT32 Event);
 
 #if defined(FUXI_USB_DMA32)
@@ -97,7 +108,7 @@ Dwc3SendEpCommand (
   UINT32 Timeout;
   UINT32 CommandStatus;
 #if defined(FUXI_USB_DMA32)
-  BOOLEAN Trace = (BOOLEAN)(FuxiCommandTraceBudget != 0);
+  BOOLEAN Trace = (BOOLEAN)(FUXI_USB_EP0_TRACE && FuxiCommandTraceBudget != 0);
   if (Trace) {
     FuxiCommandTraceBudget--;
     DEBUG ((DEBUG_ERROR, "FUXI EP: submit ep=%u cmd=%x params=%08x/%08x/%08x\n",
@@ -462,7 +473,7 @@ Dwc3Ep0OutStart (IN DWC3_DEV *Dev)
   }
 
 #if defined(FUXI_USB_DMA32)
-  DEBUG ((DEBUG_ERROR, "FUXI EP0: arm setup buffer\n"));
+  FUXI_TRACE ((DEBUG_ERROR, "FUXI EP0: arm setup buffer\n"));
 #endif
   Dev->Ep0State         = Dwc3Ep0StateSetup;
   Dev->Ep0StatusStarted = FALSE;
@@ -647,7 +658,7 @@ Dwc3HandleEp0Event (
   UINT8          ExpectedEp;
 
 #if defined(FUXI_USB_DMA32)
-  DEBUG ((DEBUG_ERROR, "FUXI EP0: evt=%u status=%u ep=%u state=%u rsc=%u run=%u\n",
+  FUXI_TRACE ((DEBUG_ERROR, "FUXI EP0: evt=%u status=%u ep=%u state=%u rsc=%u run=%u\n",
           EventType, EventStatus, PhysEpNum, Dev->Ep0State, Endpoint->ResourceIndex,
           Endpoint->TransferStarted));
 #endif
@@ -671,7 +682,7 @@ Dwc3HandleEp0Event (
 #if defined(FUXI_USB_DMA32)
         if (FuxiEp0DropTraceBudget != 0) {
           FuxiEp0DropTraceBudget--;
-          DEBUG ((DEBUG_ERROR, "FUXI EP0: ignore COMPLETE want=%u armed=%u end=%u/%u trb=%08x/%08x\n",
+          FUXI_TRACE ((DEBUG_ERROR, "FUXI EP0: ignore COMPLETE want=%u armed=%u end=%u/%u trb=%08x/%08x\n",
                   ExpectedEp, Dev->Ep0StatusStarted,
                   Dev->Endpoints[DWC3_EP0_OUT].EndTransferPending,
                   Dev->Endpoints[DWC3_EP0_IN].EndTransferPending,
@@ -774,7 +785,7 @@ Dwc3HandleEpEvent (
         ((DWC3_DEPEVT_PARAMETERS (Event) >> 8) & 0xF) == DWC3_DEPCMD_ENDTRANSFER &&
         Endpoint->EndTransferPending) {
 #if defined(FUXI_USB_DMA32)
-      DEBUG ((DEBUG_ERROR, "FUXI EP0: END done ep=%u status=%u\n", PhysEpNum, EventStatus));
+      FUXI_TRACE ((DEBUG_ERROR, "FUXI EP0: END done ep=%u status=%u\n", PhysEpNum, EventStatus));
 #endif
       if (EventStatus != 0) {
         Dev->Ep0RestartFailed = TRUE;

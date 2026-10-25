@@ -57,6 +57,8 @@
   FUXI_DATA_SCM_QUERY            = 0
   # M1: native read-only UFS takeover diagnostic (FuxiNativeUfsDxe).
   FUXI_DATA_PORT_UFS             = 0
+  # 0 = silence the per-packet EP0 traces (diagnostic-first candidates).
+  FUXI_USB_EP0_TRACE             = 1
 
   #
   # 0 = SM8550-AB
@@ -151,11 +153,19 @@
 !if $(FUXI_USB_KEEP_PHY) == 1
       *_*_*_CC_FLAGS = -DFUXI_USB_KEEP_PHY=1
 !endif
+!if $(FUXI_USB_EP0_TRACE) == 0
+      *_*_*_CC_FLAGS = -DFUXI_USB_EP0_TRACE=0
+!endif
   }
   fuxiPkg/Drivers/FuxiUsbRamDxe/FuxiUsbRamDxe.inf {
-!if $(FUXI_USB_RAM_SYSTEM_HANDOFF) == 1
+!if $(FUXI_USB_RAM_SYSTEM_HANDOFF) == 1 || $(FUXI_USB_EP0_TRACE) == 0
     <BuildOptions>
+!endif
+!if $(FUXI_USB_RAM_SYSTEM_HANDOFF) == 1
       *_*_*_CC_FLAGS = -DFUXI_USB_RAM_SYSTEM_HANDOFF=1
+!endif
+!if $(FUXI_USB_EP0_TRACE) == 0
+      *_*_*_CC_FLAGS = -DFUXI_USB_EP0_TRACE=0
 !endif
   }
 !endif

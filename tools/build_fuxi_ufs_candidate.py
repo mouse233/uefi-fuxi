@@ -64,6 +64,9 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_DATA_PORT_UFS"] = "1"
     ctx.board["firmware"]["defines"]["FUXI_DATA_PORT_PROBE"] = "0"
     ctx.board["firmware"]["defines"]["FUXI_DATA_SCM_QUERY"] = "0"
+    # Keep the diagnostic block readable on the boot log: the receiver's
+    # per-packet EP0 traces would scroll it away during enumeration.
+    ctx.board["firmware"]["defines"]["FUXI_USB_EP0_TRACE"] = "0"
     ctx.uefi = uefi
     fd = firmware.build(ctx, {}, uefi, edk2, "DEBUG")
     shutil.copyfile(fd, out / "SILICIUM_UEFI.fd")

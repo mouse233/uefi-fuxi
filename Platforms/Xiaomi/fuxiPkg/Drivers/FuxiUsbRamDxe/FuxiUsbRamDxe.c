@@ -12,6 +12,16 @@
 #include <Library/TimerLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include "RamBulk.h"
+// Per-setup-packet traces flood the boot log during host enumeration; a
+// diagnostic-first candidate silences them with FUXI_USB_EP0_TRACE=0.
+#ifndef FUXI_USB_EP0_TRACE
+#define FUXI_USB_EP0_TRACE 1
+#endif
+#if FUXI_USB_EP0_TRACE
+#define FUXI_TRACE(Arg) DEBUG Arg
+#else
+#define FUXI_TRACE(Arg)
+#endif
 #if defined(FUXI_USB_RAM_SYSTEM_HANDOFF)
 #include <Protocol/UniXNURamObjects.h>
 #include <Library/CacheMaintenanceLib.h>
@@ -242,7 +252,7 @@ EFI_STATUS EFIAPI FuxiUsbRamEntry(EFI_HANDLE Image,EFI_SYSTEM_TABLE *SystemTable
     Status=Usb->EventHandler(Usb,&Message,&Size,&Payload);
     if(EFI_ERROR(Status)) break;
     if(Message==EfiUsbMsgSetupPacket) {
-      DEBUG((DEBUG_ERROR,"USBRAM: setup rt=%02x req=%02x val=%04x idx=%04x len=%u\n",
+      FUXI_TRACE((DEBUG_ERROR,"USBRAM: setup rt=%02x req=%02x val=%04x idx=%04x len=%u\n",
         Payload.udr.RequestType,Payload.udr.Request,Payload.udr.Value,
         Payload.udr.Index,Payload.udr.Length));
       Status=Setup(&Payload.udr);
@@ -255,7 +265,7 @@ EFI_STATUS EFIAPI FuxiUsbRamEntry(EFI_HANDLE Image,EFI_SYSTEM_TABLE *SystemTable
     } else if(Message==EfiUsbMsgBusEventReset || Message==EfiUsbMsgBusEventDetach) {
       Configured=FALSE;Pending=FALSE;Phase=0;
       RbClear(&Session);
-      DEBUG((DEBUG_ERROR,"USBRAM: bus %a; session cleared\n",
+      FUXI_TRACE((DEBUG_ERROR,"USBRAM: bus %a; session cleared\n",
         Message==EfiUsbMsgBusEventReset?"reset":"detach"));
     } else if(Message==EfiUsbMsgBusEventSpeed) {
       Config.Out.MaxPacketSize=Config.In.MaxPacketSize=(UINT16)(Payload.ubs>=UsbBusSpeedHigh?512:64);

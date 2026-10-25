@@ -161,6 +161,8 @@ UEFI 与 XNU 的差异已处理：本机 DMA 窗口由 UEFI 分配器给出（4 
 
 剩余为实机证据：空闲控制器检查、独立 DMA 窗口、SID 路由 readback/回滚、GPT 与已知原始块哈希都需要照片级上机记录；实机 userdata 首块 magic 应与 XNU 2026-10-23 记录的 `f673c25f 7086bec0` 对照。单次 SMC/命令可能受安全固件影响而不返回；超时即隔离缓冲并停止，不得转入 DarwinBoot。UFS 的 SID 和 context bank 不套用 USB 的 0x40 路由。退回菜单并不代替控制器停机。
 
+实机阶段记录（2026-10-25）：阶段标记把首次崩溃定位到第一条带数据阶段的命令（`capacity`），根因是 PRDT 表项被误写成大端——UFS PRDT 是小端原生存储，只有 UPIU 字段是大端；字节翻转的 DMA 地址触发 SMMU 故障并整机复位。改为与 XNU 一致的小端存储后，两次实机启动诊断全程跑完、接收器完成枚举（主机侧 1209:0001 可见），UFS 诊断与 USB 路由试用在同一 SMMU 上共存（USB 按既有策略落到 ABL 留下的 context bank 5，顶 bank 未被动过）。诊断数值行走双通道（ConOut + 调试串口）；候选以 `FUXI_USB_EP0_TRACE=0` 静默接收器逐包 EP0 调试行，使数值块稳定保留在屏幕上供拍照。GPT/magic/SHA256/停机 readback 的照片采集仍在进行。
+
 ## 8. 接入现有 RAM 对象链路
 
 以后由新的本地加载器调用公共分配/发布层，避免依赖USB协议的BEGIN/DATA/END状态机。当前`FuxiUsbRamDxe.c`仍是发布的实际实现，本分支尚未抽取或替换它。

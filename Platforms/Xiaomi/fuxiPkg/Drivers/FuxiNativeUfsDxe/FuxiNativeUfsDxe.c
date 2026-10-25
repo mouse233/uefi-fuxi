@@ -10,6 +10,7 @@
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PrintLib.h>
 #include <Library/TimerLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
@@ -22,6 +23,27 @@
 #define FNU_TIMEOUT_READ       1000000U
 #define FNU_TIMEOUT_SSU         500000U
 #define FNU_STOP_ATTEMPTS        10000U
+// Stage markers go through the debug console (they appear on the on-screen
+// boot log), so a reset localizes the faulting step without a photo of values.
+#define FNU_STAGE(Name) DEBUG((DEBUG_ERROR, "FUXIUFS stage: %a\n", (Name)))
+
+// Value lines go to both consoles: ConOut (the graphics console) and the
+// debug serial, which is the channel the on-screen boot log renders.
+STATIC VOID FnuLog(CONST CHAR16 *Fmt, ...) {
+  CHAR16 Buffer[320];
+  CHAR8 Ascii[320];
+  VA_LIST Args;
+  UINTN I;
+  VA_START(Args, Fmt);
+  UnicodeVSPrint(Buffer, sizeof(Buffer), Fmt, Args);
+  VA_END(Args);
+  Print(L"%s\n", Buffer);
+  for (I = 0; I < sizeof(Buffer) / sizeof(Buffer[0]) - 1 && Buffer[I] != 0; ++I) {
+    Ascii[I] = (CHAR8)(Buffer[I] & 0xff);  // diagnostic lines are plain ASCII
+  }
+  Ascii[I] = 0;
+  DEBUG((DEBUG_ERROR, "%a\n", Ascii));
+}
 
 STATIC FNU_OPS mOps;
 STATIC FNU_DEVICE mDev;
@@ -95,13 +117,18 @@ STATIC EFI_STATUS AllocateDmaWindow(UINT64 FirmwareList, UINTN Pages, VOID **Vir
 STATIC VOID PrintSha256(CONST CHAR16 *Label, CONST VOID *Data, UINTN Bytes) {
   FNU_SHA256_CTX Ctx;
   UINT8 Digest[32];
-  UINTN I;
+  CHAR16 Line[128];
+  UINTN I, At = 0;
   FnuSha256Init(&Ctx);
   FnuSha256Update(&Ctx, Data, Bytes);
   FnuSha256Final(&Ctx, Digest);
-  Print(L"FUXIUFS %s", Label);
-  for (I = 0; I < 32; ++I) Print(L"%02x", (UINT32)Digest[I]);
-  Print(L"\n");
+  for (I = 0; Label[I] != 0 && At < 64; ++I) Line[At++] = Label[I];
+  for (I = 0; I < 32 && At < 100; ++I) {
+    At += (UINTN)UnicodeSPrint(Line + At, sizeof(Line) - At * sizeof(CHAR16),
+                               L"%02x", (UINT32)Digest[I]);
+  }
+  Line[At] = 0;
+  FnuLog(L"%s", Line);
 }
 
 STATIC EFI_STATUS FnuReadBlocksFdp(VOID *Context, UINT64 Lba, UINTN Blocks, VOID *Buffer) {
@@ -126,14 +153,14 @@ STATIC VOID ShutdownQueue(VOID) {
     RunStop = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLRSR);
     Hcs = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_HCS);
     Is = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_IS);
-    Print(L"FUXIUFS stop=%u db=%08x run=%x hcs=%08x is=%08x\n",
+    FnuLog(L"FUXIUFS stop=%u db=%08x run=%x hcs=%08x is=%08x\n",
           (UINT32)Stopped, Doorbell, RunStop, Hcs, Is);
   } else {
     // The controller may still own the DMA window; do not touch registers.
     Doorbell = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLDBR);
     Hcs = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_HCS);
     Is = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_IS);
-    Print(L"FUXIUFS quarantined db=%08x hcs=%08x is=%08x (no register writes)\n",
+    FnuLog(L"FUXIUFS quarantined db=%08x hcs=%08x is=%08x (no register writes)\n",
           Doorbell, Hcs, Is);
   }
   if (mSmmuConfigured) {
@@ -141,7 +168,7 @@ STATIC VOID ShutdownQueue(VOID) {
     UINT32 Fsr = FnuSmmuRead(NULL, mSmmuCb + 0x58);
     UINT64 Far = (UINT64)FnuSmmuRead(NULL, mSmmuCb + 0x60) |
                  ((UINT64)FnuSmmuRead(NULL, mSmmuCb + 0x64) << 32);
-    Print(L"FUXIUFS SMMU gfsr=%08x fsr=%08x far=%lx\n", Gfsr, Fsr, Far);
+    FnuLog(L"FUXIUFS SMMU gfsr=%08x fsr=%08x far=%lx\n", Gfsr, Fsr, Far);
   }
 }
 
@@ -151,19 +178,19 @@ STATIC VOID InspectPartition(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Partitio
   FDP_F2FS_GEOMETRY Geometry;
   UINT64 Blocks, Bytes;
   if (!Partition->Present) {
-    Print(L"FUXIUFS %s: not found\n", Name);
+    FnuLog(L"FUXIUFS %s: not found\n", Name);
     return;
   }
   Blocks = Partition->Last - Partition->First + 1;
   if (Blocks > MAX_UINT64 / Disk->BlockSize) {
-    Print(L"FUXIUFS %s: geometry overflow\n", Name);
+    FnuLog(L"FUXIUFS %s: geometry overflow\n", Name);
     return;
   }
   Bytes = Blocks * Disk->BlockSize;
   // Signature/geometry inspection only; never a mount or file read.
   Status = FdpReadPartition(Disk, Partition, 0, 1, Scratch);
   if (!EFI_ERROR(Status)) Status = FdpInspectF2fs(Scratch, 4096, Bytes, &Geometry);
-  Print(L"FUXIUFS %s first-block F2FS-header=%r\n", Name, Status);
+  FnuLog(L"FUXIUFS %s first-block F2FS-header=%r\n", Name, Status);
 }
 
 STATIC VOID RunDiagnostic(VOID) {
@@ -181,18 +208,20 @@ STATIC VOID RunDiagnostic(VOID) {
   mDev.Poisoned = &mPoisoned;
 
   // Read-only clock report before anything is written.
-  Print(L"FUXIUFS GCC gdsc=%08x memphy=%08x axi=%08x ahb=%08x unipro=%08x\n",
+  FNU_STAGE("gcc-report");
+  FnuLog(L"FUXIUFS GCC gdsc=%08x memphy=%08x axi=%08x ahb=%08x unipro=%08x\n",
         FnuRead(&mOps, FNU_GCC_BASE + FNU_GCC_UFS_PHY_GDSCR),
         FnuRead(&mOps, FNU_GCC_BASE + FNU_GCC_MEM_PHY_GDSCR),
         FnuRead(&mOps, FNU_GCC_BASE + FNU_GCC_UFS_PHY_AXI),
         FnuRead(&mOps, FNU_GCC_BASE + FNU_GCC_UFS_PHY_AHB),
         FnuRead(&mOps, FNU_GCC_BASE + FNU_GCC_UFS_PHY_UNIPRO));
-  Print(L"FUXIUFS GCC txsym=%08x rxsym=%08x aux=%08x aggre=%08x\n",
+  FnuLog(L"FUXIUFS GCC txsym=%08x rxsym=%08x aux=%08x aggre=%08x\n",
         FnuRead(&mOps, FNU_GCC_BASE + FNU_GCC_UFS_PHY_TXSYM0),
         FnuRead(&mOps, FNU_GCC_BASE + FNU_GCC_UFS_PHY_RXSYM0),
         FnuRead(&mOps, FNU_GCC_BASE + FNU_GCC_UFS_PHY_AUX),
         FnuRead(&mOps, FNU_GCC_BASE + FNU_GCC_AGGRE_UFS_AXI));
 
+  FNU_STAGE("hc-report");
   Cap = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_CAP);
   Ver = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_VER);
   Is = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_IS);
@@ -205,61 +234,65 @@ STATIC VOID RunDiagnostic(VOID) {
   FirmwareList = ((UINT64)FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLBAU) << 32) |
                  FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLBA);
   for (I = 0; I < 5; ++I) Uic[I] = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UIC(I));
-  Print(L"FUXIUFS HC cap=%08x ver=%08x hcs=%08x hce=%08x is=%08x\n",
+  FnuLog(L"FUXIUFS HC cap=%08x ver=%08x hcs=%08x hce=%08x is=%08x\n",
         Cap, Ver, Hcs, Hce, Is);
-  Print(L"FUXIUFS HC db=%08x tdb=%08x run=%x ahit=%x list=%lx\n",
+  FnuLog(L"FUXIUFS HC db=%08x tdb=%08x run=%x ahit=%x list=%lx\n",
         Doorbell, TaskDoorbell, RunStop, Ahit, FirmwareList);
-  Print(L"FUXIUFS UIC pa=%08x a1=%08x a2=%08x a3=%08x r=%08x\n",
+  FnuLog(L"FUXIUFS UIC pa=%08x a1=%08x a2=%08x a3=%08x r=%08x\n",
         Uic[0], Uic[1], Uic[2], Uic[3], Uic[4]);
 
   // Idle gate: refuse to touch the controller unless it matches the state the
   // proven takeover accepted (HCE set, HCS low nibble set, both doorbells
   // clear, no fatal status).
+  FNU_STAGE("idle-gate");
   Reason = FnuQueueStopPlan(Hce, Hcs, Doorbell, TaskDoorbell, Is);
   if (Reason != NULL) {
-    Print(L"FUXIUFS idle: %a\n", Reason);
+    FnuLog(L"FUXIUFS idle: %a\n", Reason);
     return;
   }
 
+  FNU_STAGE("dma-alloc");
   mDmaPages = EFI_SIZE_TO_PAGES(FNU_DMA_BYTES);
   Status = AllocateDmaWindow(FirmwareList, mDmaPages, &mDma, &mDev.DmaPhys);
   if (EFI_ERROR(Status)) {
-    Print(L"FUXIUFS DMA window=%r\n", Status);
+    FnuLog(L"FUXIUFS DMA window=%r\n", Status);
     return;
   }
   mDev.Dma = mDma;
-  Print(L"FUXIUFS DMA phys=%lx bytes=%x\n", mDev.DmaPhys, (UINT32)FNU_DMA_BYTES);
+  FnuLog(L"FUXIUFS DMA phys=%lx bytes=%x\n", mDev.DmaPhys, (UINT32)FNU_DMA_BYTES);
   ZeroMem(mDma, FNU_DMA_BYTES);
   FnuCacheCiv(&mOps, mDma, FNU_DMA_BYTES);
 
+  FNU_STAGE("stop-queue");
   FnuWrite(&mOps, FNU_UFS_HC_BASE + FNU_REG_IE, 0);
   FnuWrite(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLRSR, 0);
   if (!FnuWaitRegister(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLRSR, 1, 0, FNU_STOP_ATTEMPTS)) {
-    Print(L"FUXIUFS stop: request list did not stop\n");
+    FnuLog(L"FUXIUFS stop: request list did not stop\n");
     return;
   }
 
+  FNU_STAGE("smmu-plan");
   Plan = FnuPlanSmmuFrom(FNU_SMMU_STREAM, mDev.DmaPhys, FNU_DMA_BYTES, NULL, FnuSmmuRead, 1);
   if (Plan.Error != NULL) {
-    Print(L"FUXIUFS SMMU plan: %a slot=%x bank=%u\n", Plan.Error, Plan.Slot, Plan.Bank);
+    FnuLog(L"FUXIUFS SMMU plan: %a slot=%x bank=%u\n", Plan.Error, Plan.Slot, Plan.Bank);
     return;
   }
   SmmuError = FnuConfigureSmmu(&Plan, FNU_SMMU_STREAM, NULL, FnuSmmuRead, FnuSmmuWrite);
   if (SmmuError != NULL) {
-    Print(L"FUXIUFS SMMU configure: %a\n", SmmuError);
+    FnuLog(L"FUXIUFS SMMU configure: %a\n", SmmuError);
     return;
   }
   mSmmuConfigured = TRUE;
   mSmmuCb = (Plan.Pages + Plan.Bank) * 4096;
-  Print(L"FUXIUFS SMMU slot=%u bank=%u reuse=%u pages=%u smr=%08x s2cr=%08x\n",
+  FnuLog(L"FUXIUFS SMMU slot=%u bank=%u reuse=%u pages=%u smr=%08x s2cr=%08x\n",
         Plan.Slot, Plan.Bank, (UINT32)Plan.Reuse, Plan.Pages,
         FnuSmmuRead(NULL, 0x800 + 4 * Plan.Slot), FnuSmmuRead(NULL, 0xc00 + 4 * Plan.Slot));
-
+  FNU_STAGE("start-queue");
   FnuWrite(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLBA, (UINT32)mDev.DmaPhys);
   FnuWrite(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLBAU, (UINT32)(mDev.DmaPhys >> 32));
   if (FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLBA) != (UINT32)mDev.DmaPhys ||
       FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLBAU) != (UINT32)(mDev.DmaPhys >> 32)) {
-    Print(L"FUXIUFS start: request list address readback\n");
+    FnuLog(L"FUXIUFS start: request list address readback\n");
     return;
   }
   IsBefore = FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_IS);
@@ -267,19 +300,21 @@ STATIC VOID RunDiagnostic(VOID) {
   FnuWrite(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLRSR, 1);
   if (!FnuWaitRegister(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLRSR, 1, 1, FNU_STOP_ATTEMPTS) ||
       !FnuWaitRegister(&mOps, FNU_UFS_HC_BASE + FNU_REG_HCS, 3, 3, FNU_STOP_ATTEMPTS)) {
-    Print(L"FUXIUFS start: request list not ready hcs=%08x\n",
+    FnuLog(L"FUXIUFS start: request list not ready hcs=%08x\n",
           FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_HCS));
     return;
   }
 
+  FNU_STAGE("nop");
   Status = FnuNop(&mDev, &mOps, FNU_POLLS(FNU_TIMEOUT_NOP));
-  Print(L"FUXIUFS nop=%r\n", Status);
+  FnuLog(L"FUXIUFS nop=%r\n", Status);
   if (EFI_ERROR(Status)) {
     ShutdownQueue();
     return;
   }
+  FNU_STAGE("power-query");
   Status = FnuQueryRead(&mDev, &mOps, 0x03, 0x02, &Power, FNU_POLLS(FNU_TIMEOUT_NOP));
-  Print(L"FUXIUFS power-query=%r mode=%02x\n", Status, Power);
+  FnuLog(L"FUXIUFS power-query=%r mode=%02x\n", Status, Power);
   if (EFI_ERROR(Status)) {
     ShutdownQueue();
     return;
@@ -288,13 +323,14 @@ STATIC VOID RunDiagnostic(VOID) {
     // START STOP UNIT, power condition ACTIVE, to the device well-known LU
     // (as Linux resumes); no user LUN and no user data touched.
     Status = FnuStartStopUnit(&mDev, &mOps, FNU_POLLS(FNU_TIMEOUT_SSU));
-    Print(L"FUXIUFS wake-ssu=%r\n", Status);
+    FnuLog(L"FUXIUFS wake-ssu=%r\n", Status);
     if (EFI_ERROR(Status)) {
       ShutdownQueue();
       return;
     }
     MicroSecondDelay(50000);
   }
+  FNU_STAGE("lun0-tur");
   Status = EFI_NOT_READY;
   for (Attempt = 0; Attempt < 20 && !mPoisoned; ++Attempt) {
     Status = FnuTestUnitReady(&mDev, &mOps, FNU_POLLS(FNU_TIMEOUT_NOP));
@@ -302,25 +338,27 @@ STATIC VOID RunDiagnostic(VOID) {
     if (!EFI_ERROR(Status)) break;
     MicroSecondDelay(10000);
   }
-  Print(L"FUXIUFS lun0-tur=%r attempts=%u\n", Status, (UINT32)TurAttempts);
+  FnuLog(L"FUXIUFS lun0-tur=%r attempts=%u\n", Status, (UINT32)TurAttempts);
   if (EFI_ERROR(Status)) {
     ShutdownQueue();
     return;
   }
+  FNU_STAGE("capacity");
   Status = FnuReadCapacity(&mDev, &mOps, &LastLba, &BlockBytes, FNU_POLLS(FNU_TIMEOUT_READ));
-  Print(L"FUXIUFS capacity=%r last=%x block=%u\n", Status, LastLba, BlockBytes);
+  FnuLog(L"FUXIUFS capacity=%r last=%x block=%u\n", Status, LastLba, BlockBytes);
   if (EFI_ERROR(Status)) {
     ShutdownQueue();
     return;
   }
   if (BlockBytes != 4096) {
-    Print(L"FUXIUFS unexpected LUN0 block size; no GPT read\n");
+    FnuLog(L"FUXIUFS unexpected LUN0 block size; no GPT read\n");
     ShutdownQueue();
     return;
   }
   mLastBlock = LastLba;
   mReady = TRUE;
 
+  FNU_STAGE("gpt");
   {
     FDP_DISK Disk;
     FDP_PARTITIONS Parts;
@@ -331,14 +369,14 @@ STATIC VOID RunDiagnostic(VOID) {
     Disk.LastBlock = mLastBlock;
     Scratch = AllocateAlignedPages(EFI_SIZE_TO_PAGES(FDP_SCRATCH_BYTES), 4096);
     if (Scratch == NULL) {
-      Print(L"FUXIUFS scratch allocation failed\n");
+      FnuLog(L"FUXIUFS scratch allocation failed\n");
       ShutdownQueue();
       return;
     }
     Status = FdpReadGpt(&Disk, Scratch, FDP_SCRATCH_BYTES, &Parts);
-    Print(L"FUXIUFS GPT=%r\n", Status);
+    FnuLog(L"FUXIUFS GPT=%r\n", Status);
     if (!EFI_ERROR(Status)) {
-      Print(L"FUXIUFS metadata=%lx..%lx userdata=%lx..%lx\n",
+      FnuLog(L"FUXIUFS metadata=%lx..%lx userdata=%lx..%lx\n",
             Parts.Metadata.First, Parts.Metadata.Last,
             Parts.Userdata.First, Parts.Userdata.Last);
       if (Parts.Userdata.Present) {
@@ -348,12 +386,12 @@ STATIC VOID RunDiagnostic(VOID) {
           UINT32 Magic0 = Block[0] | (Block[1] << 8) | (Block[2] << 16) | ((UINT32)Block[3] << 24);
           UINT32 Magic1 = Block[4] | (Block[5] << 8) | (Block[6] << 16) | ((UINT32)Block[7] << 24);
           UINT32 Ext4 = (UINT32)Block[1080] | ((UINT32)Block[1081] << 8);
-          Print(L"FUXIUFS userdata block0 magic=%08x %08x ext4magic=%04x\n",
+          FnuLog(L"FUXIUFS userdata block0 magic=%08x %08x ext4magic=%04x\n",
                 Magic0, Magic1, Ext4);
-          Print(L"FUXIUFS (XNU 2026-10-23 observed magic f673c25f 7086bec0)\n");
+          FnuLog(L"FUXIUFS (XNU 2026-10-23 observed magic f673c25f 7086bec0)\n");
           PrintSha256(L"userdata-first-block-sha256 ", Scratch, 4096);
         } else {
-          Print(L"FUXIUFS userdata first block=%r\n", Status);
+          FnuLog(L"FUXIUFS userdata first block=%r\n", Status);
         }
       }
       if (Parts.Metadata.Present) {
@@ -361,7 +399,7 @@ STATIC VOID RunDiagnostic(VOID) {
         if (!EFI_ERROR(Status)) {
           PrintSha256(L"metadata-first-block-sha256 ", Scratch, 4096);
         } else {
-          Print(L"FUXIUFS metadata first block=%r\n", Status);
+          FnuLog(L"FUXIUFS metadata first block=%r\n", Status);
         }
       }
       InspectPartition(&Disk, &Parts.Metadata, L"metadata", Scratch);
@@ -370,10 +408,12 @@ STATIC VOID RunDiagnostic(VOID) {
     ZeroMem(Scratch, EFI_PAGES_TO_SIZE(EFI_SIZE_TO_PAGES(FDP_SCRATCH_BYTES)));
     FreeAlignedPages(Scratch, EFI_SIZE_TO_PAGES(FDP_SCRATCH_BYTES));
   }
+  FNU_STAGE("shutdown");
   ShutdownQueue();
 }
 
 EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
+  DEBUG((DEBUG_ERROR, "FUXIUFS: entry reached\n"));
   mOps.Context = NULL;
   mOps.Read = FnuRead;
   mOps.Write = FnuWrite;
@@ -386,9 +426,9 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
   // candidate parks in its entry after the 180 s window and never reaches
   // ReadyToBoot, and the topmost SMMU context bank must stay untouched until
   // the receiver's route trial claims it.
-  Print(L"\nFUXIUFS M1: native UFS read-only takeover (diagnostic)\n");
+  FnuLog(L"\nFUXIUFS M1: native UFS read-only takeover (diagnostic)");
   RunDiagnostic();
-  Print(L"FUXIUFS END: metadata-decrypt=UNIMPLEMENTED file-read=UNIMPLEMENTED\n");
+  FnuLog(L"FUXIUFS END: metadata-decrypt=UNIMPLEMENTED file-read=UNIMPLEMENTED\n");
   DEBUG((DEBUG_INFO, "FUXIUFS M1 completed; no decryptor, no BlockIo publication\n"));
   return EFI_SUCCESS;
 }

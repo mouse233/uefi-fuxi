@@ -50,12 +50,15 @@ VOID FnuFillUtrd(UINT8 *Dma, UINT64 DmaPhys, UINT32 Direction, UINT32 DataBytes)
   Words[6] = (512U >> 2) | ((FNU_RSP_OFFSET >> 2) << 16);
   Words[7] = (DataBytes ? 1U : 0U) | ((FNU_PRDT_OFFSET >> 2) << 16);
   if (DataBytes != 0) {
+    // PRDT fields are little-endian native words (unlike the UPIU, which is
+    // big-endian); a swapped data address faults the SMMU on the first
+    // data-bearing command.
     UINT32 *Prd = (UINT32 *)(VOID *)(Dma + FNU_UCD_OFFSET + FNU_PRDT_OFFSET);
     UINT64 DataPhys = DmaPhys + FNU_DATA_OFFSET;
-    PutBe32((UINT8 *)Prd + 0, (UINT32)DataPhys);
-    PutBe32((UINT8 *)Prd + 4, (UINT32)(DataPhys >> 32));
-    PutBe32((UINT8 *)Prd + 8, 0);
-    PutBe32((UINT8 *)Prd + 12, DataBytes - 1);
+    Prd[0] = (UINT32)DataPhys;
+    Prd[1] = (UINT32)(DataPhys >> 32);
+    Prd[2] = 0;
+    Prd[3] = DataBytes - 1;
   }
 }
 

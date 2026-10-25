@@ -121,13 +121,12 @@ static void ValidateRequest(HC *Hc) {
     Fail(Hc, "UTRD response length/offset");
   }
   if (Hc->ExpectDataBytes != 0) {
-    UINT64 DataPhys = (UINT64)GetBe32(Hc->Dma + FNU_UCD_OFFSET + FNU_PRDT_OFFSET + 4) << 32 |
-                      GetBe32(Hc->Dma + FNU_UCD_OFFSET + FNU_PRDT_OFFSET);
+    // The controller reads PRDT fields as little-endian native words.
+    const UINT32 *Prd = (const UINT32 *)(const VOID *)(Hc->Dma + FNU_UCD_OFFSET + FNU_PRDT_OFFSET);
+    UINT64 DataPhys = (UINT64)Prd[1] << 32 | Prd[0];
     if ((Words[7] & 0xffff) != 1) Fail(Hc, "PRDT entry count");
     if (DataPhys != Hc->DmaPhys + FNU_DATA_OFFSET) Fail(Hc, "PRDT data address");
-    if (GetBe32(Hc->Dma + FNU_UCD_OFFSET + FNU_PRDT_OFFSET + 12) != Hc->ExpectDataBytes - 1) {
-      Fail(Hc, "PRDT byte count");
-    }
+    if (Prd[3] != Hc->ExpectDataBytes - 1) Fail(Hc, "PRDT byte count");
     if (GetBe32(Ucd + 12) != Hc->ExpectDataBytes) Fail(Hc, "UPIU expected transfer length");
     if (Direction != FNU_DIR_READ) Fail(Hc, "data command direction");
     if ((Ucd[1] & 0x40) == 0) Fail(Hc, "UPIU read flag");
