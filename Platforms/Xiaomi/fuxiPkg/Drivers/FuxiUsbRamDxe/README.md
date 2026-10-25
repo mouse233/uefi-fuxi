@@ -33,6 +33,13 @@ implemented by `FuxiUsbRamDxe.c`. The Python sender, production-engine tests,
 firmware verifier and build wrapper are in the device repository:
 [USB Bulk workflow and wire format](https://github.com/mouse233/unixnu-fuxi/blob/feat/ramdisk-test/diagnostics/ram-root/usb-bulk.md).
 
+`RB_CHUNK` is 1 MiB since the 2026-10-25 throughput candidate (was 64 KiB).
+The wire protocol is stop-and-wait (header RX, payload RX, ACK TX per chunk),
+so per-chunk fixed cost dominated the old 16.5 MB/s link rate; 16x fewer chunks
+amortize it. HELLO advertises the value and the sender adopts it (bounded to
+64 KiB..1 MiB), so an old 64 KiB receiver still interoperates. The DWC3 single
+TRB stays far below `DWC3_MAX_TRANSFER_SIZE`.
+
 Receiver object allocations are retained only while this diagnostic owns the
 UEFI session. Future XNU use requires explicit reserved-memory layout and a
 loader handoff; EfiLoaderData allocations alone do not provide that contract.

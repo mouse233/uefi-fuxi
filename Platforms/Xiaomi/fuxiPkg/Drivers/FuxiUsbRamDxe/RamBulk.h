@@ -15,7 +15,7 @@ typedef uint32_t RB32;
 typedef uint64_t RB64;
 #endif
 #define RB_HEADER 64
-#define RB_CHUNK 65536
+#define RB_CHUNK 1048576
 #define RB_OBJECTS 3
 #define RB_TOTAL_LIMIT (10ULL << 30)
 enum { RbHello=1, RbBegin, RbData, RbEnd, RbAbort };
