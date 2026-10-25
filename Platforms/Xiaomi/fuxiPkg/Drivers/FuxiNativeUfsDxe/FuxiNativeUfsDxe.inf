@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = FuxiNativeUfsDxe
+  FILE_GUID                      = 8A4D2C65-1E7B-4F39-9C2A-6B0E5D8F71A4
+  MODULE_TYPE                    = UEFI_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = FuxiNativeUfsDxeEntry
+
+[Sources]
+  FuxiNativeUfsDxe.c
+  UfsCore.c
+  UfsSha256.c
+  ../FuxiDataProbeDxe/DataReadOnly.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  CacheMaintenanceLib
+  IoLib
+  TimerLib
+  DebugLib

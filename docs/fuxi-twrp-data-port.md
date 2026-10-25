@@ -16,7 +16,8 @@
 | F2FS 两份超级块头部识别 | 已实现诊断 | 仅魔数和部分几何；不是完整超级块/文件系统校验 |
 | SCM/QSEE UEFI 协议发现 | 已实现 | ARM64 编译；无实机结论 |
 | SCM 调用存在性查询 | 已实现、单独开关，默认关闭 | 请求白名单/结果分类测试；ARM64 编译 |
-| 当前默认固件中的原生 UFS 提供者 | **未实现** | 不能因现有 BlockIo 缺失就尝试 DMA |
+| M1 原生 UEFI UFS 只读接管 | 已实现诊断（`FuxiNativeUfsDxe`，开关默认关闭） | 建模控制器主机测试、ARM64 编译；无实机结论 |
+| 当前默认固件中的原生 UFS 提供者 | 默认固件仍无；M1 诊断镜像需显式开 `FUXI_DATA_PORT_UFS=1` | 不能因现有 BlockIo 缺失就尝试 DMA |
 | F2FS checkpoint、NAT、目录和文件读取 | **未实现** | 不向后跟随头部地址 |
 | 元数据解密、密钥解封、ICE装钥、fscrypt | **未实现** | 不加载安全应用或传递密钥 |
 | 本地文件 → RAM 对象发布 | **未实现** | 当前 USB 发布链路没有改动 |
@@ -103,7 +104,18 @@ ufs_qcom → ufshcd-crypto-qti → crypto-qti-common → crypto-qti-hwkm → qco
 
 只读metadata/userdata的前两个4KiB块以识别两份F2FS超级块头。F2FS返回success仅表示魔数和一组有界几何成立；没有验证超级块CRC、checkpoint或inode，不能据此跟随地址或宣称挂载成功。userdata不匹配F2FS可能仍是元数据加密，不能据此宣称文件系统损坏。
 
-**重要限制：默认fuxi固件没有启用vendor UFS栈，也没有本分支的原生UFS接管实现，因此当前最可能输出UFS提供者缺失。** 这是M0的明确边界，不应为让探针通过而直接启用整个vendor栈。未来原生驱动可实现相同Read回调，复用已验证的上层边界。
+**重要限制：默认fuxi固件没有启用vendor UFS栈。** 这是M0的明确边界，不应为让探针通过而直接启用整个vendor栈。M1原生驱动（下节）以同一Read回调形态直接驱动M0的限界读取层。
+
+## 5a. M1 原生 UFS 只读诊断（FuxiNativeUfsDxe）
+
+文件位于 `Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/`：
+
+- `UfsCore.c/.h`：无 MMIO、无分配、无缓存操作的自由独立核心。UTRD/UPIU 构造、单槽轮询、响应/sense 校验、停队列前置检查、SMMU 计划与配置回读全部为回调形式；数据方向只允许 0（无数据）与 2（设备到主机），写入方向在参数检查即被拒绝。
+- `UfsSha256.c/.h`：独立 SHA-256（FIPS 180-4），用于原始块哈希；不链接加密库。
+- `FuxiNativeUfsDxe.c`：DXE 调度时执行一次的 UEFI 集成（APRIORI 中排在 USB 接收器之前，因为 receiver-only 候选在入口内等待 180 秒后驻留、永远到不了 ReadyToBoot；此时 ConOut 已就绪）：GCC/HC 只读报告 → 空闲门（HCE、HCS 低半字节、双 doorbell、致命中断位，任一不满足不写任何寄存器）→ 独立 DMA 窗口（4 GiB 以下分配 139,264 字节，绝不覆盖 ABL 遗留请求列表）→ 停队列 → stream 0x60 SMMU 绕过配置（计划器从次顶 bank 开始，把最顶 bank 原样留给 USB 路由试验；拒绝与其他活动 stream 共享 bank）→ 起队列 → NOP → 电源查询（必要时 SSU ACTIVE 到 0xD0）→ TEST UNIT READY → READ CAPACITY（4096 字节块校验）→ M0 的 GPT/F2FS 限界读取 → 原始块 SHA256 → 再次停队列并打印 doorbell/故障寄存器。任何完成疑点（超时/致命状态）即隔离缓冲，此后不再发命令、不再触碰寄存器。
+- 寄存器事实转录自已在本机 XNU 验证的 NativeUfs 驱动（2026-10-17/23 实机记录）：请求列表 0x50/0x54、传输 doorbell 0x58、run/stop 回读 0x60、任务 doorbell 0x78、致命状态 0x71880、UFS HC 0x1d84000/0x3000、GCC 0x100000、apps_smmu 0x15000000、UFS stream 0x60。这些是本机事实，不推广到其他 SM8550 设备。
+- `MemoryMapLib` 新增 GCC 与 UFS HC 两个 MMIO 窗口（AddDev/NS_DEVICE，与 vendor uefiplatLA.cfg 同源风格）；映射本身不触碰硬件。
+- 模块默认不进入固件：`FUXI_DATA_PORT_UFS=1` 时才编译进 FD。诊断只读、无 BlockIo 发布、无密钥操作；成功后控制器停机，失败后按 XNU 同款隔离规则处理。
 
 ## 6. SCM 查询的精确含义
 
@@ -112,9 +124,10 @@ ufs_qcom → ufshcd-crypto-qti → crypto-qti-common → crypto-qti-hwkm → qco
 ```text
 FUXI_DATA_PORT_PROBE=1   # 将DXE模块纳入实验固件
 FUXI_DATA_SCM_QUERY=1    # 另行允许直接SMC调用存在性查询
+FUXI_DATA_PORT_UFS=1     # M1 原生UFS只读诊断进入固件（FuxiNativeUfsDxe）
 ```
 
-仅开第一个开关时，只发现SCM/QSEE协议和读取已有UFS提供者；不调用安全服务。两者都开时，新增调用只允许INFO/IS_CALL_AVAIL：
+仅开第一个开关时，只发现SCM/QSEE协议和读取已有UFS提供者；不调用安全服务。开第三个开关时，M1诊断会在ReadyToBoot接管空闲的UFS控制器并读取GPT/分区首块；两者都开时，新增调用只允许INFO/IS_CALL_AVAIL：
 
 | 字段 | 内容 |
 | --- | --- |
@@ -140,13 +153,13 @@ availability=true只证明固件声称支持入口，不能证明UEFI有权限�
 | M4 `/data`已知小文件 | 正确域与policy，完整明文SHA256和TWRP/主机对照一致 | 仅能列目录、读到乱码或返回成功但哈希不一致都不算通过 |
 | M5 完整对象加载 | OS/SystemOS全量SHA256、RAM归属、存储完全停机、协议绑定与DarwinBoot/XNU照片 | 不以USB消失或配置位当作停机/进入XNU证据 |
 
-### 7.1 M1 的实施参考
+### 7.1 M1 的实施状态与剩余证据
 
-从已在本机XNU中验证的NativeUfs **读取路径**开始审计，参考`RootQueue.h`、`RootCommands.h`、`SmmuTakeover.h`。不能连同持久化写入窗口一起移植。使用本机FDT和实机记录重新核对GCC/UFS/MMIO、SID0x60等参数；不要推广到其他SM8550设备。
+实施已完成并按 NativeUfs **读取路径**转录：`RootQueue.h` 停/起队列序列、`RootCommands.h` 单槽提交与轮询、`SmmuTakeover.h` 计划器、`TransferPoll.h` 完成策略，全部对照源码逐行核对；持久化写入窗口未移植。GCC/UFS/MMIO、SID 0x60 等参数按本机 FDT 与 2026-10-17/23 实机记录重新核对；未推广到其他 SM8550 设备。
 
-UEFI和XNU的内存描述、页分配、DMA映射和缓存维护不同。当前UEFI内存表未映射全部GCC/UFS窗口，不可直接解引用地址。需在独立候选中只映射经过核验的寄存器范围。不能覆盖ABL遗留请求列表或借用未知RAM。
+UEFI 与 XNU 的差异已处理：本机 DMA 窗口由 UEFI 分配器给出（4 GiB 以下，永不覆盖 ABL 遗留请求列表）；GCC/UFS MMIO 窗口经 MemoryMapLib 显式映射；缓存维护用 CacheMaintenanceLib（提交前 WriteBackInvalidate、完成后 Invalidate），行纪律与原驱动一致。
 
-控制器未空闲不得改队列/SMMU。超时后DMA可能仍持有缓冲，不能释放或复用；没有停机readback证据时不得转入DarwinBoot。UFS的SID和context bank不能套用USB的0x40路由。退回菜单并不代替控制器停机。
+剩余为实机证据：空闲控制器检查、独立 DMA 窗口、SID 路由 readback/回滚、GPT 与已知原始块哈希都需要照片级上机记录；实机 userdata 首块 magic 应与 XNU 2026-10-23 记录的 `f673c25f 7086bec0` 对照。单次 SMC/命令可能受安全固件影响而不返回；超时即隔离缓冲并停止，不得转入 DarwinBoot。UFS 的 SID 和 context bank 不套用 USB 的 0x40 路由。退回菜单并不代替控制器停机。
 
 ## 8. 接入现有 RAM 对象链路
 
@@ -176,6 +189,14 @@ PYTHONDONTWRITEBYTECODE=1 python3 tools/test_fuxi_data_port.py \
   --report out/data-port-m0-host-tests.json
 ```
 
+M1 原生 UFS 核心的建模控制器主机测试（UTRD/UPIU、轮询与隔离、响应/sense、停队列计划、SMMU 计划器、SHA-256 向量对 hashlib）：
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tools/test_fuxi_ufs_port.py \
+  --edk2 /Volumes/External/VSCode/UniXNU/uefi-fuxi/Mu_Basecore \
+  --report out/data-port-m1-host-tests.json
+```
+
 容器内独立模块编译，避免修改或构建其他会话的候选：
 
 ```sh
@@ -189,7 +210,19 @@ docker exec -w /work/ramdisk-test/uefi-twrp-data unixnu-fuxi-build-arm64 \
   --output /work/ramdisk-test/uefi-twrp-data/out/data-port-m0-scm-query --scm-query
 ```
 
-`DataPort.dsc`只编译DXE模块，不产生FD/Android启动镜像。其依赖使用现有Mu_Basecore，脚本不修改共享EDK2或应用补丁；输出build.json记录源哈希和真实退出码。两个变体顺序构建，共用本独立检出的Build目录，不得同时运行。
+`DataPort.dsc`独立编译两个DXE模块，不产生FD/Android启动镜像。其依赖使用现有Mu_Basecore，脚本不修改共享EDK2或应用补丁；输出build.json记录源哈希和真实退出码。模块变体顺序构建，共用本独立检出的Build目录，不得同时运行。
+
+M1 候选（receiver-only + 原生 UFS 诊断）在容器内构建，`--base` 必须是实验检出 `ramdisk-test/unixnu-source`（其 bootimg.py 才支持 v3 头与 os_version；顶层 unixnu-source 的旧 bootimg 会在 verify 处失败）：
+
+```sh
+docker exec -w /work/ramdisk-test/uefi-twrp-data unixnu-fuxi-build-arm64 \
+  /work/build-support/venv-arm64/bin/python3 tools/build_fuxi_ufs_candidate.py \
+  --base /work/ramdisk-test/unixnu-source --device /work/ramdisk-test/UniXNU-fuxi \
+  --edk2 /work/uefi-fuxi/Mu_Basecore \
+  --output /work/ramdisk-test/uefi-twrp-data/out/ufs-m1-receiver
+```
+
+本检出的四个子模块需先按 pin 的 SHA 就位（本地引用顶层 `uefi-fuxi` 的对象即可，无需网络）。候选定义的开关：`FUXI_USB_RAM_RECEIVER=1 FUXI_USB_TRY_SID_ROUTE=1 FUXI_USB_KEEP_PHY=1 FUXI_PAYLOAD_DIAGNOSTIC=0 FUXI_USB_RAM_SYSTEM_HANDOFF=0 FUXI_DATA_PORT_UFS=1 FUXI_DATA_PORT_PROBE=0 FUXI_DATA_SCM_QUERY=0`。
 
 本次模块哈希：
 
@@ -206,7 +239,7 @@ query   13824字节 90ad4c5e4a3e8022292ced90636ca1545d4758986e7461622b3d8ddd4828
 
 新组合镜像仍须完成工作区要求的SMMU、route、receiver和image四项检查；进入系统挂载阶段时补齐候选套件。主机和实机检查按工作区规则执行，实机结论入档前所有必需检查必须退出0。
 
-本轮没有组合镜像或attempt；`out/data-port-m0/REVIEW.md`记录本轮模块构建和未验证边界。下一项实际实现任务是M1原生UFS只读适配，而不是宣称默认固件已有可供探针使用的UFS BlockIo。
+本轮M0没有组合镜像或attempt；`out/data-port-m0/REVIEW.md`记录M0模块构建和未验证边界。M1原生UFS只读适配已实现并通过建模控制器主机测试与ARM64编译；其实机证据（空闲控制器、独立DMA窗口、SID路由readback、GPT与原始块哈希照片）待receiver-only候选`out/ufs-m1-receiver/`完成规范四项检查后上机采集，不得宣称默认固件已有可供探针使用的UFS BlockIo。
 
 后续每阶段更新本表和候选REVIEW，并向设备仓库`diagnostics/ram-root/usb-bulk.md`追加结论。UEFI分支只推送`origin feat/twrp-data-uefi`至mouse233/uefi-fuxi，设备仓库的独立诊断追加按其既定fork/分支规则提交。
 

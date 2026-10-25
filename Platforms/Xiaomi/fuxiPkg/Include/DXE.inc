@@ -78,3 +78,7 @@
 !if $(FUXI_DATA_PORT_PROBE) == 1
   INF fuxiPkg/Drivers/FuxiDataProbeDxe/FuxiDataProbeDxe.inf
 !endif
+
+!if $(FUXI_DATA_PORT_UFS) == 1
+  INF fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf
+!endif

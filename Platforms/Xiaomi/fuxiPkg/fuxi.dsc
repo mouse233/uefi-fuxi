@@ -55,6 +55,8 @@
   # TWRP /data port diagnostics. No decryptor, no native UFS takeover yet.
   FUXI_DATA_PORT_PROBE           = 0
   FUXI_DATA_SCM_QUERY            = 0
+  # M1: native read-only UFS takeover diagnostic (FuxiNativeUfsDxe).
+  FUXI_DATA_PORT_UFS             = 0
 
   #
   # 0 = SM8550-AB
@@ -138,6 +140,9 @@
     <BuildOptions>
       *_*_*_CC_FLAGS = -DFUXI_DATA_SCM_QUERY=$(FUXI_DATA_SCM_QUERY)
   }
+!endif
+!if $(FUXI_DATA_PORT_UFS) == 1
+  fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf
 !endif
 !if $(FUXI_USB_RAM_RECEIVER) == 1
   SamsungPkg/Drivers/UsbfnDwc3Dxe/UsbfnDwc3Dxe.inf {

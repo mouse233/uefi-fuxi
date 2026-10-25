@@ -55,4 +55,11 @@ APRIORI DXE {
   INF MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
   INF MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
   INF MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
+
+!if $(FUXI_DATA_PORT_UFS) == 1
+  # The native UFS diagnostic must dispatch before the USB receiver: the
+  # receiver-only candidate parks inside its entry after the idle window and
+  # never reaches BDS. The console stack above is already up at this point.
+  INF fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf
+!endif
 }
