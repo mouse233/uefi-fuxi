@@ -74,3 +74,7 @@
   INF SamsungPkg/Drivers/UsbfnDwc3Dxe/UsbfnDwc3Dxe.inf
   INF fuxiPkg/Drivers/FuxiUsbRamDxe/FuxiUsbRamDxe.inf
 !endif
+
+!if $(FUXI_DATA_PORT_PROBE) == 1
+  INF fuxiPkg/Drivers/FuxiDataProbeDxe/FuxiDataProbeDxe.inf
+!endif

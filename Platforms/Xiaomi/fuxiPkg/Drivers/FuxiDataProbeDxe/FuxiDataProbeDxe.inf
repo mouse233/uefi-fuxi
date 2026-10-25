@@ -1,0 +1,41 @@
+## @file
+# TWRP /data port M0: read-only inspection, default excluded from firmware.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+[Defines]
+  INF_VERSION = 0x0001001B
+  BASE_NAME = FuxiDataProbeDxe
+  FILE_GUID = D5E47166-41ED-4C9D-B302-C2BFCD579C2B
+  MODULE_TYPE = DXE_DRIVER
+  VERSION_STRING = 0.1
+  ENTRY_POINT = FuxiDataProbeDxeEntry
+
+[Sources]
+  FuxiDataProbeDxe.c
+  DataReadOnly.c
+  DataReadOnly.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  QcomPkg/QcomPkg.dec
+
+[LibraryClasses]
+  ArmSmcLib
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+
+[Guids]
+  gEfiEventReadyToBootGuid
+
+[Protocols]
+  gEfiBlockIoProtocolGuid
+  gEfiDevicePathProtocolGuid
+  gQcomScmProtocolGuid
+  gQcomQseecomProtocolGuid
+
+[Depex]
+  TRUE

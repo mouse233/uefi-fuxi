@@ -1,0 +1,253 @@
+{
+  "cpio_sha256": "6973560a73525ae1bbf2c13102934067d45cac2344e93ca077b9d0097923ba93",
+  "files": {
+    "init.recovery.qcom.rc": {
+      "bytes": 2953,
+      "sha256": "ea0049522493a2f2175d9f1c93a8ebaffea1f650da6ae4c9c54da041f2a10f1c"
+    },
+    "prop.default": {
+      "bytes": 10878,
+      "sha256": "b98cf0b4a70cfab6116ee211baa2758e157bebe98e3dff1ceca2032fe8669888"
+    },
+    "system/bin/recovery": {
+      "bytes": 2606904,
+      "interface_symbols": [
+        "Decrypt_DE",
+        "Decrypt_User"
+      ],
+      "module_abi": [],
+      "needed": [
+        "libfs_mgr.so",
+        "libhardware.so",
+        "android.hardware.boot@1.0.so",
+        "android.hardware.boot@1.1.so",
+        "android.hardware.boot@1.2.so",
+        "libprotobuf-cpp-lite.so",
+        "liblp.so",
+        "libutils.so",
+        "libhidlbase.so",
+        "android.hardware.health@2.0.so",
+        "libz.so",
+        "libcutils.so",
+        "libstdc++.so",
+        "libtar.so",
+        "libblkid.so",
+        "libminuitwrp.so",
+        "libmtdutils.so",
+        "libtwadbbu.so",
+        "libbootloader_message.so",
+        "libcrecovery.so",
+        "libtwrpdigest.so",
+        "libc++.so",
+        "libaosprecovery.so",
+        "libcrypto.so",
+        "libbase.so",
+        "libziparchive.so",
+        "libselinux.so",
+        "libdl_android.so",
+        "libtwrpmtp-ffs.so",
+        "libgpt_twrp.so",
+        "android.frameworks.stats@1.0.so",
+        "android.hardware.authsecret@1.0.so",
+        "android.security.authorization-ndk_platform.so",
+        "android.hardware.oemlock@1.0.so",
+        "libf2fs_sparseblock.so",
+        "libbinder.so",
+        "libbinder_ndk.so",
+        "libandroidicu.so",
+        "android.hardware.gatekeeper@1.0.so",
+        "android.hardware.weaver@1.0.so",
+        "android.security.maintenance-ndk_platform.so",
+        "android.system.keystore2-V1-ndk_platform.so",
+        "libkeyutils.so",
+        "liblog.so",
+        "libsqlite.so",
+        "libkeystoreinfo.so",
+        "libgatekeeper_aidl.so",
+        "libresetprop.so",
+        "libc.so",
+        "libm.so",
+        "libdl.so"
+      ],
+      "sha256": "9aa603b1b2851df9c773c153f7df4520b7c634be0c15bc55f43c2fb83b82e4b0"
+    },
+    "system/etc/recovery.fstab": {
+      "bytes": 6519,
+      "sha256": "c47477e2cf957b4d156487e629d7033b0fb943eb56d37dfe2772d4f681203ed6"
+    },
+    "system/etc/twrp.flags": {
+      "bytes": 3879,
+      "sha256": "9646e944f20bfc4d06b8562d7260945c1b8e60f0322c8c8b35469feb2bd59f66"
+    },
+    "vendor/bin/hw/android.hardware.security.keymint-service-qti": {
+      "bytes": 41136,
+      "interface_symbols": [],
+      "module_abi": [],
+      "needed": [
+        "liblog.so",
+        "libcutils.so",
+        "libbase.so",
+        "libutils.so",
+        "libhardware.so",
+        "libbinder_ndk.so",
+        "libhidlbase.so",
+        "android.hardware.keymaster@4.0.so",
+        "libqtikeymint.so",
+        "libcrypto.so",
+        "android.hardware.security.keymint-V2-ndk.so",
+        "android.hardware.security.secureclock-V1-ndk.so",
+        "android.hardware.security.sharedsecret-V1-ndk.so",
+        "libc++.so",
+        "libc.so",
+        "libm.so",
+        "libdl.so"
+      ],
+      "sha256": "104325882c4b03dde44daaf645b05272757fc3df0c69fb6e56fa0c2c27617dba"
+    },
+    "vendor/lib/modules/1.1/crypto-qti-common.ko": {
+      "bytes": 24176,
+      "interface_symbols": [
+        "crypto_qti_debug",
+        "crypto_qti_debug.cfi_jt",
+        "crypto_qti_derive_raw_secret",
+        "crypto_qti_derive_raw_secret.cfi_jt",
+        "crypto_qti_derive_raw_secret_platform",
+        "crypto_qti_disable",
+        "crypto_qti_disable.cfi_jt",
+        "crypto_qti_disable_platform",
+        "crypto_qti_enable",
+        "crypto_qti_enable.cfi_jt",
+        "crypto_qti_init_crypto",
+        "crypto_qti_init_crypto.cfi_jt",
+        "crypto_qti_invalidate_key",
+        "crypto_qti_keyslot_evict",
+        "crypto_qti_keyslot_evict.cfi_jt",
+        "crypto_qti_keyslot_program",
+        "crypto_qti_keyslot_program.cfi_jt",
+        "crypto_qti_program_key",
+        "crypto_qti_resume",
+        "crypto_qti_resume.cfi_jt"
+      ],
+      "module_abi": [
+        "vermagic=5.15.78 SMP preempt mod_unload modversions aarch64",
+        "depends=crypto-qti-hwkm"
+      ],
+      "needed": [],
+      "sha256": "3ee5088ac15e581aff71ddb0f50c8987a21d10b2ffec7f7468e8108ebe4f5242"
+    },
+    "vendor/lib/modules/1.1/crypto-qti-hwkm.ko": {
+      "bytes": 17840,
+      "interface_symbols": [
+        "crypto_qti_derive_raw_secret_platform",
+        "crypto_qti_derive_raw_secret_platform.cfi_jt",
+        "crypto_qti_disable_platform",
+        "crypto_qti_disable_platform.cfi_jt",
+        "crypto_qti_get_hwkm_raw_secret_tz",
+        "crypto_qti_invalidate_key",
+        "crypto_qti_invalidate_key.cfi_jt",
+        "crypto_qti_program_key",
+        "crypto_qti_program_key.cfi_jt",
+        "qcom_scm_clear_ice_key",
+        "qcom_scm_config_set_ice_key",
+        "qcom_scm_derive_raw_secret"
+      ],
+      "module_abi": [
+        "vermagic=5.15.78 SMP preempt mod_unload modversions aarch64",
+        "depends=qcom-scm,hwkm"
+      ],
+      "needed": [],
+      "sha256": "be67c86de45b02bfc9e00089c6b49899c1d2579e7db2860e684b186cf22e866d"
+    },
+    "vendor/lib/modules/1.1/qcom-scm.ko": {
+      "bytes": 204000,
+      "interface_symbols": [
+        "qcom_scm_clear_ice_key",
+        "qcom_scm_clear_ice_key.cfi_jt",
+        "qcom_scm_config_set_ice_key",
+        "qcom_scm_config_set_ice_key.cfi_jt",
+        "qcom_scm_derive_raw_secret",
+        "qcom_scm_derive_raw_secret.cfi_jt"
+      ],
+      "module_abi": [
+        "vermagic=5.15.78 SMP preempt mod_unload modversions aarch64",
+        "depends="
+      ],
+      "needed": [],
+      "sha256": "8932f0206f8a0083af352684cd64de8c9406346dd639606d045136cf27b079a5"
+    },
+    "vendor/lib/modules/1.1/ufs_qcom.ko": {
+      "bytes": 16404664,
+      "interface_symbols": [
+        "crypto_qti_disable",
+        "qcom_scm_config_set_ice_key"
+      ],
+      "module_abi": [
+        "vermagic=5.15.78 SMP preempt mod_unload modversions aarch64",
+        "depends=qcom-scm,crypto-qti-common,qcom-reboot-reason,miev,phy-qcom-ufs,clk-qcom,qcom_ipc_logging,minidump,ufshcd-crypto-qti"
+      ],
+      "needed": [],
+      "sha256": "9557ac75f8d90ef689b636295cec66183494bb08fe164305caa9f9401a2b1fe1"
+    },
+    "vendor/lib/modules/1.1/ufshcd-crypto-qti.ko": {
+      "bytes": 24464,
+      "interface_symbols": [
+        "crypto_qti_derive_raw_secret",
+        "crypto_qti_keyslot_evict",
+        "crypto_qti_keyslot_program"
+      ],
+      "module_abi": [
+        "vermagic=5.15.78 SMP preempt mod_unload modversions aarch64",
+        "depends=crypto-qti-common"
+      ],
+      "needed": [],
+      "sha256": "02ed3dd34b22ecde458bef3644906ae42b4192be039dbc1dc12e7f0abdbca538"
+    },
+    "vendor/lib64/libminkdescriptor.so": {
+      "bytes": 45760,
+      "interface_symbols": [],
+      "module_abi": [],
+      "needed": [
+        "liblog.so",
+        "libutils.so",
+        "libqcbor.so",
+        "libc++.so",
+        "libc.so",
+        "libm.so",
+        "libdl.so"
+      ],
+      "sha256": "fb8d804eab4b856aa1d14174b8f75ec8b77aea6b326f93c150da25c3609aefe9"
+    },
+    "vendor/lib64/libqtikeymint.so": {
+      "bytes": 271224,
+      "interface_symbols": [],
+      "module_abi": [],
+      "needed": [
+        "liblog.so",
+        "libcrypto.so",
+        "libhidlbase.so",
+        "libutils.so",
+        "libcutils.so",
+        "libkeymasterdeviceutils.so",
+        "libbase.so",
+        "libqcbor.so",
+        "libkeymaster_messages.so",
+        "android.hardware.keymaster@4.0.so",
+        "android.hardware.keymaster@4.1.so",
+        "android.hardware.security.keymint-V2-ndk.so",
+        "android.hardware.security.secureclock-V1-ndk.so",
+        "android.hardware.security.sharedsecret-V1-ndk.so",
+        "libbinder_ndk.so",
+        "libkeymasterutils.so",
+        "libc++.so",
+        "libc.so",
+        "libm.so",
+        "libdl.so"
+      ],
+      "sha256": "657093d0991515f91e6ea35192b0cfe66bcbd52196a3b906fabe64086ab1ddcb"
+    }
+  },
+  "image_name": "twrp-3.7.1_12-v9.0_A16-fuxi-skkk.img",
+  "image_sha256": "68f3829ba4b7faaf8b873fd0dce7dabd03b2bdd750debbae56b1dbe326f87da5",
+  "schema": 1,
+  "scope": "static interface evidence; no decryption, SMC, or device execution"
+}

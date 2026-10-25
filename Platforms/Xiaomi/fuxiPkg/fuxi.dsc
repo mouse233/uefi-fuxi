@@ -52,6 +52,10 @@
   # GUSB2PHYCFG.PHYSOFTRST, which this firmware cannot re-initialize.
   FUXI_USB_KEEP_PHY              = 0
 
+  # TWRP /data port diagnostics. No decryptor, no native UFS takeover yet.
+  FUXI_DATA_PORT_PROBE           = 0
+  FUXI_DATA_SCM_QUERY            = 0
+
   #
   # 0 = SM8550-AB
   # 1 = SM8550-AC
@@ -129,6 +133,12 @@
   FdtLib|MdePkg/Library/BaseFdtLib/BaseFdtLib.inf
 
 [Components]
+!if $(FUXI_DATA_PORT_PROBE) == 1
+  fuxiPkg/Drivers/FuxiDataProbeDxe/FuxiDataProbeDxe.inf {
+    <BuildOptions>
+      *_*_*_CC_FLAGS = -DFUXI_DATA_SCM_QUERY=$(FUXI_DATA_SCM_QUERY)
+  }
+!endif
 !if $(FUXI_USB_RAM_RECEIVER) == 1
   SamsungPkg/Drivers/UsbfnDwc3Dxe/UsbfnDwc3Dxe.inf {
     <BuildOptions>
