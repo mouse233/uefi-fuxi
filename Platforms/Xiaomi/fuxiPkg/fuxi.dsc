@@ -60,6 +60,8 @@
   FUXI_UFS_REPORT_HOLD_SECONDS   = 0
   # 0 = silence the per-packet EP0 traces (diagnostic-first candidates).
   FUXI_USB_EP0_TRACE             = 1
+  # 0 = end EP0 without ForceRM, matching upstream dwc3_ep0_end_control_data().
+  FUXI_USB_EP0_FORCERM           = 1
 
   #
   # 0 = SM8550-AB
@@ -159,6 +161,9 @@
 !endif
 !if $(FUXI_USB_EP0_TRACE) == 0
       *_*_*_CC_FLAGS = -DFUXI_USB_EP0_TRACE=0
+!endif
+!if $(FUXI_USB_EP0_FORCERM) == 0
+      *_*_*_CC_FLAGS = -DFUXI_USB_EP0_FORCERM=0
 !endif
   }
   fuxiPkg/Drivers/FuxiUsbRamDxe/FuxiUsbRamDxe.inf {

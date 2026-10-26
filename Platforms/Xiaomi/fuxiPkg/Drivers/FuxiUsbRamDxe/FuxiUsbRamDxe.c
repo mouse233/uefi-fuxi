@@ -31,7 +31,9 @@ STATIC VOID ReplayUfsReport(VOID) {
 #define FUXI_USB_EP0_TRACE 1
 #endif
 #if FUXI_USB_EP0_TRACE
-#define FUXI_TRACE(Arg) DEBUG Arg
+// Call sites pass an already-parenthesized (Level, fmt, ...) group; DEBUG needs
+// that group as one argument, so it must be wrapped before expansion.
+#define FUXI_TRACE(Arg) DEBUG (Arg)
 #else
 #define FUXI_TRACE(Arg)
 #endif

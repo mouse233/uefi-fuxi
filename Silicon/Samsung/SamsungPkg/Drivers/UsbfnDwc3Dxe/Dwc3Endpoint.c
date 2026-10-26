@@ -15,8 +15,13 @@
 #ifndef FUXI_USB_EP0_TRACE
 #define FUXI_USB_EP0_TRACE 1
 #endif
+#ifndef FUXI_USB_EP0_FORCERM
+#define FUXI_USB_EP0_FORCERM 1
+#endif
 #if defined(FUXI_USB_DMA32) && FUXI_USB_EP0_TRACE
-#define FUXI_TRACE(Arg) DEBUG Arg
+// Call sites pass an already-parenthesized (Level, fmt, ...) group; DEBUG needs
+// that group as one argument, so it must be wrapped before expansion.
+#define FUXI_TRACE(Arg) DEBUG (Arg)
 #else
 #define FUXI_TRACE(Arg)
 #endif
@@ -406,8 +411,20 @@ Dwc3EndTransfer (
     return;
   }
 
-  Command = DWC3_DEPCMD_ENDTRANSFER | DWC3_DEPCMD_HIPRI_FORCERM | DWC3_DEPCMD_CMDIOC;
-  Command |= DWC3_DEPCMD_PARAM (Endpoint->ResourceIndex);
+  // FUXI_USB_EP0_FORCERM=1 keeps the accepted behavior. =0 matches upstream
+  // dwc3_ep0_end_control_data(), which ends EP0 without ForceRM so TRB
+  // progress is updated on completion; that update is what the
+  // EndTransferPending wait below depends on. Non-EP0 callers are abort/disable
+  // paths that want removal either way.
+  Command = DWC3_DEPCMD_ENDTRANSFER | DWC3_DEPCMD_CMDIOC |
+            DWC3_DEPCMD_PARAM (Endpoint->ResourceIndex);
+#if FUXI_USB_EP0_FORCERM
+  Command |= DWC3_DEPCMD_HIPRI_FORCERM;
+#else
+  if (PhysEpNum > DWC3_EP0_IN) {
+    Command |= DWC3_DEPCMD_HIPRI_FORCERM;
+  }
+#endif
 
   if (PhysEpNum <= DWC3_EP0_IN) {
     Endpoint->EndTransferPending = TRUE;
