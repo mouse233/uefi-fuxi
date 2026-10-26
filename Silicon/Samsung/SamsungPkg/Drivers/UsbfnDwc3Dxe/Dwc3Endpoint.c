@@ -57,15 +57,16 @@ Dwc3FailSnapshot (
   FuxiFailSnapshotBudget--;
 
   DEBUG ((DEBUG_ERROR,
-    "FUXI SNAPFAIL ep=%u cmd=%x DEPCMD=%08x PAR0=%08x DCTL=%08x DSTS=%08x GEVNTCOUNT=%08x trb=%08x started=%u rsc=%u\n",
+    "FUXI SNAPFAIL ep=%u cmd=%x DEPCMD=%08x PAR0=%08x DCTL=%08x DSTS=%08x GEVNTCOUNT=%08x PHYCFG=%08x trb=%08x started=%u rsc=%u pumps=%u\n",
     PhysEpNum, Command,
     MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMD),
     MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMDPAR0),
     MmioRead32 (Dev->Base + DWC3_DCTL),
     MmioRead32 (Dev->Base + DWC3_DSTS),
     MmioRead32 (Dev->Base + DWC3_GEVNTCOUNT (0)),
+    MmioRead32 (Dev->Base + DWC3_GUSB2PHYCFG (0)),
     Endpoint->TrbPool[0].Control, Endpoint->TransferStarted,
-    Endpoint->ResourceIndex));
+    Endpoint->ResourceIndex, FuxiPollEventPumps));
 }
 #endif
 
@@ -133,6 +134,25 @@ Dwc3PushTransferResult (
   Dwc3PushMessage (Dev, IsIn ? EfiUsbMsgEndpointStatusChangedTx : EfiUsbMsgEndpointStatusChangedRx, &Payload);
 }
 
+// Dwc3ProcessEvents dispatches into the END/START paths, which come back here,
+// so the poll loop must not re-enter it through its own command.
+STATIC BOOLEAN  FuxiPumpingEvents = FALSE;
+STATIC UINT32   FuxiPollEventPumps = 0;
+
+STATIC
+VOID
+Dwc3PumpEventsWhilePolling (IN DWC3_DEV *Dev)
+{
+  if (FuxiPumpingEvents) {
+    return;
+  }
+
+  FuxiPumpingEvents = TRUE;
+  FuxiPollEventPumps++;
+  Dwc3ProcessEvents (Dev);
+  FuxiPumpingEvents = FALSE;
+}
+
 EFI_STATUS
 Dwc3SendEpCommand (
   IN  DWC3_DEV *Dev,
@@ -168,8 +188,7 @@ Dwc3SendEpCommand (
   for (Timeout = 0; Timeout < DWC3_CMD_TIMEOUT_US; Timeout++) {
     Register = MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMD);
 
-    if ((Register & DWC3_DEPCMD_CMDACT) == 0) {
-      CommandStatus = DWC3_DEPCMD_STATUS (Register);
+    if ((Register & DWC3_DEPCMD_CMDACT) == 0) {      CommandStatus = DWC3_DEPCMD_STATUS (Register);
 #if defined(FUXI_USB_DMA32)
       if (Trace) { DEBUG ((DEBUG_ERROR, "FUXI EP: complete ep=%u reg=%08x\n", PhysEpNum, Register)); }
 #endif
@@ -184,6 +203,17 @@ Dwc3SendEpCommand (
       }
 
       return EFI_SUCCESS;
+    }
+
+    // The EPCMDCMPLT for a failed END sits in the event ring, but the only
+    // caller of Dwc3ProcessEvents is the receiver loop between messages, which
+    // this poll blocks. A delivered V-E candidate read GEVNTCOUNT=0x10 at the
+    // moment of timeout, so drain it here instead of waiting out the 500 ms.
+    // End-transfer only: that is the command observed wedging, and it keeps the
+    // change off the STARTTRANSFER path.
+    if (DWC3_DEPCMD_CMD (Command) == DWC3_DEPCMD_ENDTRANSFER &&
+        (Timeout % 1000) == 0) {
+      Dwc3PumpEventsWhilePolling (Dev);
     }
 
     gBS->Stall (1);
