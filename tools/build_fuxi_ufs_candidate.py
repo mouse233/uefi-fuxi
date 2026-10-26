@@ -4,7 +4,7 @@
 Runs inside unixnu-fuxi-build-arm64, reuses the shared unixnu orchestration,
 and adds the feat/twrp-data-uefi switches on top of the reference receiver
 image. The result is a boot image with no OS payload: FuxiNativeUfsDxe runs
-its read-only UFS takeover diagnostic at ReadyToBoot, then the receiver waits
+its read-only UFS takeover diagnostic during DXE dispatch, then the receiver waits
 for a transfer that never comes. No phone command is issued here.
 """
 import argparse
@@ -28,7 +28,7 @@ def main():
     parser.add_argument("--sources-only", action="store_true",
                         help="only regenerate sources.json from the current tree")
     args = parser.parse_args()
-    if platform.system() != "Linux" or platform.machine() not in ("aarch64", "arm64"):
+    if platform.system() != "Linux" or platform.machine() not in ("aarch64", "arm64", "x86_64", "AMD64"):
         parser.error("the candidate firmware build must run in unixnu-fuxi-build-arm64")
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:

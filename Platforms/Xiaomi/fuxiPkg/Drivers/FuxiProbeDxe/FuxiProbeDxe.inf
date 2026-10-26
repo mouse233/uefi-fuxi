@@ -1,0 +1,29 @@
+## @file
+#  Bring-up probe that looks for the UniXNU payload volume in physical memory.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = FuxiProbeDxe
+  FILE_GUID                      = 8F3C2A11-77D4-4E2B-9C55-3B1E5A9F0C42
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = FuxiProbeEntry
+
+[Sources]
+  FuxiProbeDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiLib
+  BaseMemoryLib
+
+[Depex]
+  TRUE

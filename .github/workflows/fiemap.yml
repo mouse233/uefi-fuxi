@@ -1,0 +1,18 @@
+name: fiemap tool
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the static aarch64 binary
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu
+          aarch64-linux-gnu-gcc -O2 -static -o fiemap fiemap-tool/fiemap.c
+          file fiemap
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fiemap
+          path: fiemap

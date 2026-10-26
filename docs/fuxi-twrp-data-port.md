@@ -127,7 +127,7 @@ FUXI_DATA_SCM_QUERY=1    # 另行允许直接SMC调用存在性查询
 FUXI_DATA_PORT_UFS=1     # M1 原生UFS只读诊断进入固件（FuxiNativeUfsDxe）
 ```
 
-仅开第一个开关时，只发现SCM/QSEE协议和读取已有UFS提供者；不调用安全服务。开第三个开关时，M1诊断会在ReadyToBoot接管空闲的UFS控制器并读取GPT/分区首块；两者都开时，新增调用只允许INFO/IS_CALL_AVAIL：
+仅开第一个开关时，只发现SCM/QSEE协议和读取已有UFS提供者；不调用安全服务。开第三个开关时，M1诊断会在DXE调度时接管空闲的UFS控制器并读取GPT/分区首块；两者都开时，新增调用只允许INFO/IS_CALL_AVAIL：
 
 | 字段 | 内容 |
 | --- | --- |
@@ -250,3 +250,24 @@ query   13824字节 90ad4c5e4a3e8022292ced90636ca1545d4758986e7461622b3d8ddd4828
 - [Linux v5.15 F2FS磁盘格式](https://github.com/torvalds/linux/blob/v5.15/include/linux/f2fs_fs.h)：本轮只使用公开字节布局事实；未移植完整文件系统实现。
 - [Linux v5.15 SCM接口](https://github.com/torvalds/linux/blob/v5.15/drivers/firmware/qcom_scm.c)：调用存在性查询和ABI探测参考；ES具体命令以输入TWRP模块为准。
 - [Android FBE](https://source.android.com/docs/security/features/encryption/file-based)、[元数据加密](https://source.android.com/docs/security/features/encryption/metadata)、[硬件包装密钥](https://source.android.com/docs/security/features/encryption/hw-wrapped-keys)：区分文件、元数据及硬件密钥处理。
+
+
+## 2026-10-26：上游合并与 WSL 构建入口
+
+本分支已合入包含上游 5493eb07 的 fuxi 主分支，保留已验证的 RAM/FD
+布局、受限载荷/SEC 检查、UFS 小端 PRDT 和默认关闭的诊断开关。
+上游独立 loader/extents 路径不接入当前 USB/M1 接力；其扫描器不自动调度。
+
+当前容器仍名为 `unixnu-fuxi-build-arm64`，实际宿主是 amd64，固件目标
+固定 AARCH64。两个构建器接受 amd64/ARM64 Linux 宿主；容器 Python
+使用 `/opt/fuxi-venv/bin/python3`，不再使用迁移包里的 macOS/ARM64 venv。
+`build_fuxi_data_port.py` 同时归档两个 DXE 模块、哈希与宿主/目标架构。
+
+新独立构建 `out/upstream-sync-ufs-m1-receiver/REVIEW.md` 记录完整平台/
+镜像编译、六项交付检查与未上机边界。模块 no-SMC/query 两版及完整固件
+真实退出 0；原生 UFS 两版均无 SMC，M0 版本分别 0/1 条 SMC。
+主机检查不替代 M1 GPT/magic/SHA256/停机数值块照片。
+
+新框架主分支已纳入 bootimg v3 元数据修复，§9 关于“顶层旧版 bootimg”
+的描述仅适用于 2026-10-25 快照。主分支与实验分支仍需区分：本轮 M1
+使用合并后的 `feat/ramdisk-test` 基础和原有设备仓库，不用旧包覆盖它。

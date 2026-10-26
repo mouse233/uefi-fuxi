@@ -251,6 +251,7 @@ FuxiKeyInputDxeEntry (
   EFI_STATUS  Status;
   int         Rc;
 
+
   mArbiter.core = (volatile UINT32 *)SPMI_CORE_BASE;
   mArbiter.obs  = (volatile UINT32 *)SPMI_OBSRVR_BASE;
   mArbiter.ee   = 0;
