@@ -1,0 +1,114 @@
+name: iosroot build
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 180
+    steps:
+      - name: Fetch the reference root tweaks
+        uses: actions/checkout@v4
+        with:
+          repository: bangprovn/ios-fuxi
+          path: src
+      - name: Download the iPhone X IPSW
+        run: |
+          curl -L --retry 3 -o ipsw.zip "https://updates.cdn-apple.com/2025FallFCS/fullrestores/122-77006/1158E502-D76D-4226-AA06-ED5E30CD1111/iPhone10,3,iPhone10,6_16.7.16_20H392_Restore.ipsw"
+          ls -lh ipsw.zip
+      - name: Extract OS and the two cryptexes
+        run: |
+          mkdir -p dmg
+          unzip -o -j ipsw.zip '087-86698-044.dmg' '087-86593-047.dmg' '087-86715-047.dmg' -d dmg
+          ls -lh dmg
+      - name: Attach them read-only
+        run: |
+          set -e
+          mkdir -p /tmp/os /tmp/sysos /tmp/appos
+          sudo hdiutil attach -nobrowse -readonly -mountpoint /tmp/os    dmg/087-86698-044.dmg
+          sudo hdiutil attach -nobrowse -readonly -mountpoint /tmp/sysos dmg/087-86593-047.dmg
+          sudo hdiutil attach -nobrowse -readonly -mountpoint /tmp/appos dmg/087-86715-047.dmg
+          sudo ls -ln /tmp/os | head
+      - name: Create the HFS+ image and copy the system
+        run: |
+          set -euxo pipefail
+          mkfile -n 16g root.img
+          DEV=$(hdiutil attach -nomount -imagekey diskimage-class=CRawDiskImage root.img | head -1 | awk '{print $1}')
+          echo "device=$DEV"
+          newfs_hfs -s -J -v iOSRoot "$DEV"
+          hdiutil detach "$DEV" -force || true
+          hdiutil attach -nobrowse -owners on -imagekey diskimage-class=CRawDiskImage -mountpoint /Volumes/iOSRoot root.img
+          sudo rsync -aH --numeric-ids /tmp/os/    /Volumes/iOSRoot/
+          sudo mkdir -p /Volumes/iOSRoot/private/preboot/Cryptexes/OS /Volumes/iOSRoot/private/preboot/Cryptexes/App
+          sudo rsync -aH --numeric-ids /tmp/sysos/ /Volumes/iOSRoot/private/preboot/Cryptexes/OS/
+          sudo rsync -aH --numeric-ids /tmp/appos/ /Volumes/iOSRoot/private/preboot/Cryptexes/App/
+          df -h /Volumes/iOSRoot
+      - name: Apply the SWEET root additions
+        run: |
+          set -euxo pipefail
+          R=/Volumes/iOSRoot
+          dsc=private/preboot/Cryptexes/OS/System/Library/Caches/com.apple.dyld
+          sudo mkdir -p "$R/System/Library/Caches/com.apple.dyld"
+          for f in "$R/$dsc"/*; do
+            [ -e "$f" ] || continue
+            sudo ln "$f" "$R/System/Library/Caches/com.apple.dyld/${f##*/}" || true
+          done
+          for c in OS App; do
+            (cd "$R/private/preboot/Cryptexes/$c" && sudo find . ! -type d ! -path './System/Library/Caches/com.apple.dyld/*') |
+            while IFS= read -r f; do
+              f=${f#./}
+              if ! sudo test -e "$R/$f" && ! sudo test -L "$R/$f"; then
+                sudo mkdir -p "$R/$(dirname "$f")"
+                src="$R/private/preboot/Cryptexes/$c/$f"
+                if sudo test -L "$src"; then sudo cp -P "$src" "$R/$f"; else sudo ln "$src" "$R/$f"; fi
+              fi
+            done
+          done
+          db="$R/private/var/db"
+          sudo install -d -o 272 -g 272 -m 0751 "$db/diagnostics"
+          sudo install -d -o 272 -g 272 -m 0755 "$db/uuidtext" "$db/diagnostics/timesync"
+          for d in diagnostics uuidtext diagnostics/timesync; do
+            sudo install -o 272 -g 272 -m 0644 /dev/null "$db/$d/.migrated"
+          done
+          sudo install -d -m 0700 -o 0 -g 0 "$R/private/var/keybags"
+          cat > /tmp/systembag.kb <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict><key>KeyBagKeys</key><data>U1dFRVQ=</data></dict></plist>
+          PLIST
+          sed -i '' 's/^          //' /tmp/systembag.kb
+          sudo install -m 0600 -o 0 -g 0 /tmp/systembag.kb "$R/private/var/keybags/systembag.kb"
+      - name: Normalise ownership of the system trees
+        run: |
+          set -euxo pipefail
+          R=/Volumes/iOSRoot
+          for d in System usr bin sbin Applications Library private/preboot; do
+            sudo chown -R 0:0 "$R/$d" || true
+          done
+          sudo find "$R/System" "$R/usr" "$R/bin" "$R/sbin" -xdev \( -type f -o -type d \) \
+            ! -user 0 -print | head -20 || true
+          sudo ls -ln "$R/System/Library/Caches/com.apple.dyld" | head -5 || true
+      - name: Apply the SWEET root tweaks
+        run: |
+          set -euxo pipefail
+          sudo python3 src/tools/sweet-root-tweaks.py /Volumes/iOSRoot
+      - name: Detach and report
+        run: |
+          set -euxo pipefail
+          df -h /Volumes/iOSRoot || true
+          sudo umount /Volumes/iOSRoot || hdiutil detach /Volumes/iOSRoot -force
+          ls -lh root.img
+          hdiutil detach /tmp/os -force || true
+          hdiutil detach /tmp/sysos -force || true
+          hdiutil detach /tmp/appos -force || true
+      - name: Compress
+        run: |
+          set -euxo pipefail
+          gzip -1 root.img
+          ls -lh root.img.gz
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: iosroot
+          path: root.img.gz
+          compression-level: 0
+          retention-days: 3

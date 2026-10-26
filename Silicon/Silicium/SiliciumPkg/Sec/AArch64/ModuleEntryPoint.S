@@ -28,6 +28,9 @@ ASM_FUNC (_ModuleEntryPoint)
   // loader hands over. The slot is in this section, which is in RAM here.
   adr   x1, ASM_PFX (gSecEntryArg0)
   str   x0, [x1]
+  // BootShim leaves x1 at the firmware source; the payload follows it.
+  adr   x1, ASM_PFX (gSecEntryArg1)
+  str   x21, [x1]
 
   // Do Platform Specific Initialization
   bl    ASM_PFX (PlatformAssemblyInitialize)
@@ -82,4 +85,8 @@ ASM_PFX (MainEntryPoint):
   .align 3
   .global ASM_PFX (gSecEntryArg0)
 ASM_PFX (gSecEntryArg0):
+  .quad 0
+
+  .global ASM_PFX (gSecEntryArg1)
+ASM_PFX (gSecEntryArg1):
   .quad 0
