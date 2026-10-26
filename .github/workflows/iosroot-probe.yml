@@ -1,0 +1,32 @@
+name: iosroot probe
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: macos-14
+    steps:
+      - name: Download the iPhone X IPSW
+        run: |
+          curl -L --retry 3 -o ipsw.zip "https://updates.cdn-apple.com/2025FallFCS/fullrestores/122-77006/1158E502-D76D-4226-AA06-ED5E30CD1111/iPhone10,3,iPhone10,6_16.7.16_20H392_Restore.ipsw"
+          ls -lh ipsw.zip
+          unzip -l ipsw.zip | grep -i dmg
+      - name: Extract the images
+        run: |
+          mkdir -p dmg
+          unzip -o -j ipsw.zip '*.dmg' -d dmg
+          ls -lh dmg
+      - name: Attach and describe each volume
+        run: |
+          set -x
+          for f in dmg/*.dmg; do
+            echo "=== $f"
+            mnt="/tmp/mnt/$(basename $f .dmg)"
+            mkdir -p "$mnt"
+            hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "$f" || continue
+            diskutil info "$mnt" | egrep "Volume Name|File System|Read-Only|Total Size" || true
+            echo "--- top level"
+            ls -la "$mnt" | head -20
+            echo "--- has root dir?"
+            ls -d "$mnt/root" 2>/dev/null && ls "$mnt/root" | head -10
+            hdiutil detach "$mnt" -force || true
+          done
