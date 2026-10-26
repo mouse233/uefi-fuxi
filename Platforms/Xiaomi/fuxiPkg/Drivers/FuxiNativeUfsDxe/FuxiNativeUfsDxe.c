@@ -19,6 +19,16 @@
 #include "UfsReport.h"
 #include "../../Include/Protocol/FuxiUfsReport.h"
 #include "../FuxiDataProbeDxe/DataReadOnly.h"
+#include "../FuxiDataProbeDxe/F2fsReadOnly.h"
+#ifndef FUXI_UFS_M2_FILES
+#define FUXI_UFS_M2_FILES 0
+#endif
+#ifndef FUXI_UFS_DIAGNOSTIC_PARK
+#define FUXI_UFS_DIAGNOSTIC_PARK 0
+#endif
+#if FUXI_UFS_DIAGNOSTIC_PARK && !FUXI_UFS_M2_FILES
+#error Diagnostic park requires the M2 diagnostic
+#endif
 
 #define FNU_POLLS(Microseconds) ((Microseconds) / 2U)
 #define FNU_TIMEOUT_NOP         200000U
@@ -277,6 +287,8 @@ STATIC VOID SnapshotMappings(CONST CHAR16 *When) {
   FnuLog(L"FUXIUFS %s sid60 matches=%u (first four shown)", When, Matches);
 }
 
+#include "M2Diagnostic.inc"
+
 STATIC VOID RunDiagnostic(VOID) {
   UINT32 Cap, Ver, Is, Hcs, Hce, Doorbell, TaskDoorbell, RunStop, Ahit;
   UINT32 Uic[5], I;
@@ -505,6 +517,9 @@ STATIC VOID RunDiagnostic(VOID) {
       if (EFI_ERROR(Status)) goto ReleaseScratch;
       InspectPartition(&Disk, &Parts.Metadata, L"metadata", Scratch);
       InspectPartition(&Disk, &Parts.Userdata, L"userdata", Scratch);
+#if FUXI_UFS_M2_FILES
+      RunM2(&Disk, &Parts.Metadata, Scratch, Repeat);
+#endif
     }
 ReleaseScratch:
     ZeroMem(Repeat, 4096);
@@ -531,6 +546,10 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
   // ReadyToBoot, and the topmost SMMU context bank must stay untouched until
   // the receiver's route trial claims it.
   FnuLog(L"\nFUXIUFS M1: native UFS read-only takeover (diagnostic)");
+#if FUXI_UFS_DIAGNOSTIC_PARK
+  // Diagnostic residence is intentional; disable the UEFI watchdog before IO.
+  FnuLog(L"FUXIM2 watchdog-disable=%r",gBS->SetWatchdogTimer(0,0,0,NULL));
+#endif
   RunDiagnostic();
   FnuLog(L"FUXIUFS final stage=%a poisoned=%u ready=%u smmu-configured=%u",
          mLastStage, (UINT32)mPoisoned, (UINT32)mReady, (UINT32)mSmmuConfigured);
@@ -543,13 +562,22 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
            FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_IS));
     SnapshotMappings(L"after");
   }
+#if FUXI_UFS_M2_FILES
+  FnuLog(L"FUXIM2 END: file-result=%r; decrypt=UNIMPLEMENTED handoff=0",mM2Status);
+#else
   FnuLog(L"FUXIUFS END: metadata-decrypt=UNIMPLEMENTED file-read=UNIMPLEMENTED\n");
+#endif
   {
     EFI_HANDLE ReportHandle = NULL;
     EFI_STATUS PublishStatus;
     UINTN Seconds;
+#if FUXI_UFS_DIAGNOSTIC_PARK
+    FnuLog(L"FUXIM2 PARK: no USB receiver; no handoff");
+#endif
+#if !FUXI_UFS_DIAGNOSTIC_PARK
     FnuLog(L"FUXIUFS photo hold=%u seconds before USB; final report replays at receiver park",
            (UINT32)FUXI_UFS_REPORT_HOLD_SECONDS);
+#endif
     mReport.Sealed = TRUE;
     PublishStatus = gBS->InstallProtocolInterface(&ReportHandle, &mReportGuid,
                                                  EFI_NATIVE_INTERFACE, &mReportProtocol);
@@ -559,6 +587,11 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
     }
     for (Seconds = 0; Seconds < FUXI_UFS_REPORT_HOLD_SECONDS; ++Seconds) MicroSecondDelay(1000000);
   }
+#if FUXI_UFS_DIAGNOSTIC_PARK
+  // APRIORI dispatch cannot proceed into UsbfnDwc3Dxe/FuxiUsbRamDxe.
+  // No register access or new UFS IO occurs in this residence loop.
+  for (;;) MicroSecondDelay(1000000);
+#endif
   DEBUG((DEBUG_INFO, "FUXIUFS M1 completed; no decryptor, no BlockIo publication\n"));
   return EFI_SUCCESS;
 }

@@ -13,9 +13,11 @@
   UfsSha256.c
   UfsReport.c
   UfsReport.h
+  M2Diagnostic.inc
   ../../Include/Protocol/FuxiUfsReport.h
   ../FuxiDataProbeDxe/DataReadOnly.c
   ../FuxiDataProbeDxe/F2fsReadOnly.c
+  ../FuxiDataProbeDxe/F2fsFiles.c
 
 [Packages]
   MdePkg/MdePkg.dec

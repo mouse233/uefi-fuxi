@@ -2,7 +2,7 @@
 #ifndef FUXI_UFS_REPORT_H
 #define FUXI_UFS_REPORT_H
 #include <Uefi.h>
-#define FNU_REPORT_LINES 48U
+#define FNU_REPORT_LINES 96U
 #define FNU_REPORT_CHARS 192U
 typedef struct {
   UINTN Count, Dropped, Truncated;

@@ -285,3 +285,13 @@ M2 草稿已编译并通过13类磁盘fixture：双超级块/CP选择、CRC与�
 
 详见 [本轮修复、构建与 M2 接口](fuxi-m1-read-proof-m2-draft.md)。兼容配置通过
 显式 `--device-config-ref` 绑定；共享设备仓库的 schema-2 迁移未被回滚或冒充完成。
+
+## 2026-10-26：M2 metadata 真实文件读取候选（未上机）
+
+M1 v8 的同次启动独立读取与队列停止实机证据已归档，USB 描述符/正常停止故障仍在。
+本轮进入 M2，补齐 clean checkpoint NAT journal、node/inode 校验、inline/block 目录、
+路径与普通文件读取（各级节点映射、稀疏洞、错误清零）。独立候选
+`out/m2-metadata-files-v1` 编译并通过十二项主机/交付检查；38 组文件样本、14 组引导
+样本及 mkfs/sload 独立生成卷的三项真实文件对照通过，均非手机结果。
+候选尝试读取 metadata 的 vold version 文件，随后停在 UFS 诊断，不启动 USB 接收器；
+没有 Android 解密、RAM 对象发布或 XNU 交接。详见 [M2 代码/候选/边界](fuxi-m2-metadata-files.md)。

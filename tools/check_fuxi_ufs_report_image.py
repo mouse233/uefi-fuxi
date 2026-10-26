@@ -22,8 +22,15 @@ def main():
     verified = json.loads((out / "verification.json").read_text())
     image = out / "Mu-fuxi-ufs-m1.img"
     assert sha(image) == candidate["sha256"] == verified["boot_sha256"]
-    assert candidate["ufs_report_cached"] and candidate["ufs_report_replay_at_receiver_park"]
-    assert candidate["receiver_only"] and not candidate["kernel_handoff"]
+    park=bool(candidate.get("diagnostic_park_before_usb"))
+    assert candidate["ufs_report_cached"]
+    assert candidate["ufs_report_replay_at_receiver_park"] == (not park)
+    assert not candidate["kernel_handoff"]
+    assert candidate["receiver_only"] == (not park)
+    if park:
+        assert candidate["diagnostic_only"] and candidate["m2_metadata_files"]
+        assert not candidate["receiver_runtime_enabled"]
+        assert candidate["m2_target_path"] == "/vold/metadata_encryption/key/version"
     assert 0 <= candidate["ufs_report_hold_seconds"] <= 60
     sources = verified["source_sha256"]
     for name, digest in sources.items():
@@ -59,6 +66,14 @@ def main():
     assert ufs in inner and receiver in inner
     for marker in ("FUXIUFS CACHED REPORT BEGIN (no new UFS IO)", "FUXIUFS REPORT INCOMPLETE dropped=%u truncated=%u"):
         assert marker.encode("utf-16-le") in ufs
+    if park:
+        for marker in ("FUXIM2 PARK: no USB receiver; no handoff", "FUXIM2 file-sha256=%s", "FUXIM2 prepare=%r"):
+            assert marker.encode("utf-16-le") in ufs
+        order=(root/"Platforms/Xiaomi/fuxiPkg/Include/APRIORI.inc").read_text()
+        assert "FuxiNativeUfsDxe.inf" in order and "UsbfnDwc3Dxe.inf" not in order and "FuxiUsbRamDxe.inf" not in order
+        for filename in ("m2-file-tests.json", "m2-tools-tests.json", "m2-draft-tests.json"):
+            test=json.loads((out/filename).read_text());assert test["result"]=="passed"
+            for name,digest in test["sources"].items():assert sha(root/name)==digest,name
     assert b"USBRAM: cached UFS report unavailable" in receiver
     protocol = uuid.UUID("6d8c0fc1-6c29-4df2-b7d1-845e1b4cf209").bytes_le
     assert protocol in ufs and protocol in receiver
@@ -72,6 +87,7 @@ def main():
     report = dict(result="passed", boot_sha256=sha(image), ufs_efi_sha256=sha(out/"FuxiNativeUfsDxe.efi"),
                   ufs_efi_in_delivered_fd=True, report_protocol_in_both_modules=True,
                   replay_marker_in_delivered_modules=True, smc_instructions=smc,
+                  diagnostic_park_before_usb=park,
                   source_files_checked=len(sources), checker_sha256=sha(Path(__file__)),
                   ufs_report_hold_seconds=candidate["ufs_report_hold_seconds"], hardware_result="pending")
     (out / "report-image-tests.json").write_text(json.dumps(report, indent=2) + "\n")

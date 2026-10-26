@@ -10,6 +10,8 @@
   BUILD_TARGETS = DEBUG|RELEASE
   SKUID_IDENTIFIER = DEFAULT
   DEFINE FUXI_DATA_SCM_QUERY = 0
+  DEFINE FUXI_UFS_M2_FILES = 0
+  DEFINE FUXI_UFS_DIAGNOSTIC_PARK = 0
 
 [LibraryClasses]
   ArmSmcLib|MdePkg/Library/ArmSmcLib/ArmSmcLib.inf
@@ -42,4 +44,7 @@
     <BuildOptions>
       *_*_*_CC_FLAGS = -DFUXI_DATA_SCM_QUERY=$(FUXI_DATA_SCM_QUERY)
   }
-  fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf
+  fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf {
+    <BuildOptions>
+      *_*_*_CC_FLAGS = -DFUXI_UFS_M2_FILES=$(FUXI_UFS_M2_FILES) -DFUXI_UFS_DIAGNOSTIC_PARK=$(FUXI_UFS_DIAGNOSTIC_PARK)
+  }

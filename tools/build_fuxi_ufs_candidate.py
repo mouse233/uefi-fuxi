@@ -32,6 +32,8 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--ufs-report-hold-seconds", type=int, default=20,
                         help="photo hold before USB (0..60 seconds, default 20)")
+    parser.add_argument("--m2-metadata-files", action="store_true",
+                        help="run bounded metadata file diagnostics and park before USB dispatch")
     parser.add_argument("--without-ufs", action="store_true",
                         help="skip the UFS diagnostic entirely: receiver-only baseline")
     parser.add_argument("--usb-ep0-trace", choices=["0", "1"], default="0",
@@ -46,7 +48,9 @@ def main():
         parser.error("the candidate firmware build must run in unixnu-fuxi-build-arm64")
     if not 0 <= args.ufs_report_hold_seconds <= 60:
         parser.error("--ufs-report-hold-seconds must be between 0 and 60")
-    hold = 0 if args.without_ufs else args.ufs_report_hold_seconds
+    if args.m2_metadata_files and args.without_ufs:
+        parser.error("M2 requires the native UFS diagnostic")
+    hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
         write_sources(uefi, args.output.resolve())
@@ -77,7 +81,6 @@ def main():
     binding["framework_ref"] = subprocess.check_output(["git", "-C", str(base), "rev-parse", "HEAD"], text=True).strip()
     binding["framework_dirty"] = bool(subprocess.check_output(["git", "-C", str(base), "status", "--porcelain"], text=True))
     (out / "build-inputs.json").write_text(json.dumps(binding, indent=2) + "\n")
-    (out / "board-effective.json").write_text(json.dumps(ctx.board, indent=2) + "\n")
     ctx.work, ctx.logs = out / "work", out / "logs"
     ctx.tree = ctx.work / "tree"
     ctx.tree.mkdir(parents=True, exist_ok=True)
@@ -102,12 +105,15 @@ def main():
     # SMMU stream setup or DMA allocation ahead of it.
     ctx.board["firmware"]["defines"]["FUXI_DATA_PORT_UFS"] = "0" if args.without_ufs else "1"
     ctx.board["firmware"]["defines"]["FUXI_UFS_REPORT_HOLD_SECONDS"] = str(hold)
+    ctx.board["firmware"]["defines"]["FUXI_UFS_M2_FILES"] = str(int(args.m2_metadata_files))
+    ctx.board["firmware"]["defines"]["FUXI_UFS_DIAGNOSTIC_PARK"] = str(int(args.m2_metadata_files))
     ctx.board["firmware"]["defines"]["FUXI_DATA_PORT_PROBE"] = "0"
     ctx.board["firmware"]["defines"]["FUXI_DATA_SCM_QUERY"] = "0"
     # Accepted M1 candidates ship with the trace off so the UFS block stays
     # readable; the receiver's per-packet EP0 traces would scroll it away.
     ctx.board["firmware"]["defines"]["FUXI_USB_EP0_TRACE"] = args.usb_ep0_trace
     ctx.board["firmware"]["defines"]["FUXI_USB_EP0_FORCERM"] = args.usb_ep0_forcerm
+    (out / "board-effective.json").write_text(json.dumps(ctx.board, indent=2) + "\n")
     ctx.uefi = uefi
     fd = firmware.build(ctx, {}, uefi, edk2, "DEBUG")
     shutil.copyfile(fd, out / "SILICIUM_UEFI.fd")
@@ -124,15 +130,21 @@ def main():
     # The delivery image checker reads Mu-fuxi-usb-ram.img, so both names are
     # the same bytes either way.
     shutil.copyfile(image, out / alias)
+    if args.m2_metadata_files:
+        shutil.copyfile(image, out / "Mu-fuxi-m2-metadata.img")
     report = dict(image=str(image), sha256=hashlib.sha256(image.read_bytes()).hexdigest(),
                   bytes=image.stat().st_size,
-                  mode=("receiver-only image without the UFS diagnostic (A/B baseline)"
+                  mode=("M2 metadata read-only diagnostic; parks before USB" if args.m2_metadata_files else
+                        "receiver-only image without the UFS diagnostic (A/B baseline)"
                         if args.without_ufs else
                         "receiver-only image with the M1 native UFS read-only diagnostic"),
                   dma_audit_only=False, dma_transfer_enabled=True,
                   usb_sid_route_enabled=True, usb_keep_phy=True,
                   ufs_report_cached=not args.without_ufs,
-                  ufs_report_replay_at_receiver_park=not args.without_ufs,
+                  ufs_report_replay_at_receiver_park=not args.without_ufs and not args.m2_metadata_files,
+                  m2_metadata_files=args.m2_metadata_files, diagnostic_park_before_usb=args.m2_metadata_files,
+                  m2_target_path="/vold/metadata_encryption/key/version" if args.m2_metadata_files else None,
+                  receiver_runtime_enabled=not args.m2_metadata_files,
                   ufs_report_hold_seconds=hold,
                   fuxi_data_port_ufs=not args.without_ufs, fuxi_data_port_probe=False,
                   usb_ep0_trace=args.usb_ep0_trace == "1",
@@ -140,8 +152,9 @@ def main():
                   native_ufs_takeover=("absent; --without-ufs" if args.without_ufs else
                                         "diagnostic only; read commands, no writes, no keys"),
                   controller="DWC3 USB2, SM8550 inherited ABL PHY/clocks",
-                  hardware_result="pending", kernel_handoff=False, receiver_only=True,
-                  partition_io=False, system_handoff=False)
+                  hardware_result="pending", kernel_handoff=False, receiver_only=not args.m2_metadata_files, diagnostic_only=args.m2_metadata_files,
+                  partition_io=False, raw_partition_reads=not args.without_ufs,
+                  partition_writes=False, system_handoff=False)
     (out / "candidate.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 
@@ -158,6 +171,8 @@ def write_sources(uefi, out):
         *sorted((uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe").glob("*.[ch]")),
         *sorted((uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe").glob("*.[ch]")),
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M2Diagnostic.inc",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Include/APRIORI.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.dsc", uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.fdf",
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/DXE.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Library/MemoryMapLib/MemoryMapLib.c",
@@ -165,6 +180,8 @@ def write_sources(uefi, out):
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/Protocol/FuxiUfsReport.h",
         *sorted((uefi / "tools/tests").glob("dwc3_*_host.c")),
         uefi / "tools/test_fuxi_usb_state.py",
+        *sorted((uefi / "tools/tests").glob("fuxi_f2fs*_host.c")),
+        *sorted((uefi / "tools").glob("test_fuxi_f2fs*.py")),
         Path(__file__),
     ]
     (out / "sources.json").write_text(json.dumps({str(x.relative_to(uefi)):

@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--edk2", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--scm-query", action="store_true")
+    parser.add_argument("--m2-metadata-files", action="store_true")
     args = parser.parse_args()
     if platform.system() != "Linux" or platform.machine() not in ("aarch64", "arm64", "x86_64", "AMD64"):
         parser.error("UEFI compilation must run in unixnu-fuxi-build-arm64")
@@ -46,7 +47,9 @@ def main():
          "log", "-1", "--format=%ct"], text=True).strip())
     command = ["build", "-p", "Platforms/Xiaomi/fuxiPkg/DataPort.dsc", "-a", "AARCH64",
                "-b", "DEBUG", "-t", "CLANGPDB", "-n", "4",
-               "-D", f"FUXI_DATA_SCM_QUERY={int(args.scm_query)}"]
+               "-D", f"FUXI_DATA_SCM_QUERY={int(args.scm_query)}",
+               "-D", f"FUXI_UFS_M2_FILES={int(args.m2_metadata_files)}",
+               "-D", f"FUXI_UFS_DIAGNOSTIC_PARK={int(args.m2_metadata_files)}"]
     with (out / "build.log").open("w") as log:
         result = subprocess.run(command, cwd=workspace, env=env,
                                 stdout=log, stderr=subprocess.STDOUT)
@@ -71,6 +74,7 @@ def main():
 
         modules=modules, module=str(destination), sha256=hashlib.sha256(destination.read_bytes()).hexdigest(),
         bytes=destination.stat().st_size, scm_queries_enabled=args.scm_query,
+        m2_runtime_compiled=args.m2_metadata_files,
         hardware_result="not tested", boot_image=False, native_ufs_takeover=False,
         data_decryption=False, data_file_read=False,
         sources={str(path.relative_to(workspace)): hashlib.sha256(path.read_bytes()).hexdigest()

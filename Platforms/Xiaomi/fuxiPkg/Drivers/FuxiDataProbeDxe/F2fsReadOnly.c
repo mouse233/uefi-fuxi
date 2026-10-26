@@ -6,7 +6,7 @@
 #define F2R_CP_BITMAP 192U
 // Observed metadata 0x499: encryption capability, extra attrs, project quota,
 // quota inodes, verity. These do not change SB/CP address fields. Inode/data
-// interpretation remains unimplemented. Optional SB CRC is already checked.
+// interpretation is checked separately in F2fsFiles.c. Optional SB CRC is checked.
 #define F2R_BOOTSTRAP_FEATURES (0x0499U | 0x0800U)
 STATIC UINT32 L32(CONST UINT8 *P) {
   return P[0] | ((UINT32)P[1]<<8) | ((UINT32)P[2]<<16) | ((UINT32)P[3]<<24);
@@ -39,7 +39,7 @@ STATIC EFI_STATUS Super(CONST UINT8 *S, UINT64 PartitionBlocks, F2R_VOLUME *V) {
     if (Crc(S,F2R_SB_CRC)!=L32(S+F2R_SB_CRC)) return EFI_CRC_ERROR;
   }
   if (L32(S+1664)!=0) return EFI_UNSUPPORTED; // cp_payload is a later extension.
-  // No multi-device addressing in this draft.
+  // No multi-device addressing in this reader.
   { UINTN I; for (I=2201; I<2745; ++I) if (S[I]) return EFI_UNSUPPORTED; }
   V->Blocks=L64(S+36); V->Checkpoint=L32(S+76); V->Nat=L32(S+84);
   V->Main=L32(S+92); V->RootInode=L32(S+96); V->NatSegments=L32(S+60);
@@ -79,7 +79,7 @@ STATIC EFI_STATUS Checkpoint(CONST F2R_VOLUME *V, UINT32 Start, UINT8 *First, UI
 }
 EFI_STATUS F2rPrepare(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Part,
                      F2R_VOLUME *V, VOID *Work, UINTN WorkBytes) {
-  UINT8 *W=Work, *Chosen; UINTN I; UINT32 SitBytes,NatBytes,Flags;
+  UINT8 *W=Work, *Chosen; UINTN I; UINT32 SitBytes,NatBytes,Flags,Start,Total,Summary;
   EFI_STATUS A,B,Status; UINT64 Difference; BOOLEAN IoError;
   if (!V) return EFI_INVALID_PARAMETER;
   // Rejected preparation never leaves an old valid capability behind.
@@ -90,7 +90,7 @@ EFI_STATUS F2rPrepare(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Part,
   V->Disk=*Disk; V->Partition=*Part; V->Blocks=Part->Last-Part->First+1;
   Status=Read(V,0,W); if (EFI_ERROR(Status)) return Status;
   Status=Read(V,1,W+4096); if (EFI_ERROR(Status)) return Status;
-  // Conservative draft: both superblocks must agree; never silently repair.
+  // Conservative reader: both superblocks must agree; never silently repair.
   if (!Equal(W+1024,W+4096+1024,3072)) return EFI_VOLUME_CORRUPTED;
   Status=Super(W+1024,V->Blocks,V); if (EFI_ERROR(Status)) return Status;
   A=Checkpoint(V,V->Checkpoint,W,W+4096,&IoError);
@@ -104,16 +104,37 @@ EFI_STATUS F2rPrepare(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Part,
     return EFI_VOLUME_CORRUPTED; // ambiguous modular ordering
   V->SelectedPack=EFI_ERROR(A) || (!EFI_ERROR(B) && Difference && Difference<((UINT64)1<<63)) ? 2:1;
   Chosen=V->SelectedPack==1?W:W+8192;
-  Flags=L32(Chosen+132);
-  // Clean unmount only; dirty/fsck/error/orphan/compact/payload extensions
+  Flags=L32(Chosen+132); V->CheckpointFlags=Flags;
+  // Clean unmount only; dirty/fsck/error/orphan/payload extensions
   // need explicit recovery/journal handling, not fallback to an older pack.
-  if (!(Flags&1) || (Flags&~0x181U)) return EFI_UNSUPPORTED;
+  if (!(Flags&1) || (Flags&~0x3c5U)) return EFI_UNSUPPORTED;
   SitBytes=L32(Chosen+156); NatBytes=L32(Chosen+160);
   if (NatBytes!=(UINT64)V->NatSegments*512/2/8 || SitBytes!=(UINT64)V->SitSegments*512/2/8 ||
       NatBytes>4096 || SitBytes>4092-F2R_CP_BITMAP ||
       NatBytes>4092-F2R_CP_BITMAP-SitBytes) return EFI_VOLUME_CORRUPTED;
   V->CheckpointVersion=L64(Chosen); V->NatBitmapBytes=NatBytes;
   for (I=0; I<NatBytes; ++I) V->NatBitmap[I]=Chosen[F2R_CP_BITMAP+SitBytes+I];
+  Start=V->Checkpoint+(V->SelectedPack==2?512:0);
+  Total=L32(Chosen+136); Summary=L32(Chosen+140);
+  // cp_payload=0, no orphan blocks. Normal packs have 3 data + 3 node
+  // summaries. Compact NAT journal is the first 507 bytes of start_sum.
+  if (Summary!=1 || (!(Flags&4) && Total!=8) || ((Flags&4) && Total<6))
+    return EFI_UNSUPPORTED;
+  Status=Read(V,(UINT64)Start+Summary,W+12288);
+  if (EFI_ERROR(Status)) return Status;
+  Chosen=W+12288+((Flags&4)?0:3584);
+  if (!(Flags&4) && W[12288+4091]!=0) return EFI_VOLUME_CORRUPTED;
+  V->NatJournalCount=L16(Chosen);
+  if (V->NatJournalCount>38) return EFI_VOLUME_CORRUPTED;
+  for (I=0; I<V->NatJournalCount; ++I) {
+    UINTN J; UINT32 Nid=L32(Chosen+2+I*13), Ino=L32(Chosen+7+I*13);
+    UINT32 Address=L32(Chosen+11+I*13);
+    UINT64 MaxNid=(UINT64)V->NatSegments/2*512*455;
+    if (Nid<3 || Nid>=MaxNid || (Address && (Ino<3 || Ino>=MaxNid ||
+        Address<V->Main || Address>=V->MainEnd))) return EFI_VOLUME_CORRUPTED;
+    for (J=0; J<I; ++J) if (L32(V->NatJournal+J*13)==Nid) return EFI_VOLUME_CORRUPTED;
+    for (J=0; J<13; ++J) V->NatJournal[I*13+J]=Chosen[2+I*13+J];
+  }
   V->Prepared=TRUE;
   return EFI_SUCCESS;
 }

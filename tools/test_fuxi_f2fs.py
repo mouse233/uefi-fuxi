@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M2 draft fixtures independently encoded from Linux v5.15 disk-format fields."""
+"""M2 bootstrap fixtures independently encoded from Linux v5.15 disk-format fields."""
 import argparse,hashlib,json,os,pathlib,platform,struct,subprocess,tempfile,zlib
 
 def main():
@@ -16,7 +16,7 @@ def main():
     struct.pack_into('<Q',s,36,32768)
     def cp(version):
         b=bytearray(4096);struct.pack_into('<QQQ',b,0,version,6656,3)
-        for off,val in [(132,1),(136,8),(140,3),(144,3),(148,1),(152,4),(156,64),(160,64),(164,4092)]:put(b,off,val)
+        for off,val in [(132,1),(136,8),(140,1),(144,3),(148,1),(152,4),(156,64),(160,64),(164,4092)]:put(b,off,val)
         put(b,4092,crc(b[:4092]));return b
     def fixture():return {0:sb.copy(),1:sb.copy(),512:cp(1),519:cp(1),1024:cp(2),1031:cp(2)}
     cases=[('valid-newer-pack',fixture(),0,2,2560)]
@@ -68,6 +68,6 @@ def main():
         print('PASS transport failure cannot authorize an older checkpoint',flush=True)
     files=[src/'F2fsReadOnly.c',src/'F2fsReadOnly.h',src/'DataReadOnly.c',src/'DataReadOnly.h',root/'tools/tests/fuxi_f2fs_host.c',root/'tools/tests/fuxi_read_proof_host.c',pathlib.Path(__file__).resolve()]
     a.report.parent.mkdir(parents=True,exist_ok=True)
-    a.report.write_text(json.dumps(dict(result='passed',fixtures=len(cases)+1,scope='M2 draft bootstrap/NAT-read planning/dentry parser; no mount, journal resolution, decryption or hardware file read',sources={str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in files}),indent=2)+'\n')
+    a.report.write_text(json.dumps(dict(result='passed',fixtures=len(cases)+1,scope='M2 clean checkpoint/journal preparation, NAT-read planning and dentry parser; no hardware or Android decryption',sources={str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in files}),indent=2)+'\n')
 
 if __name__=='__main__':main()

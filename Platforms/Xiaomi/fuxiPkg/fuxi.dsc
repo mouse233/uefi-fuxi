@@ -58,6 +58,8 @@
   # M1: native read-only UFS takeover diagnostic (FuxiNativeUfsDxe).
   FUXI_DATA_PORT_UFS             = 0
   FUXI_UFS_REPORT_HOLD_SECONDS   = 0
+  FUXI_UFS_M2_FILES              = 0
+  FUXI_UFS_DIAGNOSTIC_PARK       = 0
   # 0 = silence the per-packet EP0 traces (diagnostic-first candidates).
   FUXI_USB_EP0_TRACE             = 1
   # 0 = end EP0 without ForceRM, matching upstream dwc3_ep0_end_control_data().
@@ -149,7 +151,7 @@
 !if $(FUXI_DATA_PORT_UFS) == 1
   fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf {
     <BuildOptions>
-      *_*_*_CC_FLAGS = -DFUXI_UFS_REPORT_HOLD_SECONDS=$(FUXI_UFS_REPORT_HOLD_SECONDS)
+      *_*_*_CC_FLAGS = -DFUXI_UFS_REPORT_HOLD_SECONDS=$(FUXI_UFS_REPORT_HOLD_SECONDS) -DFUXI_UFS_M2_FILES=$(FUXI_UFS_M2_FILES) -DFUXI_UFS_DIAGNOSTIC_PARK=$(FUXI_UFS_DIAGNOSTIC_PARK)
   }
 !endif
 !if $(FUXI_USB_RAM_RECEIVER) == 1

@@ -13,6 +13,7 @@ def main():
     parser.add_argument('--device', type=pathlib.Path, required=True)
     parser.add_argument('--edk2', type=pathlib.Path, required=True)
     parser.add_argument('--output', type=pathlib.Path, required=True)
+    parser.add_argument('--f2fs-tools', type=pathlib.Path, help='optional independent mkfs/sload validation; required for M2')
     args = parser.parse_args()
     root = pathlib.Path(__file__).resolve().parents[1]
     out, device, edk2 = args.output.resolve(), args.device.resolve(), args.edk2.resolve()
@@ -33,9 +34,16 @@ def main():
         ('m1-core', 'test_fuxi_ufs_port.py', 'ufs-core-tests.json'),
         ('report-cache', 'test_fuxi_ufs_report.py', 'report-cache-tests.json'),
         ('m2-draft', 'test_fuxi_f2fs.py', 'm2-draft-tests.json'),
+        ('m2-files', 'test_fuxi_f2fs_files.py', 'm2-file-tests.json'),
     ]:
         commands.append((name, ['python3', str(root / 'tools' / script),
                                 '--edk2', str(edk2), '--report', str(out / report)]))
+    candidate=json.loads((out/'candidate.json').read_text())
+    if candidate.get('m2_metadata_files') and not args.f2fs_tools:
+        parser.error('M2 requires --f2fs-tools independent image validation')
+    if args.f2fs_tools:
+        commands.append(('m2-tools', ['python3', str(root/'tools/test_fuxi_f2fs_tools.py'),
+            '--edk2',str(edk2),'--tools',str(args.f2fs_tools),'--report',str(out/'m2-tools-tests.json')]))
     commands += [
         ('image', ['python3', str(device / 'scripts/check-fuxi-usb-ram-image.py'),
                    '--uefi', str(root), '--output', str(out)]),
@@ -59,7 +67,8 @@ def main():
         assert hashlib.sha256(board.read_bytes()).hexdigest() == binding['board_sha256']
     (out / 'qualification.json').write_text(json.dumps(dict(
         result='passed', checks=len(results), hardware_result='pending',
-        m2_runtime_enabled=False, inputs=binding,
+        m2_runtime_enabled=bool(candidate.get("m2_metadata_files")),
+        diagnostic_park_before_usb=bool(candidate.get("diagnostic_park_before_usb")), inputs=binding,
         runner_sha256=hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest(),
     ), indent=2) + '\n')
 
