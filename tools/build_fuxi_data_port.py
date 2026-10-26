@@ -64,6 +64,7 @@ def main():
         modules[name] = dict(path=str(target), bytes=target.stat().st_size,
                              sha256=hashlib.sha256(target.read_bytes()).hexdigest())
     source_paths = [workspace / "Platforms/Xiaomi/fuxiPkg/DataPort.dsc", Path(__file__),
+                    workspace / "Platforms/Xiaomi/fuxiPkg/Include/Protocol/FuxiUfsReport.h",
                     *sorted((workspace / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe").glob("*")),
                     *sorted((workspace / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe").glob("*"))]
     report = dict(host_architecture=platform.machine(), target_architecture="AARCH64",

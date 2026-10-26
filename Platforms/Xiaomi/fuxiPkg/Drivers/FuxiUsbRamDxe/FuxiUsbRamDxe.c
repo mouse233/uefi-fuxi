@@ -12,6 +12,19 @@
 #include <Library/TimerLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include "RamBulk.h"
+#if defined(FUXI_DATA_PORT_UFS) && FUXI_DATA_PORT_UFS
+#include "../../Include/Protocol/FuxiUfsReport.h"
+STATIC VOID ReplayUfsReport(VOID) {
+  EFI_GUID Guid = FUXI_UFS_REPORT_PROTOCOL_GUID;
+  FUXI_UFS_REPORT_PROTOCOL *Report = NULL;
+  EFI_STATUS Status = gBS->LocateProtocol(&Guid, NULL, (VOID **)&Report);
+  if (!EFI_ERROR(Status) && Report != NULL && Report->Revision == FUXI_UFS_REPORT_REVISION && Report->Replay != NULL) {
+    Report->Replay(); // Sealed pre-USB text, never re-runs the UFS diagnostic.
+  } else {
+    DEBUG((DEBUG_ERROR, "USBRAM: cached UFS report unavailable %r\n", Status));
+  }
+}
+#endif
 // Per-setup-packet traces flood the boot log during host enumeration; a
 // diagnostic-first candidate silences them with FUXI_USB_EP0_TRACE=0.
 #ifndef FUXI_USB_EP0_TRACE
@@ -313,6 +326,9 @@ Stop:
   }
 #endif
 Park:
+#if defined(FUXI_DATA_PORT_UFS) && FUXI_DATA_PORT_UFS
+  ReplayUfsReport();
+#endif
   // Retain RAM and all DMA allocations for inspection until reboot. Never
   // return to BDS and accidentally start XNU with unreserved receive buffers.
   DEBUG((DEBUG_ERROR,"USBRAM STOP status=%r; buffers retained; hardware result needs review\n",Status));

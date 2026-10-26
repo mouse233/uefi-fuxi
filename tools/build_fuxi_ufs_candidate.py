@@ -25,11 +25,15 @@ def main():
                         help="device repository holding board.toml")
     parser.add_argument("--edk2", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--ufs-report-hold-seconds", type=int, default=20,
+                        help="photo hold before USB (0..60 seconds, default 20)")
     parser.add_argument("--sources-only", action="store_true",
                         help="only regenerate sources.json from the current tree")
     args = parser.parse_args()
     if platform.system() != "Linux" or platform.machine() not in ("aarch64", "arm64", "x86_64", "AMD64"):
         parser.error("the candidate firmware build must run in unixnu-fuxi-build-arm64")
+    if not 0 <= args.ufs_report_hold_seconds <= 60:
+        parser.error("--ufs-report-hold-seconds must be between 0 and 60")
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
         write_sources(uefi, args.output.resolve())
@@ -62,6 +66,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_USB_RAM_SYSTEM_HANDOFF"] = "0"
     # M1 native UFS diagnostic; the M0 probe stays off (no BlockIo provider).
     ctx.board["firmware"]["defines"]["FUXI_DATA_PORT_UFS"] = "1"
+    ctx.board["firmware"]["defines"]["FUXI_UFS_REPORT_HOLD_SECONDS"] = str(args.ufs_report_hold_seconds)
     ctx.board["firmware"]["defines"]["FUXI_DATA_PORT_PROBE"] = "0"
     ctx.board["firmware"]["defines"]["FUXI_DATA_SCM_QUERY"] = "0"
     # Keep the diagnostic block readable on the boot log: the receiver's
@@ -83,6 +88,8 @@ def main():
                   mode="receiver-only image with the M1 native UFS read-only diagnostic",
                   dma_audit_only=False, dma_transfer_enabled=True,
                   usb_sid_route_enabled=True, usb_keep_phy=True,
+                  ufs_report_cached=True, ufs_report_replay_at_receiver_park=True,
+                  ufs_report_hold_seconds=args.ufs_report_hold_seconds,
                   fuxi_data_port_ufs=True, fuxi_data_port_probe=False,
                   native_ufs_takeover="diagnostic only; read commands, no writes, no keys",
                   controller="DWC3 USB2, SM8550 inherited ABL PHY/clocks",
@@ -107,6 +114,7 @@ def write_sources(uefi, out):
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/DXE.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Library/MemoryMapLib/MemoryMapLib.c",
         uefi / "Platforms/Xiaomi/fuxiPkg/Library/MemoryMapLib/MemoryMapLib.inf",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Include/Protocol/FuxiUfsReport.h",
         Path(__file__),
     ]
     (out / "sources.json").write_text(json.dumps({str(x.relative_to(uefi)):

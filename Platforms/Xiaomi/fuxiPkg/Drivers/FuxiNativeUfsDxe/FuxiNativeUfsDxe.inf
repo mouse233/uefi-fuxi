@@ -11,6 +11,9 @@
   FuxiNativeUfsDxe.c
   UfsCore.c
   UfsSha256.c
+  UfsReport.c
+  UfsReport.h
+  ../../Include/Protocol/FuxiUfsReport.h
   ../FuxiDataProbeDxe/DataReadOnly.c
 
 [Packages]
@@ -20,6 +23,7 @@
   UefiDriverEntryPoint
   UefiBootServicesTableLib
   UefiLib
+  PrintLib
   BaseMemoryLib
   MemoryAllocationLib
   CacheMaintenanceLib

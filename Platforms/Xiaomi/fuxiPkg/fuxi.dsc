@@ -57,6 +57,7 @@
   FUXI_DATA_SCM_QUERY            = 0
   # M1: native read-only UFS takeover diagnostic (FuxiNativeUfsDxe).
   FUXI_DATA_PORT_UFS             = 0
+  FUXI_UFS_REPORT_HOLD_SECONDS   = 0
   # 0 = silence the per-packet EP0 traces (diagnostic-first candidates).
   FUXI_USB_EP0_TRACE             = 1
 
@@ -144,7 +145,10 @@
   }
 !endif
 !if $(FUXI_DATA_PORT_UFS) == 1
-  fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf
+  fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf {
+    <BuildOptions>
+      *_*_*_CC_FLAGS = -DFUXI_UFS_REPORT_HOLD_SECONDS=$(FUXI_UFS_REPORT_HOLD_SECONDS)
+  }
 !endif
 !if $(FUXI_USB_RAM_RECEIVER) == 1
   SamsungPkg/Drivers/UsbfnDwc3Dxe/UsbfnDwc3Dxe.inf {
@@ -158,8 +162,11 @@
 !endif
   }
   fuxiPkg/Drivers/FuxiUsbRamDxe/FuxiUsbRamDxe.inf {
-!if $(FUXI_USB_RAM_SYSTEM_HANDOFF) == 1 || $(FUXI_USB_EP0_TRACE) == 0
+!if $(FUXI_USB_RAM_SYSTEM_HANDOFF) == 1 || $(FUXI_USB_EP0_TRACE) == 0 || $(FUXI_DATA_PORT_UFS) == 1
     <BuildOptions>
+!endif
+!if $(FUXI_DATA_PORT_UFS) == 1
+      *_*_*_CC_FLAGS = -DFUXI_DATA_PORT_UFS=1
 !endif
 !if $(FUXI_USB_RAM_SYSTEM_HANDOFF) == 1
       *_*_*_CC_FLAGS = -DFUXI_USB_RAM_SYSTEM_HANDOFF=1

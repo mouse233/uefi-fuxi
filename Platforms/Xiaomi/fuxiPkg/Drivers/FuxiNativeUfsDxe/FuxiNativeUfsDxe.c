@@ -16,6 +16,8 @@
 #include <Library/UefiLib.h>
 #include "UfsCore.h"
 #include "UfsSha256.h"
+#include "UfsReport.h"
+#include "../../Include/Protocol/FuxiUfsReport.h"
 #include "../FuxiDataProbeDxe/DataReadOnly.h"
 
 #define FNU_POLLS(Microseconds) ((Microseconds) / 2U)
@@ -25,25 +27,48 @@
 #define FNU_STOP_ATTEMPTS        10000U
 // Stage markers go through the debug console (they appear on the on-screen
 // boot log), so a reset localizes the faulting step without a photo of values.
-#define FNU_STAGE(Name) DEBUG((DEBUG_ERROR, "FUXIUFS stage: %a\n", (Name)))
+STATIC CONST CHAR8 *mLastStage = "entry";
+#define FNU_STAGE(Name) do { mLastStage = (Name); DEBUG((DEBUG_ERROR, "FUXIUFS stage: %a\n", (Name))); } while (0)
+#ifndef FUXI_UFS_REPORT_HOLD_SECONDS
+#define FUXI_UFS_REPORT_HOLD_SECONDS 0
+#endif
+STATIC FNU_REPORT mReport;
+STATIC EFI_GUID mReportGuid = FUXI_UFS_REPORT_PROTOCOL_GUID;
 
 // Value lines go to both consoles: ConOut (the graphics console) and the
 // debug serial, which is the channel the on-screen boot log renders.
-STATIC VOID FnuLog(CONST CHAR16 *Fmt, ...) {
-  CHAR16 Buffer[320];
+STATIC VOID FnuEmitLine(CONST CHAR16 *Line) {
   CHAR8 Ascii[320];
-  VA_LIST Args;
   UINTN I;
-  VA_START(Args, Fmt);
-  UnicodeVSPrint(Buffer, sizeof(Buffer), Fmt, Args);
-  VA_END(Args);
-  Print(L"%s\n", Buffer);
-  for (I = 0; I < sizeof(Buffer) / sizeof(Buffer[0]) - 1 && Buffer[I] != 0; ++I) {
-    Ascii[I] = (CHAR8)(Buffer[I] & 0xff);  // diagnostic lines are plain ASCII
-  }
+  Print(L"%s\r\n", Line);
+  for (I = 0; I < sizeof(Ascii) - 1 && Line[I] != 0; ++I) Ascii[I] = (CHAR8)(Line[I] & 0xff);
   Ascii[I] = 0;
   DEBUG((DEBUG_ERROR, "%a\n", Ascii));
 }
+
+STATIC VOID FnuLog(CONST CHAR16 *Fmt, ...) {
+  CHAR16 Buffer[320];
+  VA_LIST Args;
+  VA_START(Args, Fmt);
+  UnicodeVSPrint(Buffer, sizeof(Buffer), Fmt, Args);
+  VA_END(Args);
+  FnuReportAppend(&mReport, Buffer);
+  FnuEmitLine(Buffer);
+}
+
+STATIC VOID EFIAPI ReplayReport(VOID) {
+  // Uses sealed text only: safe even when the transport is quarantined.
+  FnuEmitLine(L"FUXIUFS CACHED REPORT BEGIN (no new UFS IO)");
+  FnuReportReplay(&mReport, FnuEmitLine);
+  if (mReport.Dropped || mReport.Truncated) {
+    CHAR16 Warning[128];
+    UnicodeSPrint(Warning, sizeof(Warning), L"FUXIUFS REPORT INCOMPLETE dropped=%u truncated=%u",
+                  (UINT32)mReport.Dropped, (UINT32)mReport.Truncated);
+    FnuEmitLine(Warning);
+  }
+  FnuEmitLine(L"FUXIUFS CACHED REPORT END; values are from pre-USB diagnostic");
+}
+STATIC FUXI_UFS_REPORT_PROTOCOL mReportProtocol = {FUXI_UFS_REPORT_REVISION, ReplayReport};
 
 STATIC FNU_OPS mOps;
 STATIC FNU_DEVICE mDev;
@@ -193,6 +218,37 @@ STATIC VOID InspectPartition(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Partitio
   FnuLog(L"FUXIUFS %s first-block F2FS-header=%r\n", Name, Status);
 }
 
+STATIC VOID SnapshotMappings(CONST CHAR16 *When) {
+  UINT32 Idr0 = FnuSmmuRead(NULL, 0x20), Idr1 = FnuSmmuRead(NULL, 0x24);
+  UINT32 Idr2 = FnuSmmuRead(NULL, 0x28), Count = Idr0 & 255, Banks = Idr1 & 255;
+  UINT32 Pages = 1U << (((Idr1 >> 28) & 7) + 1), I, Matches = 0;
+  FnuLog(L"FUXIUFS %s SMMU idr=%08x/%08x/%08x gfsr=%08x",
+         When, Idr0, Idr1, Idr2, FnuSmmuRead(NULL, 0x48));
+  if ((Idr1 & (1U << 31)) || Count == 0 || Banks < 2 || Banks > 128 ||
+      Pages > 128 || (Pages + Banks) * 4096 > FNU_SMMU_SIZE) {
+    FnuLog(L"FUXIUFS %s mapping snapshot: unsupported geometry", When);
+    return;
+  }
+  if (Count > 128) Count = 128;
+  for (I = 0; I < Count; ++I) {
+    UINT32 Smr = FnuSmmuRead(NULL, 0x800 + 4 * I);
+    UINT32 Mask = (Smr >> 16) & 0x7fff;
+    if (!(Smr & 0x80000000U) || ((Smr ^ FNU_SMMU_STREAM) & 0xffff & ~Mask)) continue;
+    ++Matches;
+    if (Matches <= 4) {
+      UINT32 S2Cr = FnuSmmuRead(NULL, 0xc00 + 4 * I), Bank = S2Cr & 255;
+      FnuLog(L"FUXIUFS %s sid60 slot=%u smr=%08x s2cr=%08x", When, I, Smr, S2Cr);
+      if (Bank < Banks) {
+        UINTN Cb = (Pages + Bank) * 4096;
+        FnuLog(L"FUXIUFS %s bank=%u sctlr=%08x cbar=%08x cba2r=%08x fsr=%08x",
+               When, Bank, FnuSmmuRead(NULL, Cb), FnuSmmuRead(NULL, 0x1000 + 4 * Bank),
+               FnuSmmuRead(NULL, 0x1800 + 4 * Bank), FnuSmmuRead(NULL, Cb + 0x58));
+      }
+    }
+  }
+  FnuLog(L"FUXIUFS %s sid60 matches=%u (first four shown)", When, Matches);
+}
+
 STATIC VOID RunDiagnostic(VOID) {
   UINT32 Cap, Ver, Is, Hcs, Hce, Doorbell, TaskDoorbell, RunStop, Ahit;
   UINT32 Uic[5], I;
@@ -241,6 +297,8 @@ STATIC VOID RunDiagnostic(VOID) {
   FnuLog(L"FUXIUFS UIC pa=%08x a1=%08x a2=%08x a3=%08x r=%08x\n",
         Uic[0], Uic[1], Uic[2], Uic[3], Uic[4]);
 
+  SnapshotMappings(L"before");
+
   // Idle gate: refuse to touch the controller unless it matches the state the
   // proven takeover accepted (HCE set, HCS low nibble set, both doorbells
   // clear, no fatal status).
@@ -277,6 +335,9 @@ STATIC VOID RunDiagnostic(VOID) {
     FnuLog(L"FUXIUFS SMMU plan: %a slot=%x bank=%u\n", Plan.Error, Plan.Slot, Plan.Bank);
     return;
   }
+  FnuLog(L"FUXIUFS selected bank=%u slot=%u before sctlr=%08x cbar=%08x cba2r=%08x",
+         Plan.Bank, Plan.Slot, FnuSmmuRead(NULL, (Plan.Pages + Plan.Bank) * 4096),
+         FnuSmmuRead(NULL, 0x1000 + 4 * Plan.Bank), FnuSmmuRead(NULL, 0x1800 + 4 * Plan.Bank));
   SmmuError = FnuConfigureSmmu(&Plan, FNU_SMMU_STREAM, NULL, FnuSmmuRead, FnuSmmuWrite);
   if (SmmuError != NULL) {
     FnuLog(L"FUXIUFS SMMU configure: %a\n", SmmuError);
@@ -428,7 +489,31 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
   // the receiver's route trial claims it.
   FnuLog(L"\nFUXIUFS M1: native UFS read-only takeover (diagnostic)");
   RunDiagnostic();
+  FnuLog(L"FUXIUFS final stage=%a poisoned=%u ready=%u smmu-configured=%u",
+         mLastStage, (UINT32)mPoisoned, (UINT32)mReady, (UINT32)mSmmuConfigured);
+  FnuLog(L"FUXIUFS after HC db=%08x tdb=%08x run=%x hcs=%08x is=%08x",
+         FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLDBR),
+         FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTMRLDBR),
+         FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_UTRLRSR),
+         FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_HCS),
+         FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_IS));
+  SnapshotMappings(L"after");
   FnuLog(L"FUXIUFS END: metadata-decrypt=UNIMPLEMENTED file-read=UNIMPLEMENTED\n");
+  {
+    EFI_HANDLE ReportHandle = NULL;
+    EFI_STATUS PublishStatus;
+    UINTN Seconds;
+    FnuLog(L"FUXIUFS photo hold=%u seconds before USB; final report replays at receiver park",
+           (UINT32)FUXI_UFS_REPORT_HOLD_SECONDS);
+    mReport.Sealed = TRUE;
+    PublishStatus = gBS->InstallProtocolInterface(&ReportHandle, &mReportGuid,
+                                                 EFI_NATIVE_INTERFACE, &mReportProtocol);
+    ReplayReport();
+    if (EFI_ERROR(PublishStatus)) {
+      DEBUG((DEBUG_ERROR, "FUXIUFS report publish failed: %r; final replay unavailable\n", PublishStatus));
+    }
+    for (Seconds = 0; Seconds < FUXI_UFS_REPORT_HOLD_SECONDS; ++Seconds) MicroSecondDelay(1000000);
+  }
   DEBUG((DEBUG_INFO, "FUXIUFS M1 completed; no decryptor, no BlockIo publication\n"));
   return EFI_SUCCESS;
 }
