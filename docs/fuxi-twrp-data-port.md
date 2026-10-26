@@ -271,3 +271,17 @@ query   13824字节 90ad4c5e4a3e8022292ced90636ca1545d4758986e7461622b3d8ddd4828
 当前框架主分支与实验分支的 bootimg 实现仍不同：上游主分支尚未包含
 本地的 Android v3 验证/OS 元数据扩展，§9 的基础检出选择仍适用。本轮 M1
 使用合并后的 `feat/ramdisk-test` 基础和原有设备仓库，不用顶层 main 替代它。
+
+## 2026-10-26：M1 read-proof v8 与 M2 只读解析草稿
+
+当前工作主线为本 TWRP 分支。M1 的 V-F 事件分派回归及交付宏编译问题已修正，
+独立候选 `out/m1-read-proof-v8` 已构建并通过十项主机/交付检查。新增同次启动、
+不同缓冲区三次读取、完整队列停止证明与 M2 所需 F2FS feature/CP 几何记录。
+新候选尚未实机验收；USB 原始枚举故障没有被主机通过结果判为修复。
+
+M2 草稿已编译并通过13类磁盘fixture：双超级块/CP选择、CRC与几何、NAT副本地址
+计划、非inline目录项解析。未接入设备执行；NAT journal、inode/文件映射与路径
+查找仍待补齐，尚无 `/metadata` 文件读取或 Android 解密成功结论。
+
+详见 [本轮修复、构建与 M2 接口](fuxi-m1-read-proof-m2-draft.md)。兼容配置通过
+显式 `--device-config-ref` 绑定；共享设备仓库的 schema-2 迁移未被回滚或冒充完成。

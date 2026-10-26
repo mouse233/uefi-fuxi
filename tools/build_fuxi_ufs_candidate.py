@@ -16,6 +16,7 @@ import json
 import os
 import platform
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -26,6 +27,7 @@ def main():
                         help="checkout providing the unixnu framework (scripts/unixnu)")
     parser.add_argument("--device", type=Path, required=True,
                         help="device repository holding board.toml")
+    parser.add_argument("--device-config-ref", help="explicit immutable device board.toml revision; does not change the shared checkout")
     parser.add_argument("--edk2", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--ufs-report-hold-seconds", type=int, default=20,
@@ -53,9 +55,29 @@ def main():
     sys.path.insert(0, str(base / "scripts"))
     from unixnu import cli, firmware, bootimg, tree
     from unixnu.config import Context
-    ctx = Context(cli.parser().parse_args(["build", "firmware", "-D", str(device),
+    # Firmware-only candidates may pin the last qualified format-1 board
+    # while another workflow migrates the shared device to layered profiles.
+    config_device = device
+    binding = {"device": str(device), "config_ref": None}
+    if args.device_config_ref:
+        revision = subprocess.check_output(["git", "-C", str(device), "rev-parse",
+                                             args.device_config_ref + "^{commit}"], text=True).strip()
+        board = subprocess.check_output(["git", "-C", str(device), "show", revision + ":board.toml"])
+        config_device = out / "config-input"
+        config_device.mkdir(parents=True, exist_ok=True)
+        existing = config_device / "board.toml"
+        if existing.exists() and existing.read_bytes() != board:
+            raise SystemExit("refusing to replace a candidate's pinned board input")
+        existing.write_bytes(board)
+        binding.update(config_ref=revision, board_sha256=hashlib.sha256(board).hexdigest())
+    ctx = Context(cli.parser().parse_args(["build", "firmware", "-D", str(config_device),
                                            "--out", str(out), "--uefi", str(uefi),
                                            "--edk2", str(edk2), "-j", "10"]))
+    ctx.device = device
+    binding["framework_ref"] = subprocess.check_output(["git", "-C", str(base), "rev-parse", "HEAD"], text=True).strip()
+    binding["framework_dirty"] = bool(subprocess.check_output(["git", "-C", str(base), "status", "--porcelain"], text=True))
+    (out / "build-inputs.json").write_text(json.dumps(binding, indent=2) + "\n")
+    (out / "board-effective.json").write_text(json.dumps(ctx.board, indent=2) + "\n")
     ctx.work, ctx.logs = out / "work", out / "logs"
     ctx.tree = ctx.work / "tree"
     ctx.tree.mkdir(parents=True, exist_ok=True)
@@ -134,12 +156,15 @@ def write_sources(uefi, out):
         *sorted((uefi / "Silicon/Samsung/SamsungPkg/Drivers/UsbfnDwc3Dxe").glob("*.[ch]")),
         uefi / "Silicon/Samsung/SamsungPkg/Include/Device/Dwc3.h",
         *sorted((uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe").glob("*.[ch]")),
+        *sorted((uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe").glob("*.[ch]")),
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe.inf",
         uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.dsc", uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.fdf",
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/DXE.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Library/MemoryMapLib/MemoryMapLib.c",
         uefi / "Platforms/Xiaomi/fuxiPkg/Library/MemoryMapLib/MemoryMapLib.inf",
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/Protocol/FuxiUfsReport.h",
+        *sorted((uefi / "tools/tests").glob("dwc3_*_host.c")),
+        uefi / "tools/test_fuxi_usb_state.py",
         Path(__file__),
     ]
     (out / "sources.json").write_text(json.dumps({str(x.relative_to(uefi)):

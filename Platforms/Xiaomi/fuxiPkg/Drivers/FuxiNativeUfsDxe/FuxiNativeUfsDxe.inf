@@ -15,6 +15,7 @@
   UfsReport.h
   ../../Include/Protocol/FuxiUfsReport.h
   ../FuxiDataProbeDxe/DataReadOnly.c
+  ../FuxiDataProbeDxe/F2fsReadOnly.c
 
 [Packages]
   MdePkg/MdePkg.dec

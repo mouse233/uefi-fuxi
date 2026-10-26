@@ -50,6 +50,8 @@ Dwc3FailSnapshot (
   IN DWC3_ENDPOINT *Endpoint)
 {
   UINTN DepBase = DWC3_DEP_BASE (PhysEpNum);
+  UINT32 Count, Word;
+  UINTN I, Samples;
 
   if (FuxiFailSnapshotBudget == 0) {
     return;
@@ -57,7 +59,7 @@ Dwc3FailSnapshot (
   FuxiFailSnapshotBudget--;
 
   DEBUG ((DEBUG_ERROR,
-    "FUXI SNAPFAIL ep=%u cmd=%x DEPCMD=%08x PAR0=%08x DCTL=%08x DSTS=%08x GEVNTCOUNT=%08x PHYCFG=%08x trb=%08x started=%u rsc=%u pumps=%u\n",
+    "FUXI SNAPFAIL ep=%u cmd=%x DEPCMD=%08x PAR0=%08x DCTL=%08x DSTS=%08x GEVNTCOUNT=%08x PHYCFG=%08x trb=%08x started=%u rsc=%u\n",
     PhysEpNum, Command,
     MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMD),
     MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMDPAR0),
@@ -66,7 +68,23 @@ Dwc3FailSnapshot (
     MmioRead32 (Dev->Base + DWC3_GEVNTCOUNT (0)),
     MmioRead32 (Dev->Base + DWC3_GUSB2PHYCFG (0)),
     Endpoint->TrbPool[0].Control, Endpoint->TransferStarted,
-    Endpoint->ResourceIndex, FuxiPollEventPumps));
+    Endpoint->ResourceIndex));
+  // CPU-view snapshot only. Never advance EventPos, acknowledge GEVNTCOUNT,
+  // or dispatch handlers while the DEP command is unconfirmed. A concurrent
+  // device write may change this sample; it is not an atomic event history.
+  Count = MmioRead32 (Dev->Base + DWC3_GEVNTCOUNT (0)) & DWC3_GEVNTCOUNT_MASK;
+  if (Dev->EventBuffer == NULL || Count > DWC3_EVENT_BUFFER_SIZE ||
+      Dev->EventPos >= DWC3_EVENT_BUFFER_SIZE || (Dev->EventPos & 3) != 0) {
+    return;
+  }
+  Samples = Count / sizeof (UINT32);
+  if (Samples > 4) Samples = 4;
+  for (I = 0; I < Samples; ++I) {
+    UINTN Position = (Dev->EventPos + I * sizeof (UINT32)) % DWC3_EVENT_BUFFER_SIZE;
+    CopyMem (&Word, Dev->EventBuffer + Position, sizeof (Word));
+    DEBUG ((DEBUG_ERROR, "FUXI SNAPEV cpu-view pos=%u word=%08x (not consumed)\n",
+            (UINT32)Position, Word));
+  }
 }
 #endif
 
@@ -134,25 +152,6 @@ Dwc3PushTransferResult (
   Dwc3PushMessage (Dev, IsIn ? EfiUsbMsgEndpointStatusChangedTx : EfiUsbMsgEndpointStatusChangedRx, &Payload);
 }
 
-// Dwc3ProcessEvents dispatches into the END/START paths, which come back here,
-// so the poll loop must not re-enter it through its own command.
-STATIC BOOLEAN  FuxiPumpingEvents = FALSE;
-STATIC UINT32   FuxiPollEventPumps = 0;
-
-STATIC
-VOID
-Dwc3PumpEventsWhilePolling (IN DWC3_DEV *Dev)
-{
-  if (FuxiPumpingEvents) {
-    return;
-  }
-
-  FuxiPumpingEvents = TRUE;
-  FuxiPollEventPumps++;
-  Dwc3ProcessEvents (Dev);
-  FuxiPumpingEvents = FALSE;
-}
-
 EFI_STATUS
 Dwc3SendEpCommand (
   IN  DWC3_DEV *Dev,
@@ -176,6 +175,13 @@ Dwc3SendEpCommand (
   }
 #endif
 
+  // A callback/reset must not overwrite a command the core still owns.
+  // Do not pump state-machine handlers here: they can submit new commands.
+  Register = MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMD);
+  if ((Register & DWC3_DEPCMD_CMDACT) != 0) {
+    return EFI_NOT_READY;
+  }
+
   MmioWrite32 (Dev->Base + DepBase + DWC3_DEPCMDPAR0, Param0);
   MmioWrite32 (Dev->Base + DepBase + DWC3_DEPCMDPAR1, Param1);
   MmioWrite32 (Dev->Base + DepBase + DWC3_DEPCMDPAR2, Param2);
@@ -188,7 +194,8 @@ Dwc3SendEpCommand (
   for (Timeout = 0; Timeout < DWC3_CMD_TIMEOUT_US; Timeout++) {
     Register = MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMD);
 
-    if ((Register & DWC3_DEPCMD_CMDACT) == 0) {      CommandStatus = DWC3_DEPCMD_STATUS (Register);
+    if ((Register & DWC3_DEPCMD_CMDACT) == 0) {
+      CommandStatus = DWC3_DEPCMD_STATUS (Register);
 #if defined(FUXI_USB_DMA32)
       if (Trace) { DEBUG ((DEBUG_ERROR, "FUXI EP: complete ep=%u reg=%08x\n", PhysEpNum, Register)); }
 #endif
@@ -203,17 +210,6 @@ Dwc3SendEpCommand (
       }
 
       return EFI_SUCCESS;
-    }
-
-    // The EPCMDCMPLT for a failed END sits in the event ring, but the only
-    // caller of Dwc3ProcessEvents is the receiver loop between messages, which
-    // this poll blocks. A delivered V-E candidate read GEVNTCOUNT=0x10 at the
-    // moment of timeout, so drain it here instead of waiting out the 500 ms.
-    // End-transfer only: that is the command observed wedging, and it keeps the
-    // change off the STARTTRANSFER path.
-    if (DWC3_DEPCMD_CMD (Command) == DWC3_DEPCMD_ENDTRANSFER &&
-        (Timeout % 1000) == 0) {
-      Dwc3PumpEventsWhilePolling (Dev);
     }
 
     gBS->Stall (1);

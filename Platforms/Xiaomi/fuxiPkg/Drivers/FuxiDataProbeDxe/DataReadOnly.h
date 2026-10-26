@@ -38,6 +38,12 @@ EFI_STATUS FdpReadGpt(CONST FDP_DISK *Disk, VOID *Scratch, UINTN ScratchBytes,
                       FDP_PARTITIONS *Partitions);
 EFI_STATUS FdpReadPartition(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Partition,
                             UINT64 RelativeLba, UINTN Blocks, VOID *Buffer);
+// Compare independent reads into disjoint caller-owned buffers. Stops at the
+// first transport error or mismatch; output count is the completed read count.
+EFI_STATUS FdpVerifyPartitionRead(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Partition,
+                                  UINT64 RelativeLba, UINTN Blocks, VOID *First,
+                                  VOID *Repeat, UINTN BufferBytes, UINTN Reads,
+                                  UINTN *Completed);
 // Signature/geometry inspection only. This neither mounts nor authenticates F2FS.
 EFI_STATUS FdpInspectF2fs(CONST VOID *First4k, UINTN Bytes,
                          UINT64 PartitionBytes, FDP_F2FS_GEOMETRY *Geometry);

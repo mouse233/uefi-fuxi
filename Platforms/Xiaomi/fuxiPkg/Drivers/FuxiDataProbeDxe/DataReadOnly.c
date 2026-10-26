@@ -176,3 +176,27 @@ EFI_STATUS FdpDecodeAvailability(UINT64 Result0, UINT64 Result1, BOOLEAN *Availa
   *Available = (BOOLEAN)(Result1 == 1);
   return EFI_SUCCESS;
 }
+
+EFI_STATUS FdpVerifyPartitionRead(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Partition,
+                                  UINT64 RelativeLba, UINTN Blocks, VOID *First,
+                                  VOID *Repeat, UINTN BufferBytes, UINTN Reads,
+                                  UINTN *Completed) {
+  UINTN Bytes, I, N, A = (UINTN)First, B = (UINTN)Repeat;
+  EFI_STATUS Status;
+  if (Completed == NULL) return EFI_INVALID_PARAMETER;
+  *Completed = 0;
+  if (!DiskValid(Disk) || !First || !Repeat || Blocks == 0 ||
+      Blocks > MAX_UINTN / Disk->BlockSize || Reads < 2 || Reads > 8)
+    return EFI_INVALID_PARAMETER;
+  Bytes = Blocks * Disk->BlockSize;
+  if (Bytes > BufferBytes || A > MAX_UINTN - Bytes || B > MAX_UINTN - Bytes ||
+      (A < B + Bytes && B < A + Bytes)) return EFI_INVALID_PARAMETER;
+  for (N = 0; N < Reads; ++N) {
+    Status = FdpReadPartition(Disk, Partition, RelativeLba, Blocks, N ? Repeat : First);
+    if (EFI_ERROR(Status)) return Status;
+    ++*Completed;
+    if (N) for (I = 0; I < Bytes; ++I)
+      if (((UINT8 *)First)[I] != ((UINT8 *)Repeat)[I]) return EFI_CRC_ERROR;
+  }
+  return EFI_SUCCESS;
+}
