@@ -4,6 +4,10 @@
 #define F2R_SB_FEATURE 2180U
 #define F2R_SB_CRC 3068U
 #define F2R_CP_BITMAP 192U
+// Observed metadata 0x499: encryption capability, extra attrs, project quota,
+// quota inodes, verity. These do not change SB/CP address fields. Inode/data
+// interpretation remains unimplemented. Optional SB CRC is already checked.
+#define F2R_BOOTSTRAP_FEATURES (0x0499U | 0x0800U)
 STATIC UINT32 L32(CONST UINT8 *P) {
   return P[0] | ((UINT32)P[1]<<8) | ((UINT32)P[2]<<16) | ((UINT32)P[3]<<24);
 }
@@ -28,7 +32,8 @@ STATIC EFI_STATUS Super(CONST UINT8 *S, UINT64 PartitionBlocks, F2R_VOLUME *V) {
   if (L16(S+4)!=1 || L32(S+16)!=12 || L32(S+20)!=9 ||
       L32(S+8)<9 || L32(S+8)>12 || L32(S+12)>3 ||
       L32(S+8)+L32(S+12)!=12) return EFI_UNSUPPORTED;
-  if (Feature & ~0x800U) return EFI_UNSUPPORTED;
+  if (Feature & ~F2R_BOOTSTRAP_FEATURES) return EFI_UNSUPPORTED;
+  V->Features=Feature;
   if (Feature & 0x800U) {
     if (L32(S+32)!=F2R_SB_CRC) return EFI_UNSUPPORTED;
     if (Crc(S,F2R_SB_CRC)!=L32(S+F2R_SB_CRC)) return EFI_CRC_ERROR;

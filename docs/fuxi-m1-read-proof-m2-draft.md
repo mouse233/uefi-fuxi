@@ -128,3 +128,20 @@ Disk-format facts were checked against the primary Linux v5.15
 [format definitions](https://github.com/torvalds/linux/blob/v5.15/include/linux/f2fs_fs.h)
 and [checkpoint implementation](https://github.com/torvalds/linux/blob/v5.15/fs/f2fs/checkpoint.c).
 This is an original small reader, not copied Linux filesystem source.
+
+## Device evidence and M2 v2 bootstrap profile
+
+The v8 attempt-01 now proves M1 same-boot read consistency and UFS queue stop.
+See [the device record](fuxi-m1-read-proof-device-20261026.md) for exact limits;
+USB enumeration/normal stop remain failed, with a Windows descriptor-request
+error and raw CONNECT_DONE/link/reset events. No END completion was sampled.
+
+Observed metadata has feature=0x499 and cp_payload=0, CP=512/NAT=2560/main=4096.
+M2 v2 accepts/records these known capability bits for SB/CP bootstrap only,
+alongside the optional SB CRC bit. Inode-level encryption/extra-attribute/quota/
+verity handling is not enabled by this acceptance. Compression/casefold/zoned
+and other unknown bits remain rejected. The 14-fixture suite passes and the
+AARCH64 standalone module compiles; no M2 device execution occurred.
+The shipped v8 candidate stays pinned to 75a7faca; it is not rebuilt or rebound
+to this newer M2 draft. NAT journals and verified inode/path/file reading are
+the next functional milestone.

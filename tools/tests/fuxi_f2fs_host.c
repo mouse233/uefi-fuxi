@@ -15,7 +15,7 @@ static EFI_STATUS Read(VOID *Context,UINT64 Lba,UINTN Count,VOID *Buffer) {
   return EFI_SUCCESS;
 }
 int main(int Argc,char **Argv) {
-  assert(Argc==5);
+  assert(Argc==6);
   Image=fopen(Argv[1],"rb");assert(Image);
   FDP_DISK Disk={NULL,Read,4096,32767};
   FDP_PARTITION Part={0,32767,TRUE};
@@ -24,6 +24,7 @@ int main(int Argc,char **Argv) {
   EFI_STATUS Status=F2rPrepare(&Disk,&Part,&Volume,Work,sizeof(Work));
   if(Status!=Expected) { fprintf(stderr,"actual=%llx expected=%llx\n",(unsigned long long)Status,(unsigned long long)Expected); return 1; }
   if(!EFI_ERROR(Status)) {
+    assert(Volume.Features==(UINT32)strtoul(Argv[5],NULL,0));
     assert(Volume.SelectedPack==(UINT32)strtoul(Argv[3],NULL,0));
     UINT64 Block; UINTN Offset;
     assert(F2rPlanNatRead(&Volume,3,&Block,&Offset)==EFI_SUCCESS);

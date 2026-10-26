@@ -11,12 +11,15 @@ typedef struct {
   FDP_PARTITION Partition;
   UINT64 Blocks, CheckpointVersion;
   UINT32 Checkpoint, Nat, Main, MainEnd, RootInode, NatSegments, SitSegments;
-  UINT32 SelectedPack, NatBitmapBytes;
+  UINT32 SelectedPack, NatBitmapBytes, Features;
   UINT8 NatBitmap[F2R_BLOCK_BYTES];
   BOOLEAN Prepared;
 } F2R_VOLUME;
 // Bootstrap only, not a mount or file-read success. This draft accepts a
 // single-device 4K-block layout, no cp_payload, and a clean checkpoint.
+// Known feature bits are accepted for SB/CP bootstrap ONLY. Features records
+// encryption/extra-attribute/quota/verity requirements for future inode code;
+// Prepared does not authorize plaintext file reads or bypass inode policy.
 EFI_STATUS F2rPrepare(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Partition,
                      F2R_VOLUME *Volume, VOID *Work, UINTN WorkBytes);
 // Plan the on-disk NAT table read. NAT journal overlays MUST be implemented

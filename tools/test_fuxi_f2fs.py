@@ -20,6 +20,9 @@ def main():
         put(b,4092,crc(b[:4092]));return b
     def fixture():return {0:sb.copy(),1:sb.copy(),512:cp(1),519:cp(1),1024:cp(2),1031:cp(2)}
     cases=[('valid-newer-pack',fixture(),0,2,2560)]
+    observed=fixture()
+    for block in (0,1):put(observed[block],1024+2180,0x499)
+    cases.append(('observed-metadata-499-bootstrap-only',observed,0,2,2560))
     def altered(name,block,offset,value,status,recrc=False):
         f=fixture();put(f[block],offset,value)
         if recrc:
@@ -33,8 +36,8 @@ def main():
     altered('oversized-bitmap',1024,160,4096,err(10),True)
     f=fixture();f[1][1024]^=1;cases.append(('superblocks-disagree',f,err(10),0,0))
     f=fixture();
-    for block in (0,1):put(f[block],1024+2180,1)
-    cases.append(('unsupported-encryption-feature',f,err(3),0,0))
+    for block in (0,1):put(f[block],1024+2180,0x2000)
+    cases.append(('unsupported-compression-feature',f,err(3),0,0))
     f=fixture();
     for block in (0,1):put(f[block],1024+1664,1)
     cases.append(('payload-extension-not-guessed',f,err(3),0,0))
@@ -55,12 +58,12 @@ def main():
             with image.open('wb') as stream:
                 stream.truncate(32768*4096)
                 for block,data in blocks.items():stream.seek(block*4096);stream.write(data)
-            subprocess.run([str(binary),str(image),hex(status),str(pack),str(nat)],check=True)
+            subprocess.run([str(binary),str(image),hex(status),str(pack),str(nat),hex(struct.unpack_from('<I',blocks[0],1024+2180)[0])],check=True)
             print('PASS '+name,flush=True)
         with image.open('wb') as stream:
             stream.truncate(32768*4096)
             for block,data in fixture().items():stream.seek(block*4096);stream.write(data)
-        subprocess.run([str(binary),str(image),hex(err(15)),'0','0'],
+        subprocess.run([str(binary),str(image),hex(err(15)),'0','0','0'],
                        env={**os.environ,'F2R_FAIL_LBA':'1024'},check=True)
         print('PASS transport failure cannot authorize an older checkpoint',flush=True)
     files=[src/'F2fsReadOnly.c',src/'F2fsReadOnly.h',src/'DataReadOnly.c',src/'DataReadOnly.h',root/'tools/tests/fuxi_f2fs_host.c',root/'tools/tests/fuxi_read_proof_host.c',pathlib.Path(__file__).resolve()]
