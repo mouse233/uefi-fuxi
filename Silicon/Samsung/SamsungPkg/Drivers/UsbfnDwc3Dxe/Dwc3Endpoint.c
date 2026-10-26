@@ -34,6 +34,41 @@ STATIC UINT32 FuxiCommandTraceBudget = 48;
 STATIC UINT32 FuxiEp0DropTraceBudget = 12;
 #endif
 
+#if defined(FUXI_USB_DMA32) && FUXI_USB_EP0_TRACE
+// Every candidate so far dies on a failed END, and no build has ever shown what
+// the registers say at that instant. Read-only: no DEPCMD, no event
+// acknowledge, no allocation, and bounded so a stuck endpoint cannot flood the
+// log. Only offsets this tree already defines are read.
+STATIC UINT32 FuxiFailSnapshotBudget = 6;
+
+STATIC
+VOID
+Dwc3FailSnapshot (
+  IN DWC3_DEV      *Dev,
+  IN UINT8          PhysEpNum,
+  IN UINT32         Command,
+  IN DWC3_ENDPOINT *Endpoint)
+{
+  UINTN DepBase = DWC3_DEP_BASE (PhysEpNum);
+
+  if (FuxiFailSnapshotBudget == 0) {
+    return;
+  }
+  FuxiFailSnapshotBudget--;
+
+  DEBUG ((DEBUG_ERROR,
+    "FUXI SNAPFAIL ep=%u cmd=%x DEPCMD=%08x PAR0=%08x DCTL=%08x DSTS=%08x GEVNTCOUNT=%08x trb=%08x started=%u rsc=%u\n",
+    PhysEpNum, Command,
+    MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMD),
+    MmioRead32 (Dev->Base + DepBase + DWC3_DEPCMDPAR0),
+    MmioRead32 (Dev->Base + DWC3_DCTL),
+    MmioRead32 (Dev->Base + DWC3_DSTS),
+    MmioRead32 (Dev->Base + DWC3_GEVNTCOUNT (0)),
+    Endpoint->TrbPool[0].Control, Endpoint->TransferStarted,
+    Endpoint->ResourceIndex));
+}
+#endif
+
 STATIC
 VOID
 Dwc3PushMessage (
@@ -434,6 +469,9 @@ Dwc3EndTransfer (
   if (EFI_ERROR (Status)) {
     DEBUG ((EFI_D_ERROR, "DWC3: ENDTRANSFER failed on Physical EP %u, RscIdx %u: %r\n",
             PhysEpNum, Endpoint->ResourceIndex, Status));
+#if defined(FUXI_USB_DMA32) && FUXI_USB_EP0_TRACE
+    Dwc3FailSnapshot (Dev, PhysEpNum, Command, Endpoint);
+#endif
   }
 
   if (PhysEpNum <= DWC3_EP0_IN) {
