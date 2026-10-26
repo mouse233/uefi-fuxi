@@ -112,3 +112,16 @@ verification.json 放入其中，用既有 Windows single-boot adapter 临时启
 `fs/f2fs/f2fs.h`；仅使用磁盘格式事实，未复制 Linux 文件系统实现或链接其源码。
 
 附加默认关闭回归：未启用 M2/park 的独立模块也已编译退出0，原生UFS EFI无M2 park标记、0条SMC；默认开关保持关闭。
+
+
+## attempt-01 实机结果 — 2026-10-26
+
+2026-10-26T22:49:51.566129+08:00 单次临时启动 Sending/Booting OKAY，退出0。IMG_7071 原图与哈希、
+启动记录、结构化判读见 attempt-01/REPORT.md、assessment.json、device-test.json。
+prepare/root-open/root-list/lookup/file-read 均 Success；CP pack2、flags145、version5788ea72、
+journal0。根目录13项（含点项），/vold/metadata_encryption/key/version 为 nid69、
+1字节 inline 文件，SHA256 6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b。UFS stop=1、双doorbell=0、run=0、
+poisoned=0，最终明确 pre-USB park，无USB接收器/交接。
+首个inline文件实机读取已观察到；未新增TWRP独立对照、非inline文件数据读取、
+非空NAT journal覆盖、Android解密、大文件/RAM对象或XNU交接通过结论。
+此结果补充上文构建时的“未上机”状态，不改写原构建/绑定记录。

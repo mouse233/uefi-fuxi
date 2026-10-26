@@ -295,3 +295,10 @@ M1 v8 的同次启动独立读取与队列停止实机证据已归档，USB 描�
 样本及 mkfs/sload 独立生成卷的三项真实文件对照通过，均非手机结果。
 候选尝试读取 metadata 的 vold version 文件，随后停在 UFS 诊断，不启动 USB 接收器；
 没有 Android 解密、RAM 对象发布或 XNU 交接。详见 [M2 代码/候选/边界](fuxi-m2-metadata-files.md)。
+
+### M2 attempt-01 实机推进
+
+metadata 根目录13项与 /vold/metadata_encryption/key/version 路径读取成功，目标为
+nid69、1字节 inline 文件；UFS 队列正常停止，最终pre-USB诊断驻留。
+这是首个真实metadata文件读取证据；TWRP独立对照、非inline内容与非空journal覆盖
+实机证据仍待补齐。详见 [实机记录](fuxi-m2-device-20261026.md)。
