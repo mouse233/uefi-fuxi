@@ -19,9 +19,9 @@ STATIC VOID RunM2(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Metadata,
   UINTN Count=0,Bytes,Request,I; UINT64 Offset=0;
   FNU_SHA256_CTX Hash; UINT8 Digest[32]; CHAR16 Hex[65];
   STATIC CONST CHAR16 Digits[]=L"0123456789abcdef";
-  // A small non-secret vold format-version file. Existence is not assumed;
-  // Not Found is recorded without choosing a different file or claiming success.
-  STATIC CONST CHAR8 Path[]="/vold/metadata_encryption/key/version";
+  // Existing non-secret aconfig map observed in A17 TWRP: 10527 bytes.
+  // Full hash is reported only after all non-inline blocks are read.
+  STATIC CONST CHAR8 Path[]="/aconfig/maps/system.package.map";
   if (mPoisoned || !Metadata->Present) return;
   FNU_STAGE("m2-metadata");
   Volume=AllocateZeroPool(sizeof(*Volume)); File=AllocateZeroPool(sizeof(*File));

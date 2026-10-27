@@ -30,7 +30,9 @@ def main():
     if park:
         assert candidate["diagnostic_only"] and candidate["m2_metadata_files"]
         assert not candidate["receiver_runtime_enabled"]
-        assert candidate["m2_target_path"] == "/vold/metadata_encryption/key/version"
+        assert candidate["m2_target_path"] == "/aconfig/maps/system.package.map"
+        assert candidate["m2_reference_bytes"] == 10527
+        assert candidate["m2_reference_sha256"] == "14f3d8675423917e383a71c936f4d9a81a29480f34ae3c550e0f4c34e53a0991"
     assert 0 <= candidate["ufs_report_hold_seconds"] <= 60
     sources = verified["source_sha256"]
     for name, digest in sources.items():
@@ -67,6 +69,7 @@ def main():
     for marker in ("FUXIUFS CACHED REPORT BEGIN (no new UFS IO)", "FUXIUFS REPORT INCOMPLETE dropped=%u truncated=%u"):
         assert marker.encode("utf-16-le") in ufs
     if park:
+        assert candidate["m2_target_path"].encode("ascii") in ufs
         for marker in ("FUXIM2 PARK: no USB receiver; no handoff", "FUXIM2 file-sha256=%s", "FUXIM2 prepare=%r"):
             assert marker.encode("utf-16-le") in ufs
         order=(root/"Platforms/Xiaomi/fuxiPkg/Include/APRIORI.inc").read_text()
