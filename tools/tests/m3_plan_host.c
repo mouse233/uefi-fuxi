@@ -42,6 +42,15 @@ int main(void) {
   p=part; p.Last=1000; rejected(&disk,&p,&map,16,8,EFI_INVALID_PARAMETER);
   p=part; p.Present=FALSE; rejected(&disk,&p,&map,16,8,EFI_INVALID_PARAMETER);
   assert(FdmPlanMetadataRead(&disk,&part,&map,16,8,NULL)==EFI_INVALID_PARAMETER);
+  // Geometry observed through sanitized TWRP DM status and UEFI GPT. This
+  // exercises only arithmetic; it does not establish key access or plaintext.
+  disk.LastBlock=0x3afc3ff; p.First=0x2f7840; p.Last=0x3afc3fa; p.Present=TRUE;
+  bad=(FDM_MAPPING){0,469917144,0,0,4096,TRUE,TRUE,TRUE,TRUE};
+  assert(FdmPlanMetadataRead(&disk,&p,&bad,0,8,&result)==EFI_SUCCESS);
+  assert(result.DiskLba==0x2f7840 && result.FirstDun==0 && result.Blocks==1);
+  assert(FdmPlanMetadataRead(&disk,&p,&bad,469917136,8,&result)==EFI_SUCCESS);
+  assert(result.DiskLba==0x3afc3fa && result.FirstDun==58739642 && result.Blocks==1);
+  rejected(&disk,&p,&bad,469917136,16,EFI_INVALID_PARAMETER);
   puts("M3 metadata mapping planner: all cases passed");
   return 0;
 }
