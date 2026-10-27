@@ -23,6 +23,12 @@
 #include "../../Include/Protocol/FuxiUfsReport.h"
 #include "../FuxiDataProbeDxe/DataReadOnly.h"
 #include "../FuxiDataProbeDxe/F2fsReadOnly.h"
+#ifndef FUXI_M3_SCM_SUBJECTS
+#define FUXI_M3_SCM_SUBJECTS 0
+#endif
+#if FUXI_M3_SCM_SUBJECTS && !FUXI_M3_SCM_INFO
+#error ICE availability requires INFO self-query
+#endif
 #ifndef FUXI_M3_SCM_INFO
 #define FUXI_M3_SCM_INFO 0
 #endif
@@ -106,6 +112,26 @@ STATIC VOID FnuScmInfoProbe(VOID) {
   Status = FdpDecodeAvailability(Args.Arg0, Args.Arg1, &Available);
   FnuLog(L"FUXIM3 SCM64 INFO return a0=%lx a1=%lx decode=%r available=%u",
          (UINT64)Args.Arg0, (UINT64)Args.Arg1, Status, (UINT32)Available);
+#if FUXI_M3_SCM_SUBJECTS
+  if (!EFI_ERROR(Status) && Available) {
+    CONST UINT32 Subjects[] = {FDP_SCM_ICE_SET, FDP_SCM_ICE_CLEAR, FDP_SCM_ICE_DERIVE};
+    UINTN I;
+    for (I = 0; I < ARRAY_SIZE(Subjects); ++I) {
+      Status = FdpMakeAvailabilityQuery(Subjects[I], TRUE, Values);
+      if (EFI_ERROR(Status)) break;
+      ZeroMem(&Args, sizeof(Args));
+      Args.Arg0 = (UINTN)Values[0];
+      Args.Arg1 = (UINTN)Values[1];
+      Args.Arg2 = (UINTN)Values[2];
+      FnuLog(L"FUXIM3 SCM64 subject=%08x begin", Subjects[I]);
+      ArmCallSmc(&Args);
+      Status = FdpDecodeAvailability(Args.Arg0, Args.Arg1, &Available);
+      FnuLog(L"FUXIM3 SCM64 subject=%08x a0=%lx a1=%lx decode=%r available=%u",
+             Subjects[I], (UINT64)Args.Arg0, (UINT64)Args.Arg1, Status, (UINT32)Available);
+      if (EFI_ERROR(Status)) break;
+    }
+  }
+#endif
 }
 #endif
 

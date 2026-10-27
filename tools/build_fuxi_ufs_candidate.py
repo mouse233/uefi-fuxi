@@ -32,6 +32,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--ufs-report-hold-seconds", type=int, default=20,
                         help="photo hold before USB (0..60 seconds, default 20)")
+    parser.add_argument("--m3-scm-subjects", action="store_true", help="query availability of ICE SCM services after INFO self-query")
     parser.add_argument("--m3-scm-info", action="store_true", help="one SMC64 INFO self-availability query")
     parser.add_argument("--m2-metadata-files", action="store_true",
                         help="run bounded metadata file diagnostics and park before USB dispatch")
@@ -49,6 +50,8 @@ def main():
         parser.error("the candidate firmware build must run in unixnu-fuxi-build-arm64")
     if not 0 <= args.ufs_report_hold_seconds <= 60:
         parser.error("--ufs-report-hold-seconds must be between 0 and 60")
+    if args.m3_scm_subjects and not args.m3_scm_info:
+        parser.error("ICE availability requires --m3-scm-info")
     if args.m3_scm_info and not args.m2_metadata_files:
         parser.error("M3 INFO requires the parked diagnostic")
     if args.m2_metadata_files and args.without_ufs:
@@ -110,6 +113,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_UFS_REPORT_HOLD_SECONDS"] = str(hold)
     ctx.board["firmware"]["defines"]["FUXI_UFS_M2_FILES"] = str(int(args.m2_metadata_files))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_INFO"] = str(int(args.m3_scm_info))
+    ctx.board["firmware"]["defines"]["FUXI_M3_SCM_SUBJECTS"] = str(int(args.m3_scm_subjects))
     ctx.board["firmware"]["defines"]["FUXI_UFS_DIAGNOSTIC_PARK"] = str(int(args.m2_metadata_files))
     ctx.board["firmware"]["defines"]["FUXI_DATA_PORT_PROBE"] = "0"
     ctx.board["firmware"]["defines"]["FUXI_DATA_SCM_QUERY"] = "0"
@@ -146,7 +150,7 @@ def main():
                   usb_sid_route_enabled=True, usb_keep_phy=True,
                   ufs_report_cached=not args.without_ufs,
                   ufs_report_replay_at_receiver_park=not args.without_ufs and not args.m2_metadata_files,
-                  m2_metadata_files=args.m2_metadata_files, m3_scm_info=args.m3_scm_info, diagnostic_park_before_usb=args.m2_metadata_files,
+                  m2_metadata_files=args.m2_metadata_files, m3_scm_info=args.m3_scm_info, m3_scm_subjects=args.m3_scm_subjects, diagnostic_park_before_usb=args.m2_metadata_files,
                   m2_target_path="/aconfig/maps/system.package.map" if args.m2_metadata_files else None,
                   m2_reference_bytes=10527 if args.m2_metadata_files else None,
                   m2_reference_sha256="14f3d8675423917e383a71c936f4d9a81a29480f34ae3c550e0f4c34e53a0991" if args.m2_metadata_files else None,

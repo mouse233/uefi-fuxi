@@ -80,6 +80,10 @@ def main():
     if candidate.get("m3_scm_info"):
         for marker in ("FUXIM3 SCM64 INFO begin (one call; no hardware timeout)", "FUXIM3 SCM64 INFO return a0=%lx a1=%lx decode=%r available=%u"):
             assert marker.encode("utf-16-le") in ufs
+    if candidate.get("m3_scm_subjects"):
+        assert candidate.get("m3_scm_info")
+        for marker in ("FUXIM3 SCM64 subject=%08x begin", "FUXIM3 SCM64 subject=%08x a0=%lx a1=%lx decode=%r available=%u"):
+            assert marker.encode("utf-16-le") in ufs
     assert b"USBRAM: cached UFS report unavailable" in receiver
     protocol = uuid.UUID("6d8c0fc1-6c29-4df2-b7d1-845e1b4cf209").bytes_le
     assert protocol in ufs and protocol in receiver
