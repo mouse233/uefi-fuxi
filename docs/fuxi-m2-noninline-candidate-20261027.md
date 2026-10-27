@@ -36,3 +36,29 @@ product `fuxi`、unlocked=yes、usb-ram profile、12项检查及精确镜像 SHA
 当前状态为 **等待手机屏幕照片**。主机启动 OKAY 只能证明 fastboot 接受了
 临时启动请求，不能据此判定非 inline 文件、UFS 停机或 M2 已通过。
 本轮仅一次临时启动；尚未获得文件读取、SHA256、队列停止或 park 的实机观察。
+
+## attempt-01 照片结果 — checkpoint 不满足只读策略
+
+原图 `attempt-01/IMG_7090-original.jpg`，SHA256
+`f6c1010e630aea66d14817fd5654dc613bc7b84c875a9f8cdf9b247d03b127ed`；结构化判读见 `assessment.json`。
+UFS NOP/power/wake/TUR/capacity/GPT 成功，metadata/userdata 各自独立缓冲区读取 3/3；
+首块 SHA 与此前 A17 TWRP 对照一致。metadata feature=0x499。
+
+`FUXIM2 prepare=Unsupported`，selected-pack=2、cp-flags=`0x44`、read-bytes=0。
+当前 `F2rPrepare` 要求 `CP_UMOUNT_FLAG`（0x01）；0x44 仅含 compact-summary (0x04)
+和 CRC-recovery (0x40)，不含 clean-unmount 位，因此代码在文件目录查找前返回
+Unsupported。没有 `lookup`、文件大小或文件 SHA 的实机结果，不能判定非 inline 读取通过。
+上次成功的 inline 文件试验为 cp-flags=0x145；本轮 TWRP 之前已 rw 挂载 metadata，
+但照片本身不能证明具体状态变化原因或文件系统损坏。不能回退旧 checkpoint 或放宽该保护。
+
+UFS `stop=1`、双 doorbell=0、run=0、HCS=0x10f、IS=0、poisoned=0；最终 pre-USB
+park。SMMU configured=1、GFSR=0、FSR=0x400，未证明完整路由恢复。
+
+下一步候选是让 Android 正常启动并通过系统菜单正常关机，再从关机状态进入
+fastboot，用同一镜像的独立 attempt-02 检查新 checkpoint 标志。正常 Android 生命周期
+可能更新文件和元数据，不能保证旧 TWRP 文件 hash 仍适用；若状态仍不满足或 hash
+不同，应保留结果并定位，不能跳过策略。Android 正常关机会尝试卸载文件系统，
+但最终 clean checkpoint 必须以实机日志确认。
+
+标志定义见 [Android kernel F2FS 头文件](https://android.googlesource.com/kernel/common/+/refs/tags/android14-5.15.189_r00/include/linux/f2fs_fs.h)，
+正常关机卸载逻辑见 [Android init reboot.cpp](https://android.googlesource.com/platform/system/core/+/android16-release/init/reboot.cpp)。
