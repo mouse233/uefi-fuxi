@@ -70,3 +70,22 @@ fastboot，用同一镜像的独立 attempt-02 检查新 checkpoint 标志。正
 只执行一次 `fastboot boot`；Sending OKAY 0.058秒、Booting OKAY 1.740秒，退出0。
 原始记录见 `attempt-02/device-test.json`。当前等待手机屏幕照片，不能凭主机
 OKAY 判定 checkpoint、文件读取、哈希或 UFS 停机通过。
+
+## attempt-02 照片结果 — 首个非 inline metadata 文件读取对照成功
+
+原图 `attempt-02/IMG_7091-original.jpg`，SHA256
+`25cad71e505cf6b408fbec3b0a8e70a1b555d342fede260e571f1d4835e221bb`；结构化判读见 `assessment.json`。
+metadata/userdata 的 UFS 独立缓冲区读取各 3/3，GPT 成功。`prepare=Success`，
+selected-pack=2、cp-flags=0x45、cp-version=0x5788ea84、journal=0；该标志包含
+此前缺失的 CP_UMOUNT_FLAG。root-open/root-list 成功，根目录 13 项（含 . 和 ..）。
+
+`lookup=Success path=/aconfig/maps/system.package.map`，nid=12、bytes=10527、inline=0；
+`file-read=Success bytes=10527`，SHA256
+`14f3d8675423917e383a71c936f4d9a81a29480f34ae3c550e0f4c34e53a0991`。
+大小和完整 SHA 与先前 TWRP 只读基准一致。这证明该文件在本次 UEFI 运行中
+成功通过非 inline 路径完整读取，与跨启动的 TWRP 文件内容对照一致；不证明全卷状态相同。
+
+UFS `stop=1`、双 doorbell=0、run=0、HCS=0x10f、IS=0、poisoned=0，最终 pre-USB
+park；SMMU configured=1、GFSR=0、FSR=0x400，不宣称完整路由恢复。缓存报告重放
+不是额外设备读取。journal=0，因此非空 NAT journal 在实机上仍未覆盖；Android
+密钥解封/ICE/fscrypt、RAM 对象发布和 XNU 交接仍未实现或未验证。

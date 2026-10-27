@@ -15,7 +15,7 @@
 | 新 A17 TWRP 静态绑定 | boot v4/CPIO/关键 ELF 哈希和旧镜像逐文件差异已记录 | 用户报告在新 TWRP 解密；ADB 确认 dm-7 的 `/data` 挂载 |
 | M0 GPT 与分区限界读取 | 主机测试与 UEFI 集成 | M1/M2 实机 GPT 和首块摘要通过 |
 | M1 原生 UFS 只读接管 | 队列、DMA、SMMU 有界诊断 | 两分区重复读 3/3、UFS 队列停止；原 USB 故障是另一验收项 |
-| M2 F2FS checkpoint/NAT/目录/文件读取 | clean/offline 解析、主机样本验证 | 1 字节 inline 文件实机读取与 TWRP hash 一致；非 inline 和非空 journal 待测 |
+| M2 F2FS checkpoint/NAT/目录/文件读取 | clean/offline 解析、主机样本验证 | inline 与 10527 字节非 inline 文件实机读取均与 TWRP SHA 一致；非空 journal 待测 |
 | M3 安全通信、密钥解封、ICE、fscrypt | 未实现 | 不因 TWRP 解密成功而视为 UEFI 通过 |
 | 本地文件 → RAM 对象 → XNU | 未实现 | 无本地系统镜像交接证据 |
 
@@ -327,3 +327,11 @@ nid69、1字节 inline 文件；UFS 队列正常停止，最终pre-USB诊断驻�
 实际 EFI 内含目标路径并绑定在 FD 中。尚未临时启动手机，非 inline 读取没有
 实机通过结论。镜像依旧在 pre-USB 诊断驻留，不做 Android 解密或 XNU 接力。
 详见 [候选 REVIEW](fuxi-m2-noninline-candidate-20261027.md)。
+
+## 2026-10-27：M2 非 inline 文件实机对照通过
+
+正常 Android 关机后的 attempt-02 观察到 checkpoint pack2/flags0x45、journal0；
+UEFI 完整读取 `/aconfig/maps/system.package.map`，10527字节、inline=0，SHA256
+`14f3d8675423917e383a71c936f4d9a81a29480f34ae3c550e0f4c34e53a0991`，与先前
+TWRP 文件基准一致；UFS 停队列及 pre-USB park 已观察。非空 NAT journal、
+Android 解密和 XNU 接力尚未实机证明。详见 [候选与照片记录](fuxi-m2-noninline-candidate-20261027.md)。

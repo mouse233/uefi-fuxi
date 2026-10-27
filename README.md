@@ -22,7 +22,7 @@ the entry point, not this README.
 | --- | --- | --- |
 | M0 | Bounded read-only probe: BlockIo discovery, GPT CRC/geometry checks, F2FS header identification, SCM/QSEE discovery | done (host-verified) |
 | M1 | Native UFS read-only takeover and repeated raw reads | bounded device proof passed; original USB stop remains a separate issue |
-| M2 | `/metadata` file read (checkpoint/NAT/directory walking) | inline file read and independent TWRP hash passed; non-inline device proof pending |
+| M2 | `/metadata` file read (checkpoint/NAT/directory walking) | inline and non-inline file hashes match TWRP on-device; nonempty NAT journal remains unverified |
 | M3 | Key wrapping, ICE slots, metadata decryption via SCM/QSEE | not started |
 | M4 | Named `/data` file plaintext with hash comparison | not started |
 | M5 | Full object load + RAM publication to the existing handoff | not started |
