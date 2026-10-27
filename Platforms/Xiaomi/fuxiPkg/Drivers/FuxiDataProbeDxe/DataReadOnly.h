@@ -62,4 +62,30 @@ EFI_STATUS FdpInspectF2fs(CONST VOID *First4k, UINTN Bytes,
 EFI_STATUS FdpMakeAvailabilityQuery(UINT32 Subject, BOOLEAN Smc64, UINT64 Args[8]);
 EFI_STATUS FdpDecodeAvailability(UINT64 Result0, UINT64 Result1,
                                  BOOLEAN *Available);
+
+// Scalar SMC64 register form observed in the A17 TWRP qcom-scm.ko descriptor
+// build: x0 = 0xC2000000 | (service << 8) | command, x1 = arginfo whose low
+// nibble is the argument count, x2..x7 = arguments. Only the scalar path is
+// modelled; the kernel's extra-argument buffer (five or more arguments) is not.
+#define FDP_SCM64_FNID_PREFIX 0xc2000000ULL
+#define FDP_SCM64_MAX_ARGS 6U
+typedef struct {
+  UINT32 Svc;
+  UINT32 Cmd;
+  UINT32 ArgCount;
+  UINT64 Args[FDP_SCM64_MAX_ARGS];
+} FDP_SCM64_CALL;
+
+EFI_STATUS FdpBuildScm64(CONST FDP_SCM64_CALL *Call, UINT64 Regs[8]);
+// Bridge descriptors use service 0x0c with owner 2: enable 0x1c takes no
+// argument, delete 0x1d takes the handle and create 0x1e takes four. Create
+// repeats the physical address with the flag word and carries the VM count at
+// bit 9 of the size word. The vendor module conditionally adds 0x1a from
+// internal state; that conditional is not modelled here.
+EFI_STATUS FdpBuildBridgeEnable(UINT64 Regs[8]);
+EFI_STATUS FdpBuildBridgeDelete(UINT64 Handle, UINT64 Regs[8]);
+EFI_STATUS FdpBuildBridgeCreate(UINT64 Phys, UINT64 Size, UINT32 VmCount,
+                                UINT64 VmBits, UINT64 Regs[8]);
+// a0 is the SCM status; create returns the bridge handle in a1.
+EFI_STATUS FdpDecodeBridgeCreate(UINT64 Result0, UINT64 Result1, UINT32 *Handle);
 #endif

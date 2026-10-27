@@ -56,6 +56,24 @@
 #if FUXI_UFS_DIAGNOSTIC_PARK && !FUXI_UFS_M2_FILES
 #error Diagnostic park requires the M2 diagnostic
 #endif
+#ifndef FUXI_M3_METADATA_KEY
+#define FUXI_M3_METADATA_KEY 0
+#endif
+#if FUXI_M3_METADATA_KEY && !FUXI_UFS_M2_FILES
+#error Metadata key discovery requires the M2 diagnostic
+#endif
+#if FUXI_M3_METADATA_KEY && !FUXI_UFS_DIAGNOSTIC_PARK
+#error Metadata key discovery requires the parked diagnostic
+#endif
+#ifndef FUXI_M3_SCM_BRIDGE_CALL
+#define FUXI_M3_SCM_BRIDGE_CALL 0
+#endif
+#if FUXI_M3_SCM_BRIDGE_CALL && !FUXI_M3_SCM_INFO
+#error Bridge calls require the INFO self-query
+#endif
+#if FUXI_M3_SCM_BRIDGE_CALL && !FUXI_UFS_DIAGNOSTIC_PARK
+#error Bridge calls require the parked diagnostic
+#endif
 
 #define FNU_POLLS(Microseconds) ((Microseconds) / 2U)
 #define FNU_TIMEOUT_NOP         200000U
@@ -106,6 +124,9 @@ STATIC VOID FnuInspectSecurityProtocols(VOID) {
   FnuLog(L"FUXIM3 discovery only: no protocol methods or SMC; no decrypt");
 }
 
+#if FUXI_M3_SCM_INFO || FUXI_M3_SCM_BRIDGE_CALL
+STATIC BOOLEAN mScmAvailable;
+#endif
 #if FUXI_M3_SCM_INFO
 // A single non-mutating INFO/IS_CALL_AVAILABLE query, asking about itself.
 // A synchronous SMC cannot be interrupted by a software timeout.
@@ -125,6 +146,7 @@ STATIC VOID FnuScmInfoProbe(VOID) {
   FnuLog(L"FUXIM3 SCM64 INFO begin (one call; no hardware timeout)");
   ArmCallSmc(&Args);
   Status = FdpDecodeAvailability(Args.Arg0, Args.Arg1, &Available);
+  mScmAvailable = (BOOLEAN)(!EFI_ERROR(Status) && Available);
   FnuLog(L"FUXIM3 SCM64 INFO return a0=%lx a1=%lx decode=%r available=%u",
          (UINT64)Args.Arg0, (UINT64)Args.Arg1, Status, (UINT32)Available);
 #if FUXI_M3_SCM_SUBJECTS || FUXI_M3_SCM_INVOKE || FUXI_M3_SCM_BRIDGE
@@ -208,6 +230,85 @@ STATIC VOID FnuCacheInv(FNU_OPS *Ops, VOID *Va, UINTN Bytes) {
   (VOID)Ops;
   InvalidateDataCacheRange(Va, Bytes);
 }
+
+#if FUXI_M3_SCM_BRIDGE_CALL
+// Closed loop over one page: enable, create, delete. The page is never freed
+// before the delete attempt. Every step logs before the synchronous SMC.
+STATIC VOID FnuSmc64(CONST UINT64 Regs[8], ARM_SMC_ARGS *Out) {
+  ZeroMem(Out, sizeof(*Out));
+  Out->Arg0 = (UINTN)Regs[0];
+  Out->Arg1 = (UINTN)Regs[1];
+  Out->Arg2 = (UINTN)Regs[2];
+  Out->Arg3 = (UINTN)Regs[3];
+  Out->Arg4 = (UINTN)Regs[4];
+  Out->Arg5 = (UINTN)Regs[5];
+  Out->Arg6 = (UINTN)Regs[6];
+  Out->Arg7 = (UINTN)Regs[7];
+  ArmCallSmc(Out);
+}
+
+STATIC VOID FnuBridgeCallProbe(VOID) {
+  EFI_PHYSICAL_ADDRESS Raw = SIZE_4GB - 1;
+  VOID *Page;
+  UINT64 Regs[8];
+  ARM_SMC_ARGS Out;
+  EFI_STATUS Status;
+  UINT32 Handle = 0;
+
+  FNU_STAGE("m3-bridge-call");
+  if (gBS->AllocatePages(AllocateMaxAddress, EfiBootServicesData, 1, &Raw) != EFI_SUCCESS) {
+    FnuLog(L"FUXIM3 BRIDGE page=allocation-failed; no SMC");
+    return;
+  }
+  Page = (VOID *)(UINTN)Raw;
+  ZeroMem(Page, EFI_PAGE_SIZE);
+  FnuCacheCiv(&mOps, Page, EFI_PAGE_SIZE);
+  FnuLog(L"FUXIM3 BRIDGE page phys=%lx bytes=%x", (UINT64)Raw, (UINT32)EFI_PAGE_SIZE);
+
+  Status = FdpBuildBridgeEnable(Regs);
+  if (EFI_ERROR(Status)) {
+    FnuLog(L"FUXIM3 BRIDGE enable construct=%r; no call", Status);
+    goto Release;
+  }
+  FnuLog(L"FUXIM3 BRIDGE enable begin x0=%lx x1=%lx (no hardware timeout)",
+         Regs[0], Regs[1]);
+  FnuSmc64(Regs, &Out);
+  FnuLog(L"FUXIM3 BRIDGE enable return a0=%lx a1=%lx a2=%lx a3=%lx",
+         (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
+  if (Out.Arg0 != 0) goto Release;
+
+  Status = FdpBuildBridgeCreate((UINT64)Raw, EFI_PAGE_SIZE, 0, 0, Regs);
+  if (EFI_ERROR(Status)) {
+    FnuLog(L"FUXIM3 BRIDGE create construct=%r; no call", Status);
+    goto Release;
+  }
+  FnuLog(L"FUXIM3 BRIDGE create begin x0=%lx arg0=%lx arg1=%lx arg2=%lx arg3=%lx",
+         Regs[0], Regs[2], Regs[3], Regs[4], Regs[5]);
+  FnuSmc64(Regs, &Out);
+  FnuLog(L"FUXIM3 BRIDGE create return a0=%lx a1=%lx a2=%lx a3=%lx",
+         (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
+  Status = FdpDecodeBridgeCreate(Out.Arg0, Out.Arg1, &Handle);
+  if (EFI_ERROR(Status)) {
+    FnuLog(L"FUXIM3 BRIDGE create decode=%r; no delete", Status);
+    goto Release;
+  }
+  Status = FdpBuildBridgeDelete(Handle, Regs);
+  if (EFI_ERROR(Status)) {
+    FnuLog(L"FUXIM3 BRIDGE delete construct=%r; no call", Status);
+    goto Release;
+  }
+  FnuLog(L"FUXIM3 BRIDGE delete begin handle=%x", Handle);
+  FnuSmc64(Regs, &Out);
+  FnuLog(L"FUXIM3 BRIDGE delete return a0=%lx a1=%lx a2=%lx a3=%lx",
+         (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
+  Status = (Out.Arg0 == 0) ? EFI_SUCCESS : EFI_NOT_READY;
+  FnuLog(L"FUXIM3 BRIDGE result=%r handle=%x; closed loop, no key, no TA, no decrypt",
+         Status, Handle);
+Release:
+  ZeroMem(Page, EFI_PAGE_SIZE);
+  gBS->FreePages(Raw, 1);
+}
+#endif
 
 STATIC UINT32 FnuSmmuRead(VOID *Context, UINTN Offset) {
   (VOID)Context;
@@ -382,6 +483,7 @@ STATIC VOID SnapshotMappings(CONST CHAR16 *When) {
 }
 
 #include "M2Diagnostic.inc"
+#include "M3KeyDiagnostic.inc"
 
 STATIC VOID RunDiagnostic(VOID) {
   UINT32 Cap, Ver, Is, Hcs, Hce, Doorbell, TaskDoorbell, RunStop, Ahit;
@@ -631,6 +733,9 @@ STATIC VOID RunDiagnostic(VOID) {
 #if FUXI_UFS_M2_FILES
       RunM2(&Disk, &Parts.Metadata, Scratch, Repeat);
 #endif
+#if FUXI_M3_METADATA_KEY
+      RunM3Key(&Disk, &Parts.Metadata, Scratch, Repeat);
+#endif
     }
 ReleaseScratch:
     ZeroMem(Repeat, 4096);
@@ -665,6 +770,10 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
 #if FUXI_M3_SCM_INFO
   FnuScmInfoProbe();
 #endif
+#if FUXI_M3_SCM_BRIDGE_CALL
+  if (mScmAvailable) FnuBridgeCallProbe();
+  else FnuLog(L"FUXIM3 BRIDGE skipped: INFO self-query unavailable");
+#endif
   RunDiagnostic();
   FnuLog(L"FUXIUFS final stage=%a poisoned=%u ready=%u smmu-configured=%u",
          mLastStage, (UINT32)mPoisoned, (UINT32)mReady, (UINT32)mSmmuConfigured);
@@ -677,6 +786,10 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
            FnuRead(&mOps, FNU_UFS_HC_BASE + FNU_REG_IS));
     SnapshotMappings(L"after");
   }
+#if FUXI_M3_METADATA_KEY
+  FnuLog(L"FUXIM3 KEY END: result=%r files=%u; metadata key read only, no decrypt",
+         mM3KeyStatus,(UINT32)mM3KeyFiles);
+#endif
 #if FUXI_UFS_M2_FILES
   FnuLog(L"FUXIM2 END: file-result=%r; decrypt=UNIMPLEMENTED handoff=0",mM2Status);
 #else

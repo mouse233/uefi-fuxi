@@ -37,7 +37,9 @@ def main():
     sources = verified["source_sha256"]
     for name, digest in sources.items():
         assert sha(root / name) == digest, name
-    for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json"):
+    extra = ("m3-transport-tests.json",) if (candidate.get("m3_bridge_call") or
+                                            candidate.get("m3_metadata_key")) else ()
+    for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
         report = json.loads((out / filename).read_text())
         assert report["result"] == "passed"
         for name, digest in report["sources"].items():
@@ -77,6 +79,29 @@ def main():
         for filename in ("m2-file-tests.json", "m2-tools-tests.json", "m2-draft-tests.json"):
             test=json.loads((out/filename).read_text());assert test["result"]=="passed"
             for name,digest in test["sources"].items():assert sha(root/name)==digest,name
+    if candidate.get("m3_bridge_call"):
+        assert candidate["m3_scm_info"] and candidate["diagnostic_park_before_usb"]
+        assert candidate["m3_bridge_ops"] == ["enable", "create", "delete"]
+        for marker in ("FUXIM3 BRIDGE page phys=%lx bytes=%x",
+                       "FUXIM3 BRIDGE enable begin x0=%lx x1=%lx (no hardware timeout)",
+                       "FUXIM3 BRIDGE enable return a0=%lx a1=%lx a2=%lx a3=%lx",
+                       "FUXIM3 BRIDGE create begin x0=%lx arg0=%lx arg1=%lx arg2=%lx arg3=%lx",
+                       "FUXIM3 BRIDGE create return a0=%lx a1=%lx a2=%lx a3=%lx",
+                       "FUXIM3 BRIDGE delete begin handle=%x",
+                       "FUXIM3 BRIDGE delete return a0=%lx a1=%lx a2=%lx a3=%lx",
+                       "FUXIM3 BRIDGE result=%r handle=%x; closed loop, no key, no TA, no decrypt"):
+            assert marker.encode("utf-16-le") in ufs, marker
+    if candidate.get("m3_metadata_key"):
+        assert candidate["m2_metadata_files"] and park
+        assert candidate["m3_key_paths"] == ["/vold", "/vold/metadata_encryption",
+                                             "/vold/metadata_encryption/key"]
+        assert candidate["m3_key_file_limit"] == 8192
+        for marker in ("FUXIM3 KEY prepare=%r pack=%u feature=%08x",
+                       "FUXIM3 KEY dir=%a open=%r",
+                       "FUXIM3 KEY file=%a mode=%04x bytes=%lu inline=%u",
+                       "FUXIM3 KEY sha256=%a %s",
+                       "FUXIM3 KEY result=%r hashed=%u total=%u; no key use, no SMC, no decrypt"):
+            assert marker.encode("utf-16-le") in ufs, marker
     if candidate.get("m3_crypto_cap"):
         for marker in ("FUXIM3 crypto-cap status=%r ccap=%08x advertised=%u read=%u", "FUXIM3 crypto-cap[%u]=%08x", "FUXIM3 crypto-xts4096 select=%r index=%u"):
             assert marker.encode("utf-16-le") in ufs
@@ -96,8 +121,11 @@ def main():
     for name in ("FuxiNativeUfsDxe.efi", "modules-no-smc/FuxiNativeUfsDxe.efi", "modules-scm-query/FuxiNativeUfsDxe.efi"):
         disassembly = subprocess.check_output([objdump, "-d", str(out / name)], text=True)
         smc[name] = sum(bool(re.search(r"\bsmc\s+#", line)) for line in disassembly.splitlines())
-        expected_smc = 1 if candidate.get("m3_scm_info") and name == "FuxiNativeUfsDxe.efi" else 0
-        assert smc[name] == expected_smc, name
+        if candidate.get("m3_bridge_call") and name == "FuxiNativeUfsDxe.efi":
+            assert smc[name] >= 1, name
+        else:
+            expected_smc = 1 if candidate.get("m3_scm_info") and name == "FuxiNativeUfsDxe.efi" else 0
+            assert smc[name] == expected_smc, name
     report = dict(result="passed", boot_sha256=sha(image), ufs_efi_sha256=sha(out/"FuxiNativeUfsDxe.efi"),
                   ufs_efi_in_delivered_fd=True, report_protocol_in_both_modules=True,
                   replay_marker_in_delivered_modules=True, smc_instructions=smc,

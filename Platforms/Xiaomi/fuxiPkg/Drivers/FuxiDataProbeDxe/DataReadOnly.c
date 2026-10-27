@@ -181,6 +181,54 @@ EFI_STATUS FdpDecodeAvailability(UINT64 Result0, UINT64 Result1, BOOLEAN *Availa
   return EFI_SUCCESS;
 }
 
+EFI_STATUS FdpBuildScm64(CONST FDP_SCM64_CALL *Call, UINT64 Regs[8]) {
+  UINT32 I;
+  if (Call == NULL || Regs == NULL) return EFI_INVALID_PARAMETER;
+  for (I = 0; I < 8; ++I) Regs[I] = 0;
+  if (Call->Svc > 0xff || Call->Cmd > 0xff ||
+      Call->ArgCount > FDP_SCM64_MAX_ARGS) return EFI_INVALID_PARAMETER;
+  Regs[0] = FDP_SCM64_FNID_PREFIX | ((UINT64)Call->Svc << 8) | Call->Cmd;
+  Regs[1] = Call->ArgCount;
+  for (I = 0; I < Call->ArgCount; ++I) Regs[2 + I] = Call->Args[I];
+  return EFI_SUCCESS;
+}
+STATIC EFI_STATUS BuildBridgeCall(UINT32 Cmd, UINT32 Count, CONST UINT64 *Args,
+                                  UINT64 Regs[8]) {
+  FDP_SCM64_CALL Call;
+  UINT32 I;
+  if (Count > FDP_SCM64_MAX_ARGS || (Count != 0 && Args == NULL))
+    return EFI_INVALID_PARAMETER;
+  Call.Svc = 0x0cU;
+  Call.Cmd = Cmd;
+  Call.ArgCount = Count;
+  for (I = 0; I < FDP_SCM64_MAX_ARGS; ++I) Call.Args[I] = (I < Count) ? Args[I] : 0;
+  return FdpBuildScm64(&Call, Regs);
+}
+EFI_STATUS FdpBuildBridgeEnable(UINT64 Regs[8]) {
+  return BuildBridgeCall(0x1cU, 0, NULL, Regs);
+}
+EFI_STATUS FdpBuildBridgeDelete(UINT64 Handle, UINT64 Regs[8]) {
+  return BuildBridgeCall(0x1dU, 1, &Handle, Regs);
+}
+EFI_STATUS FdpBuildBridgeCreate(UINT64 Phys, UINT64 Size, UINT32 VmCount,
+                                UINT64 VmBits, UINT64 Regs[8]) {
+  UINT64 Args[4];
+  if ((Phys & 0xfff) != 0 || Size == 0 || (Size & 0xfff) != 0 ||
+      VmCount > 4 || (VmBits & ~0xffffULL) != 0) return EFI_INVALID_PARAMETER;
+  Args[0] = Phys;
+  Args[1] = Phys | 6;  // flag word observed at the vendor probe call site
+  Args[2] = Size | ((UINT64)VmCount << 9);
+  Args[3] = VmBits;
+  return BuildBridgeCall(0x1eU, 4, Args, Regs);
+}
+EFI_STATUS FdpDecodeBridgeCreate(UINT64 Result0, UINT64 Result1, UINT32 *Handle) {
+  if (Handle == NULL) return EFI_INVALID_PARAMETER;
+  *Handle = 0;
+  if (Result0 != 0) return EFI_NOT_READY;
+  *Handle = (UINT32)Result1;
+  return EFI_SUCCESS;
+}
+
 EFI_STATUS FdpVerifyPartitionRead(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Partition,
                                   UINT64 RelativeLba, UINTN Blocks, VOID *First,
                                   VOID *Repeat, UINTN BufferBytes, UINTN Reads,
