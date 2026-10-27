@@ -25,3 +25,14 @@
 预期先复现 M1 三次原始读取与 GPT，再出现 `FUXIM2 lookup=Success path=/aconfig/maps/system.package.map`、`file nid=... bytes=10527 inline=0`、完整 `file-read=Success bytes=10527` 和上面的 SHA256，最后 UFS stop 与 `FUXIM2 PARK`。照片需覆盖读取、SHA、停队列、最终驻留。若 F2FS clean checkpoint/policy 不满足，应报告实际状态并停止，不能降级到旧 checkpoint 或跳过保护。
 
 读取长度/摘要必须与同状态 TWRP 基准比较。此候选仍无 Android 密钥解封、dm-default-key/fscrypt、RAM 对象发布或 XNU 接力；USB 接收器故障未重新测试。非空 NAT journal 在当前设备上也没有通过证据。
+
+## attempt-01 临时启动 — 2026-10-27
+
+2026-10-27 10:20:29 +08:00 完成一次 `fastboot boot`：发送 OKAY 0.059 秒、
+启动 OKAY 1.644 秒，命令退出 0。启动前确认设备互斥、serial `fcde91e`、
+product `fuxi`、unlocked=yes、usb-ram profile、12项检查及精确镜像 SHA。
+原始命令与查询见 `attempt-01/device-test.json`。
+
+当前状态为 **等待手机屏幕照片**。主机启动 OKAY 只能证明 fastboot 接受了
+临时启动请求，不能据此判定非 inline 文件、UFS 停机或 M2 已通过。
+本轮仅一次临时启动；尚未获得文件读取、SHA256、队列停止或 park 的实机观察。
