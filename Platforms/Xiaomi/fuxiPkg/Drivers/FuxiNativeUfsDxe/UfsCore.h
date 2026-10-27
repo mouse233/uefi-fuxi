@@ -86,6 +86,17 @@ typedef struct {
 } FNU_POLL_STATE;
 typedef enum { FNU_POLL_COMPLETED, FNU_POLL_FATAL, FNU_POLL_TIMEOUT } FNU_POLL_END;
 
+// Standard UFS capability inspection only; never reads the crypto config array.
+#define FNU_CRYPTO_CAP_LIMIT 4U
+typedef struct {
+  UINT32 Ccap;
+  UINT32 Entries[FNU_CRYPTO_CAP_LIMIT];
+  UINT32 EntryCount;
+  UINT32 AdvertisedCount;
+} FNU_CRYPTO_CAP_REPORT;
+EFI_STATUS FnuReadCryptoCapabilities(FNU_OPS *Ops, UINT32 Cap, UINT32 Hce,
+                                     FNU_CRYPTO_CAP_REPORT *Report);
+
 // Command area: zero the 32-byte UTRD and the command/response/PRDT area.
 VOID FnuClearCommandArea(UINT8 *Dma);
 // UTRD for slot 0 plus the single-entry PRDT when DataBytes > 0.

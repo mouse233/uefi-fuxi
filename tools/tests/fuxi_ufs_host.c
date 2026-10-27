@@ -17,6 +17,7 @@ typedef struct {
   UINT8 *Dma;
   UINT64 DmaPhys;
   UINTN Rings;
+  UINTN CryptoReads;
   int StickDoorbell;     // device never completes
   int InjectFatalOnRing; // fatal interrupt appears at completion time
   UINT32 OcsToReport;    // OCS the device writes; 0xf means none (stays preset)
@@ -52,6 +53,7 @@ static UINT32 GetBe32(const UINT8 *At) {
 static UINT32 HcRead(FNU_OPS *Ops, UINT64 Phys) {
   HC *Hc = Ops->Context;
   assert(Phys >= HC_BASE && Phys < HC_BASE + 0x3000 && ((Phys & 3) == 0));
+  if (Phys >= HC_BASE + 0x100 && Phys < HC_BASE + 0x200) Hc->CryptoReads++;
   return Hc->Reg[(UINTN)(Phys - HC_BASE) / 4];
 }
 
@@ -636,6 +638,26 @@ static void ResponseScenarios(VOID) {
   assert(FnuParseNopResponse(Rsp) == EFI_PROTOCOL_ERROR);
 }
 
+static void CryptoScenarios(FNU_OPS *Ops, HC *Hc) {
+  FNU_CRYPTO_CAP_REPORT R;
+  memset(Hc->Reg, 0, sizeof(Hc->Reg));
+  Hc->CryptoReads = 0;
+  assert(FnuReadCryptoCapabilities(Ops, 0, 1, &R) == EFI_UNSUPPORTED);
+  assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 0, &R) == EFI_UNSUPPORTED);
+  assert(Hc->CryptoReads == 0);
+  Hc->Reg[0x100 / 4] = 0x02000706; // 6 capabilities; config at 0x200
+  Hc->Reg[0x104 / 4] = 0x00030800; // XTS, 4096-byte unit, 256-bit key
+  Hc->Reg[0x108 / 4] = 0x12345678;
+  assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 1, &R) == EFI_SUCCESS);
+  assert(R.AdvertisedCount == 6 && R.EntryCount == 4 && Hc->CryptoReads == 5);
+  assert(R.Entries[0] == 0x00030800 && R.Entries[1] == 0x12345678);
+  Hc->Reg[0x100 / 4] = 0x01000001;
+  assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 1, &R) == EFI_COMPROMISED_DATA);
+  assert(R.EntryCount == 0 && Hc->CryptoReads == 6);
+  Hc->Reg[0x100 / 4] = 0xffffffff;
+  assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 1, &R) == EFI_DEVICE_ERROR);
+}
+
 int main(int Argc, char **Argv) {
   static UINT8 Dma[FNU_DMA_BYTES];
   UINT64 DmaPhys = 0x90000000ULL;
@@ -653,6 +675,8 @@ int main(int Argc, char **Argv) {
   Ops.Stall = FnuStallFake;
   Ops.CacheCleanInvalidate = FnuCiv;
   Ops.CacheInvalidate = FnuInv;
+  ResetHc(&Hc, Dma, DmaPhys);
+  CryptoScenarios(&Ops, &Hc);
   ResetHc(&Hc, Dma, DmaPhys);
   QueueScenarios(&Ops);
   CommandScenarios(Dma, DmaPhys);

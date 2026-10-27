@@ -23,6 +23,9 @@
 #include "../../Include/Protocol/FuxiUfsReport.h"
 #include "../FuxiDataProbeDxe/DataReadOnly.h"
 #include "../FuxiDataProbeDxe/F2fsReadOnly.h"
+#ifndef FUXI_M3_CRYPTO_CAP
+#define FUXI_M3_CRYPTO_CAP 0
+#endif
 #ifndef FUXI_M3_SCM_INVOKE
 #define FUXI_M3_SCM_INVOKE 0
 #endif
@@ -418,6 +421,18 @@ STATIC VOID RunDiagnostic(VOID) {
         Doorbell, TaskDoorbell, RunStop, Ahit, FirmwareList);
   FnuLog(L"FUXIUFS UIC pa=%08x a1=%08x a2=%08x a3=%08x r=%08x\n",
         Uic[0], Uic[1], Uic[2], Uic[3], Uic[4]);
+
+#if FUXI_M3_CRYPTO_CAP
+  {
+    FNU_CRYPTO_CAP_REPORT Crypto;
+    FNU_STAGE("crypto-capabilities-read-only");
+    Status = FnuReadCryptoCapabilities(&mOps, Cap, Hce, &Crypto);
+    FnuLog(L"FUXIM3 crypto-cap status=%r ccap=%08x advertised=%u read=%u",
+           Status, Crypto.Ccap, Crypto.AdvertisedCount, Crypto.EntryCount);
+    for (I = 0; I < Crypto.EntryCount; ++I)
+      FnuLog(L"FUXIM3 crypto-cap[%u]=%08x", I, Crypto.Entries[I]);
+  }
+#endif
 
   SnapshotMappings(L"before");
 

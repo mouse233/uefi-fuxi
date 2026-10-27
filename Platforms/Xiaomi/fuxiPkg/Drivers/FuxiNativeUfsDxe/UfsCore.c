@@ -28,6 +28,30 @@ STATIC INTN SameText(CONST CHAR8 *A, CONST CHAR8 *B) {
   return (INTN)(UINT8)A[I] - (INTN)(UINT8)B[I];
 }
 
+// Only reads CCAP and a bounded capability array; reject an overlapping or
+// implausible configuration array before touching any capability entry.
+EFI_STATUS FnuReadCryptoCapabilities(FNU_OPS *Ops, UINT32 Cap, UINT32 Hce,
+                                     FNU_CRYPTO_CAP_REPORT *Report) {
+  UINT32 Count, ConfigBase, End, I;
+  if (Ops == NULL || Ops->Read == NULL || Report == NULL) return EFI_INVALID_PARAMETER;
+  Report->Ccap = Report->EntryCount = Report->AdvertisedCount = 0;
+  for (I = 0; I < FNU_CRYPTO_CAP_LIMIT; ++I) Report->Entries[I] = 0;
+  if ((Cap & 0x10000000U) == 0 || (Hce & 1U) == 0) return EFI_UNSUPPORTED;
+  Report->Ccap = Ops->Read(Ops, FNU_UFS_HC_BASE + 0x100U);
+  if (Report->Ccap == 0xffffffffU) return EFI_DEVICE_ERROR;
+  Count = Report->Ccap & 0xffU;
+  Report->AdvertisedCount = Count;
+  if (Count > FNU_CRYPTO_CAP_LIMIT) Count = FNU_CRYPTO_CAP_LIMIT;
+  ConfigBase = (Report->Ccap >> 24) * 0x100U;
+  End = 0x104U + Count * 4U;
+  if (Count != 0 && (ConfigBase < End || ConfigBase > FNU_UFS_HC_SIZE))
+    return EFI_COMPROMISED_DATA;
+  for (I = 0; I < Count; ++I)
+    Report->Entries[I] = Ops->Read(Ops, FNU_UFS_HC_BASE + 0x104U + 4U * I);
+  Report->EntryCount = Count;
+  return EFI_SUCCESS;
+}
+
 // Command area: zero the 32-byte UTRD and the command/response/PRDT area.
 VOID FnuClearCommandArea(UINT8 *Dma) {
   if (Dma == NULL) return;
