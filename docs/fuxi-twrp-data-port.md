@@ -317,3 +317,13 @@ nid69、1字节 inline 文件；UFS 队列正常停止，最终pre-USB诊断驻�
 `dm-7` 挂载并可见解密目录。M2 version 文件和 metadata 首块通过 TWRP
 独立哈希对照，非 inline 与 UEFI 解密仍待验证。完整边界见
 [静态分析和设备记录](fuxi-twrp-a17-static-20261027.md)。
+
+## 2026-10-27：M2 非 inline 文件候选（主机通过，待实机）
+
+根据 A17 TWRP 的只读文件大小/SHA，建立独立 `out/m2-noninline-file-v1`，
+目标 `/aconfig/maps/system.package.map`（10,527 字节）。镜像 SHA256
+`6b7e00d7738d7372f6489fb1e39165b56db9034f1e63ad74a0598700d503432d`，
+源码提交 `0586ebe8af5a0ee6fe26ea3271f94ab6cfac5201`；12项主机/交付检查退出0，
+实际 EFI 内含目标路径并绑定在 FD 中。尚未临时启动手机，非 inline 读取没有
+实机通过结论。镜像依旧在 pre-USB 诊断驻留，不做 Android 解密或 XNU 接力。
+详见 [候选 REVIEW](fuxi-m2-noninline-candidate-20261027.md)。
