@@ -61,6 +61,13 @@ def main():
         require(has_symbol(device_syms, 'U', sym), sym)
     dis = output(a.llvm_objdump, '-dr', '--disassemble-symbols=get_qseecom_kernel_fun_ops', str(mod))
     require('qseecom_driver_ops' in dis and 'R_AARCH64_CALL26' in dis and 'provide_qseecom_kernel_fun_ops' in dis, 'QSEE registration')
+    reg = output(a.llvm_objdump, '-d', '--disassemble-symbols=get_client_env_object', str(mod))
+    require(re.search(r'mov\s+w1,\s*#0x5\b', reg) is not None and
+            re.search(r'mov\s+w3,\s*#0x1100\b', reg) is not None, 'register operation/counts')
+    start = output(a.llvm_objdump, '-d', '--start-address=0x1e30', '--stop-address=0x1ea0', str(mod))
+    require(re.search(r'mov\s+w8,\s*#0x7a\b', start) is not None and
+            re.search(r'mov\s+w3,\s*#0x1001\b', start) is not None and
+            re.search(r'mov\s+w1,\s*wzr\b', start) is not None, 'loader open operation/counts/uid')
     deps = (root / 'vendor/lib/modules/1.1/modules.dep').read_text().splitlines()
     matches = [x for x in deps if x.startswith('smcinvoke_dlkm.ko:')]
     require(len(matches) == 1 and 'qseecom_proxy.ko' in matches[0] and 'qcom-scm.ko' in matches[0], 'module dependencies')
@@ -71,6 +78,8 @@ def main():
               'smcinvoke_imports_scm_invoke_and_shmbridge': True,
               'qtikeymint_imports_keymasterutils_transport': True,
               'deviceutils_provides_transport_and_imports_qseecom': True,
+              'register_op_5_counts_1100_in_binary': True,
+              'loader_open_op_0_counts_1001_uid_122_in_binary': True,
               'scope': 'static ELF and metadata only; no execution, firmware ABI or keys verified'}
     a.output.parent.mkdir(parents=True, exist_ok=True)
     a.output.write_text(json.dumps(report, indent=2) + '\n')
