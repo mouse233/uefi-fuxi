@@ -1,0 +1,14 @@
+{
+  "repo": "LineageOS/android_kernel_xiaomi_sm8550-modules",
+  "commit": "9e8972287159837a256d0afcddc3f636f67ce8dd",
+  "files": {
+    "smcinvoke.c": "9907468f34d72323e4f9919f9a3019a8fef0e0e70cb629a83f8951c2288a6b7f",
+    "smcinvoke_kernel.c": "26b3716f8ec796cea6dace1b7adb9d8603ab1ac9eb51ecacac32c3ce8624272d",
+    "smcinvoke.h": "4b6fe916a6a66e7d6133d71c15ddfbf679ab37bd089c7070974615e8ae752d3c",
+    "smcinvoke_object.h": "46fcdb259980ea248a8adacae5008983628cc7018d2022ab76c7a11722b85aba",
+    "IClientEnv.h": "e4efdfa386aef8105af11eb133e7eeeccb219014db06f5b43f11fac2e2528d2a",
+    "IQSEEComCompat.h": "055f1af7680e0ccc8ca5e0fc70bcef46ae27dad06e22edba347ef429244f8fad",
+    "IQSEEComCompatAppLoader.h": "597124e1769ab805fef0e947a4636dc043250ba368cc218557a339fd55122a06"
+  },
+  "exact_device_match": false
+}
