@@ -62,3 +62,11 @@ fastboot，用同一镜像的独立 attempt-02 检查新 checkpoint 标志。正
 
 标志定义见 [Android kernel F2FS 头文件](https://android.googlesource.com/kernel/common/+/refs/tags/android14-5.15.189_r00/include/linux/f2fs_fs.h)，
 正常关机卸载逻辑见 [Android init reboot.cpp](https://android.googlesource.com/platform/system/core/+/android16-release/init/reboot.cpp)。
+
+## attempt-02 临时启动 — 2026-10-27
+
+用户按约定从 Android 正常关机后进入 fastboot。2026-10-27 10:27:41 +08:00，
+确认互斥、serial fcde91e、product=fuxi、unlocked=yes、profile 和镜像/检查绑定后，
+只执行一次 `fastboot boot`；Sending OKAY 0.058秒、Booting OKAY 1.740秒，退出0。
+原始记录见 `attempt-02/device-test.json`。当前等待手机屏幕照片，不能凭主机
+OKAY 判定 checkpoint、文件读取、哈希或 UFS 停机通过。
