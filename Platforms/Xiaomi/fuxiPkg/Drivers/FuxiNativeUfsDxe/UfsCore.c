@@ -52,6 +52,24 @@ EFI_STATUS FnuReadCryptoCapabilities(FNU_OPS *Ops, UINT32 Cap, UINT32 Hce,
   return EFI_SUCCESS;
 }
 
+// The UFS key-size code 3 in an XTS entry corresponds to AES-256-XTS;
+// SDUS bit 3 means a 4096-byte data unit (512 * 8). A capability is not a
+// keyslot reservation or proof that the vendor's wrapped-key path is usable.
+EFI_STATUS FnuFindXts4096Capability(CONST FNU_CRYPTO_CAP_REPORT *Report,
+                                    UINT32 *Index) {
+  UINT32 I, Entry;
+  if (Report == NULL || Index == NULL) return EFI_INVALID_PARAMETER;
+  *Index = MAX_UINT32;
+  if (Report->EntryCount > FNU_CRYPTO_CAP_LIMIT ||
+      Report->EntryCount > Report->AdvertisedCount) return EFI_COMPROMISED_DATA;
+  for (I = 0; I < Report->EntryCount; ++I) {
+    Entry = Report->Entries[I];
+    if ((Entry & 0xffU) == 0 && ((Entry >> 16) & 0xffU) == 3 &&
+        ((Entry >> 8) & 8U) != 0) { *Index = I; return EFI_SUCCESS; }
+  }
+  return EFI_NOT_FOUND;
+}
+
 // Command area: zero the 32-byte UTRD and the command/response/PRDT area.
 VOID FnuClearCommandArea(UINT8 *Dma) {
   if (Dma == NULL) return;

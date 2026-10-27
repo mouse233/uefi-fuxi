@@ -78,7 +78,7 @@ def main():
             test=json.loads((out/filename).read_text());assert test["result"]=="passed"
             for name,digest in test["sources"].items():assert sha(root/name)==digest,name
     if candidate.get("m3_crypto_cap"):
-        for marker in ("FUXIM3 crypto-cap status=%r ccap=%08x advertised=%u read=%u", "FUXIM3 crypto-cap[%u]=%08x"):
+        for marker in ("FUXIM3 crypto-cap status=%r ccap=%08x advertised=%u read=%u", "FUXIM3 crypto-cap[%u]=%08x", "FUXIM3 crypto-xts4096 select=%r index=%u"):
             assert marker.encode("utf-16-le") in ufs
     if candidate.get("m3_scm_info"):
         for marker in ("FUXIM3 SCM64 INFO begin (one call; no hardware timeout)", "FUXIM3 SCM64 INFO return a0=%lx a1=%lx decode=%r available=%u"):

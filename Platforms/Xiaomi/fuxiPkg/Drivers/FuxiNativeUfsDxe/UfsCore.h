@@ -97,6 +97,10 @@ typedef struct {
 EFI_STATUS FnuReadCryptoCapabilities(FNU_OPS *Ops, UINT32 Cap, UINT32 Hce,
                                      FNU_CRYPTO_CAP_REPORT *Report);
 
+// Find a standard AES-256-XTS/4096 capability; does not inspect or reserve slots.
+EFI_STATUS FnuFindXts4096Capability(CONST FNU_CRYPTO_CAP_REPORT *Report,
+                                    UINT32 *Index);
+
 // Command area: zero the 32-byte UTRD and the command/response/PRDT area.
 VOID FnuClearCommandArea(UINT8 *Dma);
 // UTRD for slot 0 plus the single-entry PRDT when DataBytes > 0.

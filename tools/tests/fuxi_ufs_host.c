@@ -640,6 +640,7 @@ static void ResponseScenarios(VOID) {
 
 static void CryptoScenarios(FNU_OPS *Ops, HC *Hc) {
   FNU_CRYPTO_CAP_REPORT R;
+  UINT32 Index;
   memset(Hc->Reg, 0, sizeof(Hc->Reg));
   Hc->CryptoReads = 0;
   assert(FnuReadCryptoCapabilities(Ops, 0, 1, &R) == EFI_UNSUPPORTED);
@@ -651,6 +652,16 @@ static void CryptoScenarios(FNU_OPS *Ops, HC *Hc) {
   assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 1, &R) == EFI_SUCCESS);
   assert(R.AdvertisedCount == 6 && R.EntryCount == 6 && Hc->CryptoReads == 7);
   assert(R.Entries[0] == 0x00030800 && R.Entries[1] == 0x12345678);
+  assert(FnuFindXts4096Capability(&R, &Index) == EFI_SUCCESS && Index == 0);
+  R.Entries[0] = 0x0001ff00; R.Entries[1] = 0x0001ff01;
+  R.Entries[2] = 0x0001ff02; R.Entries[3] = 0x0003ff00;
+  R.Entries[4] = 0x0003ff01; R.Entries[5] = 0x0003ff02;
+  assert(FnuFindXts4096Capability(&R, &Index) == EFI_SUCCESS && Index == 3);
+  R.Entries[3] = 0x0003f700;
+  assert(FnuFindXts4096Capability(&R, &Index) == EFI_NOT_FOUND && Index == MAX_UINT32);
+  R.EntryCount = 9;
+  assert(FnuFindXts4096Capability(&R, &Index) == EFI_COMPROMISED_DATA);
+  assert(FnuFindXts4096Capability(NULL, &Index) == EFI_INVALID_PARAMETER);
   Hc->Reg[0x100 / 4] = 0x01000001;
   assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 1, &R) == EFI_COMPROMISED_DATA);
   assert(R.EntryCount == 0 && Hc->CryptoReads == 8);

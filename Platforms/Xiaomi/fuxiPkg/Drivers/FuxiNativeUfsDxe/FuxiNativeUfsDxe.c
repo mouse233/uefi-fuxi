@@ -440,6 +440,11 @@ STATIC VOID RunDiagnostic(VOID) {
            Status, Crypto.Ccap, Crypto.AdvertisedCount, Crypto.EntryCount);
     for (I = 0; I < Crypto.EntryCount; ++I)
       FnuLog(L"FUXIM3 crypto-cap[%u]=%08x", I, Crypto.Entries[I]);
+    if (!EFI_ERROR(Status)) {
+      UINT32 XtsIndex;
+      Status = FnuFindXts4096Capability(&Crypto, &XtsIndex);
+      FnuLog(L"FUXIM3 crypto-xts4096 select=%r index=%u", Status, XtsIndex);
+    }
   }
 #endif
 
