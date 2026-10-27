@@ -21,6 +21,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  QcomPkg/QcomPkg.dec
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -33,3 +34,7 @@
   IoLib
   TimerLib
   DebugLib
+
+[Protocols]
+  gQcomScmProtocolGuid
+  gQcomQseecomProtocolGuid

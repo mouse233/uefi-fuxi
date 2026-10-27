@@ -5,6 +5,8 @@
 // partition blocks through the M0 bounded readers. There is no write path, no
 // key operation and no BlockIo publication; a timeout quarantines the window.
 #include <Uefi.h>
+#include <Protocol/EFIScm.h>
+#include <Protocol/EFIQseecom.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/CacheMaintenanceLib.h>
 #include <Library/DebugLib.h>
@@ -64,6 +66,19 @@ STATIC VOID FnuLog(CONST CHAR16 *Fmt, ...) {
   VA_END(Args);
   FnuReportAppend(&mReport, Buffer);
   FnuEmitLine(Buffer);
+}
+
+// DXE-time protocol discovery only: no protocol method or secure call.
+// NOT_FOUND here does not rule out a provider that would dispatch later.
+STATIC VOID FnuInspectSecurityProtocols(VOID) {
+  QCOM_SCM_PROTOCOL *Scm = NULL;
+  QCOM_QSEECOM_PROTOCOL *Qsee = NULL;
+  EFI_STATUS ScmStatus, QseeStatus;
+  ScmStatus = gBS->LocateProtocol(&gQcomScmProtocolGuid, NULL, (VOID **)&Scm);
+  QseeStatus = gBS->LocateProtocol(&gQcomQseecomProtocolGuid, NULL, (VOID **)&Qsee);
+  FnuLog(L"FUXIM3 DXE protocols SCM=%r nonnull=%u QSEE=%r nonnull=%u",
+         ScmStatus, (UINT32)(Scm != NULL), QseeStatus, (UINT32)(Qsee != NULL));
+  FnuLog(L"FUXIM3 discovery only: no protocol methods or SMC; no decrypt");
 }
 
 STATIC VOID EFIAPI ReplayReport(VOID) {
@@ -550,6 +565,7 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
   // Diagnostic residence is intentional; disable the UEFI watchdog before IO.
   FnuLog(L"FUXIM2 watchdog-disable=%r",gBS->SetWatchdogTimer(0,0,0,NULL));
 #endif
+  FnuInspectSecurityProtocols();
   RunDiagnostic();
   FnuLog(L"FUXIUFS final stage=%a poisoned=%u ready=%u smmu-configured=%u",
          mLastStage, (UINT32)mPoisoned, (UINT32)mReady, (UINT32)mSmmuConfigured);
