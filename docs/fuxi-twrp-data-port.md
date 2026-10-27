@@ -16,7 +16,7 @@
 | M0 GPT 与分区限界读取 | 主机测试与 UEFI 集成 | M1/M2 实机 GPT 和首块摘要通过 |
 | M1 原生 UFS 只读接管 | 队列、DMA、SMMU 有界诊断 | 两分区重复读 3/3、UFS 队列停止；原 USB 故障是另一验收项 |
 | M2 F2FS checkpoint/NAT/目录/文件读取 | clean/offline 解析、主机样本验证 | inline 与 10527 字节非 inline 文件实机读取均与 TWRP SHA 一致；非空 journal 待测 |
-| M3 安全通信、密钥解封、ICE、fscrypt | 未实现 | 不因 TWRP 解密成功而视为 UEFI 通过 |
+| M3 安全通信、密钥解封、ICE、fscrypt | metadata 地址/DUN 规划器已编译和主机测试；解密未实现 | 不因 TWRP 解密成功而视为 UEFI 通过 |
 | 本地文件 → RAM 对象 → XNU | 未实现 | 无本地系统镜像交接证据 |
 
 默认固件并未打开诊断 UFS/文件读取开关；已验收的是单独候选的实机路径。
@@ -335,3 +335,11 @@ UEFI 完整读取 `/aconfig/maps/system.package.map`，10527字节、inline=0，
 `14f3d8675423917e383a71c936f4d9a81a29480f34ae3c550e0f4c34e53a0991`，与先前
 TWRP 文件基准一致；UFS 停队列及 pre-USB park 已观察。非空 NAT journal、
 Android 解密和 XNU 接力尚未实机证明。详见 [候选与照片记录](fuxi-m2-noninline-candidate-20261027.md)。
+
+## 2026-10-27：M3 metadata 映射规划器（主机阶段）
+
+进入 M3，新增独立 metadata 地址/DUN 规划器与 TWRP 只读首块参考采集器。
+合成映射的边界、溢出与未确认参数拒绝测试，以及采集器的四项模拟测试通过；
+两种 AARCH64 实验模块编译和 SMC 数量检查通过。实际 dm 几何、KeyMint/QSEE、
+SCM/ICE、明文读取均未验证；没有生成启动镜像或操作设备。
+详见 [M3 规划器与下一步](fuxi-m3-metadata-plan-20261027.md)。
