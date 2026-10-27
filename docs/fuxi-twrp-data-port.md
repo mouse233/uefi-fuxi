@@ -343,3 +343,12 @@ Android 解密和 XNU 接力尚未实机证明。详见 [候选与照片记录](
 两种 AARCH64 实验模块编译和 SMC 数量检查通过。实际 dm 几何、KeyMint/QSEE、
 SCM/ICE、明文读取均未验证；没有生成启动镜像或操作设备。
 详见 [M3 规划器与下一步](fuxi-m3-metadata-plan-20261027.md)。
+
+## 2026-10-27：M3 TWRP 明文基准与 DM 几何
+
+已在 A17 TWRP 中只读得到映射 data 首块 SHA/F2FS 魔数和原始 userdata 首块 SHA。
+设备端脱敏 DM 状态验证当前 userdata 为单目标 default-key：target begin、
+底层 start、IV offset 均0，sector_size=4096、iv_large_sectors、wrappedkey_v0；
+设备号和 sysfs 几何与 UEFI GPT 相符。源码及实测几何主机测试提交 c1fd1efe。
+这不证明 UEFI 能使用 TWRP 的密钥或读取明文，详见
+[TWRP 实机参考](fuxi-m3-twrp-reference-20261027.md)。

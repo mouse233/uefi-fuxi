@@ -61,3 +61,12 @@ sector size/iv_large_sectors、wrappedkey、设备拓扑和一致性；不得从
 地址语义参考 [Android 5.15 dm-default-key](https://android.googlesource.com/kernel/common/+/refs/tags/android14-5.15-2024-06_r9/drivers/md/dm-default-key.c)，
 硬件密钥语义参考 [AOSP 硬件包装密钥](https://source.android.com/docs/security/features/encryption/hw-wrapped-keys)。
 仅按公开接口事实独立实现，未复制 Linux 或厂商代码。
+
+## 2026-10-27：TWRP 明文参考与脱敏 DM 几何
+
+已在 A17 TWRP 中取得映射 data 首块 SHA/F2FS 魔数及原始 userdata 首块 SHA，
+并使用临时 tmpfs 只读程序获取已脱敏的实际 default-key 几何。dm 与 userdata
+设备号、sysfs 大小/起点和之前 UEFI GPT 一致；当前 target begin、底层 start、
+IV offset 均0，crypto sector 4096、iv_large_sectors、wrappedkey_v0。
+依据这组快照增加首末块/越界主机测试；没有 UEFI 解密或 keyslot 实机结果。
+详见 [实机参考和验证](fuxi-m3-twrp-reference-20261027.md)。
