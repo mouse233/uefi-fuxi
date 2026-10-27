@@ -31,6 +31,9 @@ STATIC EFI_STATUS M3KCollect(VOID *Context, CONST CHAR8 *Name, UINTN Length,
   for (I = 0; I < Length; ++I)
     if (Name[I] < 32 || Name[I] > 126) return EFI_VOLUME_CORRUPTED;
   for (I = 0; I < Length; ++I) List->Name[List->Count][I] = Name[I];
+  // Rows are reused across listings; without this terminator a shorter name
+  // keeps the tail of the previous one in the log.
+  List->Name[List->Count][Length] = 0;
   List->Length[List->Count] = Length;
   List->Inode[List->Count] = Inode;
   List->Type[List->Count] = Type;
