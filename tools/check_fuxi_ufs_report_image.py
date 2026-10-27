@@ -77,6 +77,9 @@ def main():
         for filename in ("m2-file-tests.json", "m2-tools-tests.json", "m2-draft-tests.json"):
             test=json.loads((out/filename).read_text());assert test["result"]=="passed"
             for name,digest in test["sources"].items():assert sha(root/name)==digest,name
+    if candidate.get("m3_scm_info"):
+        for marker in ("FUXIM3 SCM64 INFO begin (one call; no hardware timeout)", "FUXIM3 SCM64 INFO return a0=%lx a1=%lx decode=%r available=%u"):
+            assert marker.encode("utf-16-le") in ufs
     assert b"USBRAM: cached UFS report unavailable" in receiver
     protocol = uuid.UUID("6d8c0fc1-6c29-4df2-b7d1-845e1b4cf209").bytes_le
     assert protocol in ufs and protocol in receiver
@@ -86,7 +89,8 @@ def main():
     for name in ("FuxiNativeUfsDxe.efi", "modules-no-smc/FuxiNativeUfsDxe.efi", "modules-scm-query/FuxiNativeUfsDxe.efi"):
         disassembly = subprocess.check_output([objdump, "-d", str(out / name)], text=True)
         smc[name] = sum(bool(re.search(r"\bsmc\s+#", line)) for line in disassembly.splitlines())
-        assert smc[name] == 0, name
+        expected_smc = 1 if candidate.get("m3_scm_info") and name == "FuxiNativeUfsDxe.efi" else 0
+        assert smc[name] == expected_smc, name
     report = dict(result="passed", boot_sha256=sha(image), ufs_efi_sha256=sha(out/"FuxiNativeUfsDxe.efi"),
                   ufs_efi_in_delivered_fd=True, report_protocol_in_both_modules=True,
                   replay_marker_in_delivered_modules=True, smc_instructions=smc,

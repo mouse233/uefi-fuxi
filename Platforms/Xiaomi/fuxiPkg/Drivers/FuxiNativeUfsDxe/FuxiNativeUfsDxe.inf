@@ -24,6 +24,7 @@
   QcomPkg/QcomPkg.dec
 
 [LibraryClasses]
+  ArmSmcLib
   UefiDriverEntryPoint
   UefiBootServicesTableLib
   UefiLib

@@ -7,6 +7,7 @@
 #include <Uefi.h>
 #include <Protocol/EFIScm.h>
 #include <Protocol/EFIQseecom.h>
+#include <Library/ArmSmcLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/CacheMaintenanceLib.h>
 #include <Library/DebugLib.h>
@@ -22,6 +23,9 @@
 #include "../../Include/Protocol/FuxiUfsReport.h"
 #include "../FuxiDataProbeDxe/DataReadOnly.h"
 #include "../FuxiDataProbeDxe/F2fsReadOnly.h"
+#ifndef FUXI_M3_SCM_INFO
+#define FUXI_M3_SCM_INFO 0
+#endif
 #ifndef FUXI_UFS_M2_FILES
 #define FUXI_UFS_M2_FILES 0
 #endif
@@ -80,6 +84,30 @@ STATIC VOID FnuInspectSecurityProtocols(VOID) {
          ScmStatus, (UINT32)(Scm != NULL), QseeStatus, (UINT32)(Qsee != NULL));
   FnuLog(L"FUXIM3 discovery only: no protocol methods or SMC; no decrypt");
 }
+
+#if FUXI_M3_SCM_INFO
+// A single non-mutating INFO/IS_CALL_AVAILABLE query, asking about itself.
+// A synchronous SMC cannot be interrupted by a software timeout.
+STATIC VOID FnuScmInfoProbe(VOID) {
+  UINT64 Values[8];
+  ARM_SMC_ARGS Args;
+  BOOLEAN Available = FALSE;
+  EFI_STATUS Status = FdpMakeAvailabilityQuery(FDP_SCM_INFO_AVAIL, TRUE, Values);
+  if (EFI_ERROR(Status)) {
+    FnuLog(L"FUXIM3 SCM64 INFO construct=%r; no call", Status);
+    return;
+  }
+  ZeroMem(&Args, sizeof(Args));
+  Args.Arg0 = (UINTN)Values[0];
+  Args.Arg1 = (UINTN)Values[1];
+  Args.Arg2 = (UINTN)Values[2];
+  FnuLog(L"FUXIM3 SCM64 INFO begin (one call; no hardware timeout)");
+  ArmCallSmc(&Args);
+  Status = FdpDecodeAvailability(Args.Arg0, Args.Arg1, &Available);
+  FnuLog(L"FUXIM3 SCM64 INFO return a0=%lx a1=%lx decode=%r available=%u",
+         (UINT64)Args.Arg0, (UINT64)Args.Arg1, Status, (UINT32)Available);
+}
+#endif
 
 STATIC VOID EFIAPI ReplayReport(VOID) {
   // Uses sealed text only: safe even when the transport is quarantined.
@@ -566,6 +594,9 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
   FnuLog(L"FUXIM2 watchdog-disable=%r",gBS->SetWatchdogTimer(0,0,0,NULL));
 #endif
   FnuInspectSecurityProtocols();
+#if FUXI_M3_SCM_INFO
+  FnuScmInfoProbe();
+#endif
   RunDiagnostic();
   FnuLog(L"FUXIUFS final stage=%a poisoned=%u ready=%u smmu-configured=%u",
          mLastStage, (UINT32)mPoisoned, (UINT32)mReady, (UINT32)mSmmuConfigured);
