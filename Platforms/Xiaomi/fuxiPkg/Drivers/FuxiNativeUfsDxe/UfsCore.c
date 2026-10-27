@@ -44,7 +44,7 @@ EFI_STATUS FnuReadCryptoCapabilities(FNU_OPS *Ops, UINT32 Cap, UINT32 Hce,
   if (Count > FNU_CRYPTO_CAP_LIMIT) Count = FNU_CRYPTO_CAP_LIMIT;
   ConfigBase = (Report->Ccap >> 24) * 0x100U;
   End = 0x104U + Count * 4U;
-  if (Count != 0 && (ConfigBase < End || ConfigBase > FNU_UFS_HC_SIZE))
+  if (Count != 0 && ConfigBase < End)
     return EFI_COMPROMISED_DATA;
   for (I = 0; I < Count; ++I)
     Report->Entries[I] = Ops->Read(Ops, FNU_UFS_HC_BASE + 0x104U + 4U * I);

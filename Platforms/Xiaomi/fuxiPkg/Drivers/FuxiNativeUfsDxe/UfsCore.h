@@ -87,7 +87,7 @@ typedef struct {
 typedef enum { FNU_POLL_COMPLETED, FNU_POLL_FATAL, FNU_POLL_TIMEOUT } FNU_POLL_END;
 
 // Standard UFS capability inspection only; never reads the crypto config array.
-#define FNU_CRYPTO_CAP_LIMIT 4U
+#define FNU_CRYPTO_CAP_LIMIT 8U
 typedef struct {
   UINT32 Ccap;
   UINT32 Entries[FNU_CRYPTO_CAP_LIMIT];

@@ -645,15 +645,19 @@ static void CryptoScenarios(FNU_OPS *Ops, HC *Hc) {
   assert(FnuReadCryptoCapabilities(Ops, 0, 1, &R) == EFI_UNSUPPORTED);
   assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 0, &R) == EFI_UNSUPPORTED);
   assert(Hc->CryptoReads == 0);
-  Hc->Reg[0x100 / 4] = 0x02000706; // 6 capabilities; config at 0x200
+  Hc->Reg[0x100 / 4] = 0x80003f06; // observed: 6 capabilities; config at 0x8000
   Hc->Reg[0x104 / 4] = 0x00030800; // XTS, 4096-byte unit, 256-bit key
   Hc->Reg[0x108 / 4] = 0x12345678;
   assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 1, &R) == EFI_SUCCESS);
-  assert(R.AdvertisedCount == 6 && R.EntryCount == 4 && Hc->CryptoReads == 5);
+  assert(R.AdvertisedCount == 6 && R.EntryCount == 6 && Hc->CryptoReads == 7);
   assert(R.Entries[0] == 0x00030800 && R.Entries[1] == 0x12345678);
   Hc->Reg[0x100 / 4] = 0x01000001;
   assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 1, &R) == EFI_COMPROMISED_DATA);
-  assert(R.EntryCount == 0 && Hc->CryptoReads == 6);
+  assert(R.EntryCount == 0 && Hc->CryptoReads == 8);
+  Hc->CryptoReads = 0;
+  Hc->Reg[0x100 / 4] = 0x020000ff; // malformed count is capped at 8
+  assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 1, &R) == EFI_SUCCESS);
+  assert(R.AdvertisedCount == 255 && R.EntryCount == 8 && Hc->CryptoReads == 9);
   Hc->Reg[0x100 / 4] = 0xffffffff;
   assert(FnuReadCryptoCapabilities(Ops, 0x10000000, 1, &R) == EFI_DEVICE_ERROR);
 }
