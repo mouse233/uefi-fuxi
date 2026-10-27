@@ -23,6 +23,12 @@
 #include "../../Include/Protocol/FuxiUfsReport.h"
 #include "../FuxiDataProbeDxe/DataReadOnly.h"
 #include "../FuxiDataProbeDxe/F2fsReadOnly.h"
+#ifndef FUXI_M3_SCM_BRIDGE
+#define FUXI_M3_SCM_BRIDGE 0
+#endif
+#if FUXI_M3_SCM_BRIDGE && !FUXI_M3_SCM_INFO
+#error Bridge availability requires INFO self-query
+#endif
 #ifndef FUXI_M3_CRYPTO_CAP
 #define FUXI_M3_CRYPTO_CAP 0
 #endif
@@ -121,11 +127,14 @@ STATIC VOID FnuScmInfoProbe(VOID) {
   Status = FdpDecodeAvailability(Args.Arg0, Args.Arg1, &Available);
   FnuLog(L"FUXIM3 SCM64 INFO return a0=%lx a1=%lx decode=%r available=%u",
          (UINT64)Args.Arg0, (UINT64)Args.Arg1, Status, (UINT32)Available);
-#if FUXI_M3_SCM_SUBJECTS || FUXI_M3_SCM_INVOKE
+#if FUXI_M3_SCM_SUBJECTS || FUXI_M3_SCM_INVOKE || FUXI_M3_SCM_BRIDGE
   if (!EFI_ERROR(Status) && Available) {
     CONST UINT32 Subjects[] = {
 #if FUXI_M3_SCM_SUBJECTS
       FDP_SCM_ICE_SET, FDP_SCM_ICE_CLEAR, FDP_SCM_ICE_DERIVE,
+#endif
+#if FUXI_M3_SCM_BRIDGE
+      FDP_SCM_BRIDGE_ENABLE, FDP_SCM_BRIDGE_CREATE, FDP_SCM_BRIDGE_DELETE,
 #endif
 #if FUXI_M3_SCM_INVOKE
       FDP_SCM_INVOKE_LEGACY, FDP_SCM_INVOKE_CALLBACK, FDP_SCM_INVOKE_OBJECT,

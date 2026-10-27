@@ -83,7 +83,7 @@ def main():
     if candidate.get("m3_scm_info"):
         for marker in ("FUXIM3 SCM64 INFO begin (one call; no hardware timeout)", "FUXIM3 SCM64 INFO return a0=%lx a1=%lx decode=%r available=%u"):
             assert marker.encode("utf-16-le") in ufs
-    if candidate.get("m3_scm_subjects") or candidate.get("m3_scm_invoke"):
+    if candidate.get("m3_scm_subjects") or candidate.get("m3_scm_invoke") or candidate.get("m3_scm_bridge"):
         assert candidate.get("m3_scm_info")
         for marker in ("FUXIM3 SCM64 subject=%08x begin", "FUXIM3 SCM64 subject=%08x a0=%lx a1=%lx decode=%r available=%u"):
             assert marker.encode("utf-16-le") in ufs

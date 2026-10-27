@@ -39,7 +39,8 @@ static void Security(void) {
   UINTN I;
   BOOLEAN Available;
   const UINT32 Subjects[] = {FDP_SCM_INFO_AVAIL,FDP_SCM_ICE_SET,FDP_SCM_ICE_CLEAR,FDP_SCM_ICE_DERIVE,
-    FDP_SCM_INVOKE_LEGACY,FDP_SCM_INVOKE_CALLBACK,FDP_SCM_INVOKE_OBJECT};
+    FDP_SCM_INVOKE_LEGACY,FDP_SCM_INVOKE_CALLBACK,FDP_SCM_INVOKE_OBJECT,
+    FDP_SCM_BRIDGE_ENABLE,FDP_SCM_BRIDGE_DELETE,FDP_SCM_BRIDGE_CREATE};
   for (I = 0; I < sizeof(Subjects) / sizeof(Subjects[0]); ++I) {
     assert(FdpMakeAvailabilityQuery(Subjects[I], TRUE, Args) == EFI_SUCCESS);
     assert(Args[0] == 0xc2000601 && Args[1] == 1 && Args[2] == Subjects[I]);
@@ -47,6 +48,8 @@ static void Security(void) {
     assert(FdpMakeAvailabilityQuery(Subjects[I], FALSE, Args) == EFI_SUCCESS);
     assert(Args[0] == 0x82000601 && Args[2] == Subjects[I]);
   }
+  assert(FdpMakeAvailabilityQuery(0x02000c1b, TRUE, Args) == EFI_ACCESS_DENIED);
+  assert(FdpMakeAvailabilityQuery(0x02000c1f, TRUE, Args) == EFI_ACCESS_DENIED);
   assert(FdpMakeAvailabilityQuery(0x02000a01, TRUE, Args) == EFI_ACCESS_DENIED);
   for (I = 0; I < 8; ++I) assert(Args[I] == 0);
   assert(FdpDecodeAvailability(0, 1, &Available) == EFI_SUCCESS && Available);

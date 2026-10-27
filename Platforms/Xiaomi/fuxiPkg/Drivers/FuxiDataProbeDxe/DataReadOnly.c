@@ -161,6 +161,8 @@ EFI_STATUS FdpMakeAvailabilityQuery(UINT32 Subject, BOOLEAN Smc64, UINT64 Args[8
   for (I = 0; I < 8; ++I) Args[I] = 0;
   if (Subject != FDP_SCM_INFO_AVAIL && Subject != FDP_SCM_ICE_SET &&
       Subject != FDP_SCM_ICE_CLEAR && Subject != FDP_SCM_ICE_DERIVE &&
+      Subject != FDP_SCM_BRIDGE_ENABLE && Subject != FDP_SCM_BRIDGE_DELETE &&
+      Subject != FDP_SCM_BRIDGE_CREATE &&
       Subject != FDP_SCM_INVOKE_LEGACY && Subject != FDP_SCM_INVOKE_CALLBACK &&
       Subject != FDP_SCM_INVOKE_OBJECT)
     return EFI_ACCESS_DENIED;
