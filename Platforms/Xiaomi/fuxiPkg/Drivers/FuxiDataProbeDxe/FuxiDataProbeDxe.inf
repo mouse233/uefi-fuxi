@@ -14,6 +14,8 @@
   FuxiDataProbeDxe.c
   DataReadOnly.c
   DataReadOnly.h
+  M3DefaultKeyPlan.c
+  M3DefaultKeyPlan.h
 
 [Packages]
   MdePkg/MdePkg.dec
