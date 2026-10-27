@@ -38,7 +38,8 @@ static void Security(void) {
   UINT64 Args[8];
   UINTN I;
   BOOLEAN Available;
-  const UINT32 Subjects[] = {FDP_SCM_INFO_AVAIL,FDP_SCM_ICE_SET,FDP_SCM_ICE_CLEAR,FDP_SCM_ICE_DERIVE};
+  const UINT32 Subjects[] = {FDP_SCM_INFO_AVAIL,FDP_SCM_ICE_SET,FDP_SCM_ICE_CLEAR,FDP_SCM_ICE_DERIVE,
+    FDP_SCM_INVOKE_LEGACY,FDP_SCM_INVOKE_CALLBACK,FDP_SCM_INVOKE_OBJECT};
   for (I = 0; I < sizeof(Subjects) / sizeof(Subjects[0]); ++I) {
     assert(FdpMakeAvailabilityQuery(Subjects[I], TRUE, Args) == EFI_SUCCESS);
     assert(Args[0] == 0xc2000601 && Args[1] == 1 && Args[2] == Subjects[I]);

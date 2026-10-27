@@ -160,7 +160,9 @@ EFI_STATUS FdpMakeAvailabilityQuery(UINT32 Subject, BOOLEAN Smc64, UINT64 Args[8
   if (Args == NULL) return EFI_INVALID_PARAMETER;
   for (I = 0; I < 8; ++I) Args[I] = 0;
   if (Subject != FDP_SCM_INFO_AVAIL && Subject != FDP_SCM_ICE_SET &&
-      Subject != FDP_SCM_ICE_CLEAR && Subject != FDP_SCM_ICE_DERIVE)
+      Subject != FDP_SCM_ICE_CLEAR && Subject != FDP_SCM_ICE_DERIVE &&
+      Subject != FDP_SCM_INVOKE_LEGACY && Subject != FDP_SCM_INVOKE_CALLBACK &&
+      Subject != FDP_SCM_INVOKE_OBJECT)
     return EFI_ACCESS_DENIED;
   Args[0] = Smc64 ? 0xc2000601U : 0x82000601U; // Fast INFO/IS_CALL_AVAIL only.
   Args[1] = 1; // One scalar argument; no shared memory or key material.

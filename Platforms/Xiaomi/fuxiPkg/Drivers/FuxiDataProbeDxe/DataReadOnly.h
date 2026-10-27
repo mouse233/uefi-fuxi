@@ -53,6 +53,9 @@ EFI_STATUS FdpInspectF2fs(CONST VOID *First4k, UINTN Bytes,
 #define FDP_SCM_ICE_SET    0x02001005U
 #define FDP_SCM_ICE_CLEAR  0x02001006U
 #define FDP_SCM_ICE_DERIVE 0x02001007U
+#define FDP_SCM_INVOKE_LEGACY 0x32000600U
+#define FDP_SCM_INVOKE_CALLBACK 0x32000601U
+#define FDP_SCM_INVOKE_OBJECT 0x32000602U
 EFI_STATUS FdpMakeAvailabilityQuery(UINT32 Subject, BOOLEAN Smc64, UINT64 Args[8]);
 EFI_STATUS FdpDecodeAvailability(UINT64 Result0, UINT64 Result1,
                                  BOOLEAN *Available);
