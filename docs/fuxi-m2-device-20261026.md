@@ -56,3 +56,12 @@ os_version=0x220001a7、候选十二项检查及精确 SHA 后，仅执行一次
    没有重新测试或修复原 USB 枚举/停止故障。驻留不是自动返回 Android。
 
 USB 接收器未启动的判断依据为交付镜像配置、入口驻留代码顺序与 PARK 标记；本轮未做独立主机 USB 抓包，不把此判断当作 USB HALTED 或故障修复证明。
+
+## 2026-10-27：A17 TWRP 独立对照
+
+新 TWRP 下目标 `version` 文件大小 1 字节，完整 SHA256 与上文 UEFI 结果相同；
+metadata 首块 SHA256 也与 UEFI 相同。TWRP 当时以 rw 挂载 metadata，
+故对照证明该文件及首块在两次观测中一致，不扩大为卷完全静态。
+userdata 原始首块 SHA256 已变化，原因未定位。M2 的 inline 文件设备读取
+得到独立参考验证；非 inline 文件和非空 journal 仍无设备通过证据。
+详见 [A17 TWRP 静态与实机报告](fuxi-twrp-a17-static-20261027.md)。

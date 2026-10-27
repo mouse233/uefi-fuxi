@@ -6,40 +6,46 @@
 
 最终目标是：UEFI 在只读条件下，从 Android `/data` 的两个普通文件读取当前 iPadOS OS/SystemOS 镜像的**明文**，加载到拥有明确归属的 RAM，验证完整 SHA256，发布现有 RAM 对象交接，再由菜单进入 DarwinBoot/XNU。这样省去每轮通过 USB 传输约9.38GB对象。
 
-本次实现的是 **M0 移植基础和诊断入口**，不是完整解密器：
+截至 2026-10-27，UEFI 已完成 M1 有界原始读取与 M2 首个 inline 文件实机读取；
+本轮 A17 TWRP 提供该文件和 metadata 首块的独立摘要对照。
+这仍不是 UEFI 解密器，下面早期 M0/独立模块描述仅属于开发历史。
 
-| 能力 | 本分支状态 | 验证范围 |
+| 能力 | 当前状态 | 实机边界 |
 | --- | --- | --- |
-| 绑定用户提供的 TWRP 镜像、组件哈希和接口符号 | 已实现审计工具 | 主机重新解包、ELF 检查通过 |
-| GPT CRC、分区几何/重叠/重复身份检查 | 已实现 | 512/4096字节LBA、损坏输入测试 |
-| 只读、分区内限界读取 | 已实现 | 主机回调测试；UEFI BlockIo 适配已编译 |
-| F2FS 两份超级块头部识别 | 已实现诊断 | 仅魔数和部分几何；不是完整超级块/文件系统校验 |
-| SCM/QSEE UEFI 协议发现 | 已实现 | ARM64 编译；无实机结论 |
-| SCM 调用存在性查询 | 已实现、单独开关，默认关闭 | 请求白名单/结果分类测试；ARM64 编译 |
-| M1 原生 UEFI UFS 只读接管 | 已实现诊断（`FuxiNativeUfsDxe`，开关默认关闭） | 建模控制器主机测试、ARM64 编译；无实机结论 |
-| 当前默认固件中的原生 UFS 提供者 | 默认固件仍无；M1 诊断镜像需显式开 `FUXI_DATA_PORT_UFS=1` | 不能因现有 BlockIo 缺失就尝试 DMA |
-| F2FS checkpoint、NAT、目录和文件读取 | **未实现** | 不向后跟随头部地址 |
-| 元数据解密、密钥解封、ICE装钥、fscrypt | **未实现** | 不加载安全应用或传递密钥 |
-| 本地文件 → RAM 对象发布 | **未实现** | 当前 USB 发布链路没有改动 |
+| 新 A17 TWRP 静态绑定 | boot v4/CPIO/关键 ELF 哈希和旧镜像逐文件差异已记录 | 用户报告在新 TWRP 解密；ADB 确认 dm-7 的 `/data` 挂载 |
+| M0 GPT 与分区限界读取 | 主机测试与 UEFI 集成 | M1/M2 实机 GPT 和首块摘要通过 |
+| M1 原生 UFS 只读接管 | 队列、DMA、SMMU 有界诊断 | 两分区重复读 3/3、UFS 队列停止；原 USB 故障是另一验收项 |
+| M2 F2FS checkpoint/NAT/目录/文件读取 | clean/offline 解析、主机样本验证 | 1 字节 inline 文件实机读取与 TWRP hash 一致；非 inline 和非空 journal 待测 |
+| M3 安全通信、密钥解封、ICE、fscrypt | 未实现 | 不因 TWRP 解密成功而视为 UEFI 通过 |
+| 本地文件 → RAM 对象 → XNU | 未实现 | 无本地系统镜像交接证据 |
 
-两种独立 DXE 模块变体均已在指定 ARM64 Linux 容器编译成功，82个主机fixture经 ASan/UBSan 通过。未生成新的完整启动镜像，未启动手机；没有资格宣称 UEFI 已能读取 UFS、解密 `/data` 或引导本地系统。
-
-交付EFI反汇编另外确认：no-smc变体有0条SMC指令，query变体有1条。该检查证明编译开关落实到了二进制，不代表指令在手机上执行成功。
+默认固件并未打开诊断 UFS/文件读取开关；已验收的是单独候选的实机路径。
+镜像、源码绑定及停机数值见 M1/M2 候选 REVIEW 和设备日志。
 
 ## 2. 参考输入和证据等级
 
-输入：`twrp-3.7.1_12-v9.0_A16-fuxi-skkk.img`，104,857,600字节。
+当前解密参考输入（2026-10-27）：`TWRP-FUXI-A17.img`，104,857,600 字节。
 
 ```text
-image SHA256 = 68f3829ba4b7faaf8b873fd0dce7dabd03b2bdd750debbae56b1dbe326f87da5
-cpio  SHA256 = 6973560a73525ae1bbf2c13102934067d45cac2344e93ca077b9d0097923ba93
+image SHA256 = 56f5f36e9aaeb9e79815c702d9e9196c8c0e1b03d363ec4e4c9646cd4af1444c
+cpio  SHA256 = 8e7b2178b92b04d1e8d50ff6e6b51fe48ec14cf8126cf7dd0e508ce378225c25
 ```
 
-用户已说明此 TWRP 能解密本机 `/data`。本轮没有重测该能力。镜像内 `ro.twrp.version.skkk.code=900`；文件名为A16，主程序版本字符串仍含A15，部分属性值混合了旧SDK和占位补丁日期，不能将这些字符串当作运行时版本证据。
+这是 ramdisk-only Android boot v4，header_size=1584、kernel_size=0、LZ4 legacy
+ramdisk=76,072,415 字节，解压后 CPIO=147,262,572 字节，4,025 个条目、318 个模块。
+模块 vermagic 为 5.15.78。没有内核正文，不能从镜像独立还原内核配置。
+新镜像的静态接口与完整差异见 [A17 证据](evidence/fuxi-twrp-a17-interfaces.json)
+及 [静态分析和实机只读对照](fuxi-twrp-a17-static-20261027.md)。
 
-镜像是 ramdisk-only Android boot v4，声明 header_size=1580，kernel_size=0；包含318个Linux模块，相关模块的vermagic为5.15.78。没有内核正文，不能从此镜像独立重建完整Linux配置。`ufs_qcom.ko` 保留符号和路径字符串，但没有 `.debug_info/.debug_line`，不能视为完整调试版本。
-
-可复现的组件证据见 [接口档案](evidence/fuxi-twrp-v9-interfaces.json)。完整主机取证另见工作区 `boot-tests/2026-10-25-twrp-skkk-data-readonly-analysis/REPORT.md`；前一份误传的PixelOS Recovery不作为解密实现参考。
+旧 `twrp-3.7.1_12-v9.0_A16-fuxi-skkk.img`（SHA256
+`68f3829ba4b7faaf8b873fd0dce7dabd03b2bdd750debbae56b1dbe326f87da5`）
+在本机 Android 17 上不能解密 `/data`，此前“能解密本机”的表述现已更正。
+[旧接口档案](evidence/fuxi-twrp-v9-interfaces.json) 仅供历史对比，不能再作当前解密基线。
+两镜像的解包文件逐一比较只有 `prop.default` 内容改变，旧镜像另有空 `.`
+目录条目；recovery 主程序、fstab、KeyMint 库和所查 UFS/ICE/SCM 模块完全相同。
+属性把多处 `version.release` 从 16 改为 17，部分 fingerprint 从 15 变成 16；
+主程序仍含 A15 字符串，SDK 仍为 32。这些属性是兼容性线索，静态比对不能
+单独证明解密成功的因果机制。
 
 还有一条已有实机证据：工作区 `boot-tests/2026-10-23-ufs-readonly/observation.json` 记录 fuxi 在 **XNU** 中成功接管UFS队列、验证主GPT CRC并读取userdata首块。照片哈希和镜像哈希在该档案中。这是本机原始存储读取参考，不是UEFI存储或Android解密成功。此前只依据NativeUfs README中的sheng描述而遗漏这条fuxi记录，现予更正。
 
@@ -56,7 +62,7 @@ keydirectory=/metadata/vold/metadata_encryption
 UFS sysfs=/sys/devices/platform/soc/1d84000.ufshc
 ```
 
-这描述镜像的目标配置，未核验当前手机的实时挂载状态。
+这是镜像静态配置；当前 A17 TWRP 的 `/metadata` 与 `/data` 实时挂载已单独核验，见 [实机对照](fuxi-twrp-a17-static-20261027.md)。
 
 `system/bin/recovery` 中存在已定义的 `Decrypt_DE`、`Decrypt_User`、`android::vold::retrieveKey/installKey` 及合成口令处理函数。相关vold实现已编进recovery；没有独立vold进程不代表缺少解密功能。
 
@@ -178,9 +184,10 @@ UEFI 与 XNU 的差异已处理：本机 DMA 窗口由 UEFI 分配器给出（4 
 主机源镜像绑定：
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python3 tools/audit_fuxi_twrp_port.py \
-  --image /Users/zhuxiaocheng/Downloads/twrp-3.7.1_12-v9.0_A16-fuxi-skkk.img \
-  --output out/twrp-port-evidence.json
+PYTHONDONTWRITEBYTECODE=1 python3 tools/audit_fuxi_twrp_a17.py \
+  --image /mnt/d/Projects/UniXNU/migration/20261027-twrp-a17-static/TWRP-FUXI-A17.img \
+  --compare-old /mnt/c/Users/zxc92/Downloads/twrp-3.7.1_12-v9.0_A16-fuxi-skkk.img \
+  --output out/twrp-a17-evidence.json
 ```
 
 主机损坏输入检查，直接编译生产C文件，fixture CRC由独立Python zlib生成：
@@ -302,3 +309,11 @@ metadata 根目录13项与 /vold/metadata_encryption/key/version 路径读取成
 nid69、1字节 inline 文件；UFS 队列正常停止，最终pre-USB诊断驻留。
 这是首个真实metadata文件读取证据；TWRP独立对照、非inline内容与非空journal覆盖
 实机证据仍待补齐。详见 [实机记录](fuxi-m2-device-20261026.md)。
+
+## 2026-10-27：A17 TWRP 参考纠正
+
+旧 A16 recovery 不能解密本机 Android 17；当前参考改为上传的 A17 镜像。
+静态比较显示关键可执行组件未变，仅属性文件变化；实机当前 `/data` 经
+`dm-7` 挂载并可见解密目录。M2 version 文件和 metadata 首块通过 TWRP
+独立哈希对照，非 inline 与 UEFI 解密仍待验证。完整边界见
+[静态分析和设备记录](fuxi-twrp-a17-static-20261027.md)。

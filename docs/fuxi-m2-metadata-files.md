@@ -125,3 +125,12 @@ poisoned=0，最终明确 pre-USB park，无USB接收器/交接。
 首个inline文件实机读取已观察到；未新增TWRP独立对照、非inline文件数据读取、
 非空NAT journal覆盖、Android解密、大文件/RAM对象或XNU交接通过结论。
 此结果补充上文构建时的“未上机”状态，不改写原构建/绑定记录。
+
+## 2026-10-27：TWRP 对照补充
+
+用户提供并进入 A17 TWRP，`/data` 经 dm-7 挂载。只读 ADB 验证
+`/metadata/vold/metadata_encryption/key/version` 大小/完整 SHA256 及
+metadata 首块哈希均与本候选实机结果一致。当前确认的是 inline 文件
+独立对照；非 inline 文件数据块与非空 NAT journal 尚未实机验证。
+候选目标与镜像 SHA/源码绑定不变。详见
+[A17 TWRP 报告](fuxi-twrp-a17-static-20261027.md)。

@@ -6,9 +6,13 @@ USB on every boot (~9.38 GB), UEFI should read them from ordinary files in
 `/data`, verify their full SHA256, and publish the existing RAM-object handoff
 so the menu → DarwinBoot → XNU path continues unchanged.
 
-The device is unlocked and TWRP (`twrp-3.7.1_12-v9.0_A16-fuxi-skkk.img`) can
-decrypt its `/data`; this project re-implements the reading side natively in
-UEFI. The design, milestone table and stop conditions live in
+The device is unlocked. The original A16 TWRP did not decrypt this Android 17
+`/data`. The current reference is the user-supplied `TWRP-FUXI-A17.img`
+(SHA256 `56f5f36e9aaeb9e79815c702d9e9196c8c0e1b03d363ec4e4c9646cd4af1444c`).
+On 2026-10-27 the user reported successful decryption, and read-only ADB
+confirmed `/dev/block/dm-7` mounted at `/data` with readable directory names.
+UEFI has not implemented that decryption. The design, milestone table and stop
+conditions live in
 [`docs/fuxi-twrp-data-port.md`](docs/fuxi-twrp-data-port.md) — that document is
 the entry point, not this README.
 
@@ -17,8 +21,8 @@ the entry point, not this README.
 | Milestone | Scope | State |
 | --- | --- | --- |
 | M0 | Bounded read-only probe: BlockIo discovery, GPT CRC/geometry checks, F2FS header identification, SCM/QSEE discovery | done (host-verified) |
-| M1 | Native UFS read-only takeover: idle-gated queue adoption, owned DMA window, SMMU stream 0x60 bypass, GPT + raw-block SHA256 diagnostics | implemented; on-device run in progress |
-| M2 | `/metadata` file read (checkpoint/NAT/directory walking) | not started |
+| M1 | Native UFS read-only takeover and repeated raw reads | bounded device proof passed; original USB stop remains a separate issue |
+| M2 | `/metadata` file read (checkpoint/NAT/directory walking) | inline file read and independent TWRP hash passed; non-inline device proof pending |
 | M3 | Key wrapping, ICE slots, metadata decryption via SCM/QSEE | not started |
 | M4 | Named `/data` file plaintext with hash comparison | not started |
 | M5 | Full object load + RAM publication to the existing handoff | not started |
