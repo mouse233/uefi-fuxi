@@ -127,7 +127,9 @@ def main():
             assert marker.encode("utf-16-le") in ufs, marker
     if candidate.get("m3_smci_root") and not candidate.get("m3_smc_context"):
         assert candidate["m3_bridge_call"] and candidate["m3_scm_invoke"] and park
-        assert candidate["m3_bridge_bytes"] == 8192 and candidate["m3_smci_no_keys"]
+        assert candidate["m3_bridge_bytes"] == (0x82000 if candidate.get("m3_bridge_large") else 8192) and candidate["m3_smci_no_keys"]
+        if candidate.get("m3_bridge_large"):
+            assert candidate["lun4_keymaster"] and candidate["m3_bridge_hlos"]
         assert not candidate["m3_bridge_blob"] and not candidate["m3_metadata_key"]
         assert candidate["m3_smci_mode"] in ("legacy", "object")
         assert candidate["m3_smci_fnid"] == ("72000602" if candidate["m3_smci_mode"] == "object" else "72000600")

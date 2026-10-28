@@ -14,6 +14,9 @@ def main():
   exe=Path(t)/'batch'
   subprocess.run([shutil.which('clang') or 'clang','-std=c11','-Wall','-Wextra','-Werror','-fshort-wchar','-fsanitize=address,undefined','-fno-omit-frame-pointer','-I',str(a.edk2/'MdePkg/Include'),'-I',str(a.edk2/'MdePkg/Include'/arch),'-I',str(native),'-I',str(data),str(root/'tools/tests/m3_smci_loader_host.c'),str(native/'UfsReport.c'),str(data/'DataReadOnly.c'),'-o',str(exe)],check=True)
   subprocess.run([str(exe)],check=True)
- report=dict(result='passed',vectors=82,production_lifecycle=True,report_cache_exercised=True,sanitizers=['address','undefined'],sources={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},scope='Production root->open UID122->release loader->release environment->delete bridge; raw errors and corrupted buffers stop, preserve unknown-state pages; simulated monitor only')
+  large=Path(t)/'batch-large'
+  subprocess.run([shutil.which('clang') or 'clang','-std=c11','-Wall','-Wextra','-Werror','-fshort-wchar','-fsanitize=address,undefined','-fno-omit-frame-pointer','-DFUXI_M3_BRIDGE_LARGE=1','-I',str(a.edk2/'MdePkg/Include'),'-I',str(a.edk2/'MdePkg/Include'/arch),'-I',str(native),'-I',str(data),str(root/'tools/tests/m3_smci_loader_host.c'),str(native/'UfsReport.c'),str(data/'DataReadOnly.c'),'-o',str(large)],check=True)
+  subprocess.run([str(large)],check=True)
+ report=dict(result='passed',vectors=164,large_bridge_vectors=82,production_lifecycle=True,report_cache_exercised=True,sanitizers=['address','undefined'],sources={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},scope='Production root->open UID122->release loader->release environment->delete bridge; raw errors and corrupted buffers stop, preserve unknown-state pages; simulated monitor only')
  a.report.parent.mkdir(parents=True,exist_ok=True);a.report.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
 if __name__=='__main__':main()
