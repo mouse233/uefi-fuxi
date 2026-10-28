@@ -61,3 +61,26 @@ BI 描述符在 +12（offset=32、size=名字长度），OO 在 +20，名字字�
 lookup 只回答“该名字能否返回对象”。不证明 TA 已加载到可执行状态、不证明版本/签名、
 不证明 is64，也不产生任何 KeyMint 会话。命中后需要独立的大缓冲 send/getVersion 候选
 （此前模型为 86016 字节、21 页 + callback 区）；未命中才需要恢复同版本 TA 分片。
+
+## attempt-01 实机结论：lookup 被对象层拒绝（a2=2）
+
+照片IMG_7178..JPG，SHA256 ef1dd1d215a187e9f7852a473628e76bd6b56a3a80a2cf68b249cc1a166c5192。root/loader 链路仍完整，但两次 lookup 都被对象层拒绝。
+
+- 桥：create 参数C697A006/C697A006/2200/3，返回a0=0、a1=0、a2=14194A61；delete用14194A61返回全零。
+- register→2、open UID122→3 均与上一轮一致；lookup 在句柄3上执行。
+- lookup keymaster64（BI offset=32 size=11）：a0=0、a1=0、**a2=2**、a3=0；oo=0/0，没有返回对象。
+- 回退 lookup keymaster（size=9）：a0=0、a1=0、**a2=2**、a3=0；同样没有对象。
+- 收尾：loader-release(3)、object-release(2)、bridge-delete(14194A61)全部成功；
+  BATCH stop=lookup-missing passed=1F env=0 loader=0 ta=0 retained=0；released bytes=2000；
+  result=Not Found；PARK 与 cached report end 可见。
+- 固定头把2定义为OBJECT_ERROR_INVALID（不支持/未识别的请求）；AppLoader另有10..26的具体错误，
+  2不在其中。**因此不能写成“TA不存在/未加载/名字不对”**：本轮只确认对象层拒绝了该请求。
+  未确定的可能包括：该名字不在元数据、null凭据使loader拒绝、部署固件的请求形状不同、
+  或open UID122返回的对象在此固件上不实现lookupTA。
+- UFS stop=1、db=tdb=run=0、hcs=0000010F、is=0；SMMU GFSR=0、FSR=00000400 仍残留；
+  M2 的10527字节与SHA256 14f3d867…0991仍一致。
+- 镜像e252d7d308318a64d4ba06e9fccf45ec9f14b85508fb689a984170a5e6ddbfa1与提交67e70d9c7b57063a661b98ca73b7fcae8dff55dd的56个源码绑定、20项检查、11/82/148/24向量有效。
+  无TA加载、无sendRequest、无密钥、无解密。
+- 下一步应先把“名字是否存在”和“调用形状是否被接受”分开：需要独立证据确认部署固件里
+  keymaster 分片的准确名字（例如从设备只读查看 /vendor/firmware_mnt/image），
+  再决定是恢复分片走 loadFromBuffer，还是先做一次可区分的接口校准实验。
