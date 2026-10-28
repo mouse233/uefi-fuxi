@@ -47,6 +47,9 @@ def main():
     if candidate.get('m3_bridge_call'):
         commands.append(('m3-transport', ['python3', str(root / 'tools/test_fuxi_m3_bridge_call.py'),
                                           '--edk2', str(edk2), '--report', str(out / 'm3-transport-tests.json')]))
+        if not candidate.get('m3_smci_root'):
+            commands.append(('m3-bridge-lifetime', ['python3',str(root/'tools/test_fuxi_m3_bridge_lifetime.py'),'--edk2',str(edk2),'--report',str(out/'m3-bridge-lifetime-tests.json')]))
+            commands.append(('m3-bridge-abi', ['python3',str(root/'tools/audit_fuxi_m3_bridge_abi.py'),'--module',str(root/'out/twrp-a17-analysis/ramdisk/vendor/lib/modules/1.1/qcom-scm.ko'),'--output',str(out/'static-bridge-abi')]))
     elif candidate.get('m3_metadata_key'):
         commands.append(('m3-transport', ['python3', str(root / 'tools/test_fuxi_m3_key_paths.py'),
                                           '--edk2', str(edk2), '--report', str(out / 'm3-transport-tests.json')]))

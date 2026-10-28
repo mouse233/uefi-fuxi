@@ -39,6 +39,8 @@ def main():
         assert sha(root / name) == digest, name
     extra = ("m3-transport-tests.json",) if (candidate.get("m3_bridge_call") or
                                             candidate.get("m3_metadata_key")) else ()
+    if candidate.get("m3_bridge_call") and not candidate.get("m3_smci_root"):
+        extra += ("m3-bridge-lifetime-tests.json", "m3-bridge-abi-tests.json")
     if candidate.get("m3_bridge_blob"):
         extra += ("m3-blob-tests.json",)
     if candidate.get("m3_smci_root"):
@@ -88,14 +90,18 @@ def main():
     if candidate.get("m3_bridge_call") and not candidate.get("m3_smci_root"):
         assert candidate["m3_scm_info"] and candidate["diagnostic_park_before_usb"]
         assert candidate["m3_bridge_ops"] == ["enable", "create", "delete"]
-        for marker in ("FUXIM3 BRIDGE page phys=%lx bytes=%x",
+        assert candidate["m3_bridge_abi"] == "standard64-a0-status-a1-service-a2-handle64"
+        assert candidate["m3_bridge_fnids"] == ["42000c1c","42000c1e","42000c1d"]
+        assert candidate["m3_bridge_bytes"] == 8192
+        for marker in ("FUXIM3 BRIDGE ABI=standard64 status=a0 service=a1 handle=a2; no objects",
+                       "FUXIM3 BRIDGE page phys=%lx bytes=%x",
                        "FUXIM3 BRIDGE enable begin x0=%lx x1=%lx (no hardware timeout)",
                        "FUXIM3 BRIDGE enable return a0=%lx a1=%lx a2=%lx a3=%lx",
                        "FUXIM3 BRIDGE create begin x0=%lx arg0=%lx arg1=%lx arg2=%lx arg3=%lx",
                        "FUXIM3 BRIDGE create return a0=%lx a1=%lx a2=%lx a3=%lx",
-                       "FUXIM3 BRIDGE delete begin handle=%x",
+                       "FUXIM3 BRIDGE delete begin handle=%lx",
                        "FUXIM3 BRIDGE delete return a0=%lx a1=%lx a2=%lx a3=%lx",
-                       "FUXIM3 BRIDGE retained: create/delete unresolved handle=%x bytes=%x",
+                       "FUXIM3 BRIDGE retained: create/delete unresolved handle=%lx bytes=%x",
                        "FUXIM3 BRIDGE released bytes=%x"):
             assert marker.encode("utf-16-le") in ufs, marker
     if candidate.get("m3_bridge_blob"):
@@ -106,7 +112,7 @@ def main():
         for marker in ("FUXIM3 BLOB page-sha256=%s bytes=%u match=1",
                        "FUXIM3 BLOB prefix32=%s",
                        "FUXIM3 BLOB read=%r; registered page, no TA, no decrypt",
-                       "FUXIM3 BLOB result=%r delete=%r handle=%x; no TA, no decrypt"):
+                       "FUXIM3 BLOB result=%r delete=%r handle=%lx; no TA, no decrypt"):
             assert marker.encode("utf-16-le") in ufs, marker
     if candidate.get("m3_smci_root") and not candidate.get("m3_smc_context"):
         assert candidate["m3_bridge_call"] and candidate["m3_scm_invoke"] and park
@@ -121,7 +127,7 @@ def main():
                        "FUXIM3 SMCI remote-object=%x; root register only",
                        "FUXIM3 SMCI object-release=Success handle=%x",
                        "FUXIM3 SMCI bridge-delete return a0=%lx a1=%lx",
-                       "FUXIM3 SMCI retained bridge=%x object=%x; unknown/error state, no retry",
+                       "FUXIM3 SMCI retained bridge=%lx object=%x; unknown/error state, no retry",
                        "FUXIM3 SMCI result=%r retained=%u; no TA, no key, no decrypt"):
             assert marker.encode("utf-16-le") in ufs, marker
         assert "FUXIM3 BLOB prefix32=%s".encode("utf-16-le") not in ufs

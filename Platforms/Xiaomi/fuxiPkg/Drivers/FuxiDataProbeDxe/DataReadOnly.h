@@ -63,12 +63,11 @@ EFI_STATUS FdpMakeAvailabilityQuery(UINT32 Subject, BOOLEAN Smc64, UINT64 Args[8
 EFI_STATUS FdpDecodeAvailability(UINT64 Result0, UINT64 Result1,
                                  BOOLEAN *Available);
 
-// Scalar SMC64 register form observed in the A17 TWRP qcom-scm.ko descriptor
-// build: x0 = 0xC2000000 | (service << 8) | command, x1 = arginfo whose low
-// nibble is the argument count, x2..x7 = arguments. Only the scalar path is
-// modelled; the kernel's extra-argument buffer (five or more arguments) is not.
-#define FDP_SCM64_FNID_PREFIX 0xc2000000ULL
-#define FDP_SCM64_MAX_ARGS 6U
+// Fixed qcom-scm.ko bridge calls use type=0: standard SMC64, owner=2.
+// Four scalar arguments fit x2..x5. Five or more require an extended buffer;
+// this bounded builder rejects them. INFO has its own unchanged fast builder.
+#define FDP_SCM64_FNID_PREFIX 0x42000000ULL
+#define FDP_SCM64_MAX_ARGS 4U
 typedef struct {
   UINT32 Svc;
   UINT32 Cmd;
@@ -86,6 +85,8 @@ EFI_STATUS FdpBuildBridgeEnable(UINT64 Regs[8]);
 EFI_STATUS FdpBuildBridgeDelete(UINT64 Handle, UINT64 Regs[8]);
 EFI_STATUS FdpBuildBridgeCreate(UINT64 Phys, UINT64 Size, UINT32 VmCount,
                                 UINT64 VmBits, UINT64 Regs[8]);
-// a0 is the SCM status; create returns the bridge handle in a1.
-EFI_STATUS FdpDecodeBridgeCreate(UINT64 Result0, UINT64 Result1, UINT32 *Handle);
+// Fixed wrapper: a0=SCM status, low32(a1)=service result, a2=64-bit handle.
+// Accept only the conservative zero-result/nonzero-handle subset, no retry.
+EFI_STATUS FdpDecodeBridgeCreate(UINT64 Result0, UINT64 Result1,
+                                 UINT64 Result2, UINT64 *Handle);
 #endif

@@ -33,17 +33,17 @@ static UINT32 Get(const UINT8 *p){return p[0]|((UINT32)p[1]<<8)|((UINT32)p[2]<<1
 VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  ++Calls;assert(Calls<=5);
  UINT64 fn=a->Arg0;
- if(Calls==1)assert(fn==0xc2000c1c && a->Arg1==0);
- else if(Calls==2)assert(fn==0xc2000c1e && a->Arg1==4 && a->Arg2==(UINTN)Page && a->Arg3==((UINTN)Page|6) && a->Arg4==8192);
+ if(Calls==1)assert(fn==0x42000c1c && a->Arg1==0);
+ else if(Calls==2)assert(fn==0x42000c1e && a->Arg1==4 && a->Arg2==(UINTN)Page && a->Arg3==((UINTN)Page|6) && a->Arg4==8192);
  else if(Calls==3 || Calls==4){
    assert(fn==(FUXI_M3_SMCI_OBJECT ? 0x72000602 : 0x72000600) && a->Arg1==0x224 && a->Arg2==(UINTN)Page && a->Arg3==4096 && a->Arg4==(UINTN)(Page+4096) && a->Arg5==4096 && !a->Arg6 && !a->Arg7);
    assert(Get(Page)==(Calls==3?1:0x44));
    assert(Get(Page+4)==(Calls==3?5:0xffff) && Get(Page+8)==(Calls==3?0x1100:0));
    for(UINTN i=12;i<8192;++i)assert(!Page[i]);
- }else assert(fn==0xc2000c1d && a->Arg1==1 && a->Arg2==0x5c);
+ }else assert(fn==0x42000c1d && a->Arg1==1 && a->Arg2==0x5c);
  a->Arg0=a->Arg1=a->Arg2=a->Arg3=0;
  if(Calls==1 && Mode==2)a->Arg0=1;
- if(Calls==2){a->Arg1=0x5c;if(Mode==3)a->Arg0=1;}
+ if(Calls==2){a->Arg2=0x5c;if(Mode==3)a->Arg0=1;}
  if(Calls==3){
    Page[20]=0x44;
    if(Mode==27)a->Arg0=0xffffffff80000001ULL; // Observed v1 raw failure.

@@ -737,11 +737,11 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
 #if FUXI_M3_SCM_INFO
   FnuScmInfoProbe();
 #endif
-#if FUXI_M3_SCM_BRIDGE_CALL && !FUXI_M3_BRIDGE_BLOB && !FUXI_M3_SMCI_ROOT
-  if (mScmAvailable) FnuBridgeCallProbe(NULL, NULL, NULL, NULL);
-  else FnuLog(L"FUXIM3 BRIDGE skipped: INFO self-query unavailable");
-#endif
   RunDiagnostic();
+#if FUXI_M3_SCM_BRIDGE_CALL && !FUXI_M3_BRIDGE_BLOB && !FUXI_M3_SMCI_ROOT
+  if (!mPoisoned && mScmAvailable) FnuBridgeCallProbe(NULL, NULL, NULL, NULL);
+  else FnuLog(L"FUXIM3 BRIDGE skipped: UFS/INFO not ready");
+#endif
 #if FUXI_M3_SMC_CONTEXT
   {
     UINT64 El, Daif;

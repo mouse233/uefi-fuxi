@@ -24,14 +24,15 @@ STATIC VOID FnuBridgeCallProbe(CONST FDP_DISK *Disk,
   UINT64 Regs[8];
   ARM_SMC_ARGS Out;
   EFI_STATUS Status;
-  UINT32 Handle = 0;
+  UINT64 Handle = 0;
   BOOLEAN Created = FALSE;
   EFI_STATUS BlobStatus = EFI_SUCCESS;
-  UINTN Pages = FUXI_M3_BRIDGE_BLOB ? 2 : 1;
+  UINTN Pages = 2; // Match the two-page input/output range needed by C2.
   UINTN Bytes = EFI_PAGES_TO_SIZE(Pages);
   (VOID)Disk; (VOID)Metadata; (VOID)Work; (VOID)ExpectedSha;
 
-  FNU_STAGE("m3-bridge-call");
+  FNU_STAGE("m3-bridge-standard");
+  FnuLog(L"FUXIM3 BRIDGE ABI=standard64 status=a0 service=a1 handle=a2; no objects");
   if (gBS->AllocatePages(AllocateMaxAddress, EfiBootServicesData, Pages, &Raw) != EFI_SUCCESS) {
     FnuLog(L"FUXIM3 BRIDGE page=allocation-failed; no SMC");
     return;
@@ -51,7 +52,7 @@ STATIC VOID FnuBridgeCallProbe(CONST FDP_DISK *Disk,
   FnuSmc64(Regs, &Out);
   FnuLog(L"FUXIM3 BRIDGE enable return a0=%lx a1=%lx a2=%lx a3=%lx",
          (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
-  if (Out.Arg0 != 0) goto Release;
+  if (Out.Arg0 != 0 || Out.Arg1 != 0) goto Release;
 
   Status = FdpBuildBridgeCreate((UINT64)Raw, Bytes, 0, 0, Regs);
   if (EFI_ERROR(Status)) {
@@ -66,7 +67,7 @@ STATIC VOID FnuBridgeCallProbe(CONST FDP_DISK *Disk,
   FnuSmc64(Regs, &Out);
   FnuLog(L"FUXIM3 BRIDGE create return a0=%lx a1=%lx a2=%lx a3=%lx",
          (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
-  Status = FdpDecodeBridgeCreate(Out.Arg0, Out.Arg1, &Handle);
+  Status = FdpDecodeBridgeCreate(Out.Arg0, Out.Arg1, Out.Arg2, &Handle);
   if (EFI_ERROR(Status)) {
     FnuLog(L"FUXIM3 BRIDGE create decode=%r; no delete", Status);
     goto Release;
@@ -83,27 +84,27 @@ STATIC VOID FnuBridgeCallProbe(CONST FDP_DISK *Disk,
     FnuLog(L"FUXIM3 BRIDGE delete construct=%r; no call", Status);
     goto Release;
   }
-  FnuLog(L"FUXIM3 BRIDGE delete begin handle=%x", Handle);
+  FnuLog(L"FUXIM3 BRIDGE delete begin handle=%lx", Handle);
   FnuSmc64(Regs, &Out);
   FnuLog(L"FUXIM3 BRIDGE delete return a0=%lx a1=%lx a2=%lx a3=%lx",
          (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
   Status = (Out.Arg0 == 0) ? EFI_SUCCESS : EFI_NOT_READY;
   if (!EFI_ERROR(Status)) Created = FALSE;
 #if FUXI_M3_BRIDGE_BLOB
-  FnuLog(L"FUXIM3 BLOB result=%r delete=%r handle=%x; no TA, no decrypt",
+  FnuLog(L"FUXIM3 BLOB result=%r delete=%r handle=%lx; no TA, no decrypt",
          BlobStatus, Status, Handle);
 #else
   (VOID)BlobStatus;
-  FnuLog(L"FUXIM3 BRIDGE result=%r handle=%x; closed loop, no key, no TA, no decrypt",
+  FnuLog(L"FUXIM3 BRIDGE result=%r handle=%lx; closed loop, no key, no TA, no decrypt",
          Status, Handle);
 #endif
 Release:
-  ZeroMem(Page, Bytes);
-  FnuCacheCiv(&mOps, Page, Bytes);
   if (Created) {
-    FnuLog(L"FUXIM3 BRIDGE retained: create/delete unresolved handle=%x bytes=%x",
+    FnuLog(L"FUXIM3 BRIDGE retained: create/delete unresolved handle=%lx bytes=%x",
            Handle, (UINT32)Bytes);
   } else {
+    ZeroMem(Page, Bytes);
+    FnuCacheCiv(&mOps, Page, Bytes);
     gBS->FreePages(Raw, Pages);
     FnuLog(L"FUXIM3 BRIDGE released bytes=%x", (UINT32)Bytes);
   }

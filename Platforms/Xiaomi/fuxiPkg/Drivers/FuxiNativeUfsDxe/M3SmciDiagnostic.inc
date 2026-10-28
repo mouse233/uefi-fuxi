@@ -58,7 +58,8 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   EFI_PHYSICAL_ADDRESS Raw=SIZE_4GB-1;
   UINT8 *Page;
   UINT64 Regs[8]; ARM_SMC_ARGS Out;
-  UINT32 Bridge=0, Object=0, Ignored=0;
+  UINT64 Bridge=0;
+  UINT32 Object=0, Ignored=0;
   BOOLEAN Retain=FALSE;
   mSmciStatus=EFI_NOT_READY;
   FNU_STAGE("m3-smci-root");
@@ -74,13 +75,13 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   if (EFI_ERROR(mSmciStatus)) goto Done;
   FnuLog(L"FUXIM3 SMCI bridge-enable begin");FnuSmc64(Regs,&Out);
   FnuLog(L"FUXIM3 SMCI bridge-enable return a0=%lx a1=%lx",(UINT64)Out.Arg0,(UINT64)Out.Arg1);
-  if (Out.Arg0) { mSmciStatus=EFI_NOT_READY;goto Done; }
+  if (Out.Arg0 || Out.Arg1) { mSmciStatus=EFI_NOT_READY;goto Done; }
   mSmciStatus=FdpBuildBridgeCreate((UINT64)Raw,8192,0,0,Regs);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   Retain=TRUE;
   FnuLog(L"FUXIM3 SMCI bridge-create begin");FnuSmc64(Regs,&Out);
   FnuLog(L"FUXIM3 SMCI bridge-create return a0=%lx a1=%lx",(UINT64)Out.Arg0,(UINT64)Out.Arg1);
-  mSmciStatus=FdpDecodeBridgeCreate(Out.Arg0,Out.Arg1,&Bridge);
+  mSmciStatus=FdpDecodeBridgeCreate(Out.Arg0,Out.Arg1,Out.Arg2,&Bridge);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   mSmciStatus=SmciInvoke((UINT64)Raw,Page,1,TRUE,&Object);
   if (EFI_ERROR(mSmciStatus)) goto Done;
@@ -91,7 +92,7 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   ZeroMem(Page,8192);FnuCacheCiv(&mOps,Page,8192);
   mSmciStatus=FdpBuildBridgeDelete(Bridge,Regs);
   if (EFI_ERROR(mSmciStatus)) goto Done;
-  FnuLog(L"FUXIM3 SMCI bridge-delete begin handle=%x",Bridge);FnuSmc64(Regs,&Out);
+  FnuLog(L"FUXIM3 SMCI bridge-delete begin handle=%lx",Bridge);FnuSmc64(Regs,&Out);
   FnuLog(L"FUXIM3 SMCI bridge-delete return a0=%lx a1=%lx",(UINT64)Out.Arg0,(UINT64)Out.Arg1);
   mSmciStatus=Out.Arg0 ? EFI_NOT_READY : EFI_SUCCESS;
   if (!EFI_ERROR(mSmciStatus)) Retain=FALSE;
@@ -99,7 +100,7 @@ Done:
   if (Retain) {
     // No further call, wipe, delete or free: callback/in-flight ownership is
     // unknown. No secret was put in either page. The parked probe will reboot.
-    FnuLog(L"FUXIM3 SMCI retained bridge=%x object=%x; unknown/error state, no retry",Bridge,Object);
+    FnuLog(L"FUXIM3 SMCI retained bridge=%lx object=%x; unknown/error state, no retry",Bridge,Object);
   } else {
     ZeroMem(Page,8192);FnuCacheCiv(&mOps,Page,8192);gBS->FreePages(Raw,2);
     FnuLog(L"FUXIM3 SMCI released bytes=2000");

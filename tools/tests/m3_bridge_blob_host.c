@@ -59,18 +59,18 @@ static struct {
 } BootServices={AllocatePages,FreePages}, *gBS=&BootServices;
 VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a) {
   ++Calls;
-  if(Calls==1) assert(a->Arg0==0xc2000c1c && a->Arg1==0);
+  if(Calls==1) assert(a->Arg0==0x42000c1c && a->Arg1==0);
   else if(Calls==2) {
-    assert(a->Arg0==0xc2000c1e && a->Arg1==4);
+    assert(a->Arg0==0x42000c1e && a->Arg1==4);
     assert(a->Arg2==(UINTN)Page && a->Arg3==((UINTN)Page|6) && a->Arg4==8192);
     assert(AllZero(Page,PageBytes));
   } else {
-    assert(Calls==3 && a->Arg0==0xc2000c1d && a->Arg2==0x5c);
+    assert(Calls==3 && a->Arg0==0x42000c1d && a->Arg2==0x5c);
     assert(AllZero(Page,PageBytes));
   }
   a->Arg0=Calls==FailCall?1:0;
-  a->Arg1=Calls==2?0x5c:0x59;
-  a->Arg2=a->Arg3=0;
+  a->Arg1=0;
+  a->Arg2=Calls==2?0x5c:0; a->Arg3=0;
 }
 #include "M3BridgeBlob.inc"
 #include "M3BridgeDiagnostic.inc"

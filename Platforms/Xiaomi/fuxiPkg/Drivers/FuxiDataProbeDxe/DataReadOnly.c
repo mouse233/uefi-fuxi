@@ -221,11 +221,12 @@ EFI_STATUS FdpBuildBridgeCreate(UINT64 Phys, UINT64 Size, UINT32 VmCount,
   Args[3] = VmBits;
   return BuildBridgeCall(0x1eU, 4, Args, Regs);
 }
-EFI_STATUS FdpDecodeBridgeCreate(UINT64 Result0, UINT64 Result1, UINT32 *Handle) {
+EFI_STATUS FdpDecodeBridgeCreate(UINT64 Result0, UINT64 Result1,
+                                 UINT64 Result2, UINT64 *Handle) {
   if (Handle == NULL) return EFI_INVALID_PARAMETER;
   *Handle = 0;
-  if (Result0 != 0) return EFI_NOT_READY;
-  *Handle = (UINT32)Result1;
+  if (Result0 != 0 || Result1 != 0 || Result2 == 0) return EFI_NOT_READY;
+  *Handle = Result2;
   return EFI_SUCCESS;
 }
 
