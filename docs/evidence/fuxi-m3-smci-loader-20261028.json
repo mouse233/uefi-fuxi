@@ -1,0 +1,51 @@
+{
+  "module_smcinvoke_dlkm_sha256": "831a6db7570e66729db84cd0a7ddc63f8cdbc4b03fd250dee15b80b561969348",
+  "loader": {
+    "uid": 122,
+    "operation": 0,
+    "counts": "1001",
+    "bi_offset": 32,
+    "bi_size": 4,
+    "oo_offset": 20,
+    "wire_end": 28,
+    "args_align": 8,
+    "source": {
+      "header": "IClientEnv.h IClientEnv_open: ObjectCounts_pack(1,0,0,1), uint32 uid, IClientEnv_OP_open",
+      "wire": "smcinvoke.c: offset = sizeof(hdr) + sizeof(tz_args)*counts; BI align8",
+      "asm_range": "smcinvoke_dlkm.ko .text 0x1e38..0x1e94",
+      "asm_tokens": [
+        "mov w8, #0x7a",
+        "mov w1, wzr",
+        "mov w3, #0x1001",
+        "bl get_client_env_object"
+      ]
+    }
+  },
+  "bridge": {
+    "vm_count": 1,
+    "vmid": 3,
+    "ns_perm": 6,
+    "tz_perm": 6,
+    "hyp_flags": 0,
+    "page_bytes": 8192,
+    "profile": "hlos"
+  },
+  "pinned_inputs": {
+    "out/twrp-a17-analysis/ramdisk/vendor/lib/modules/1.1/qcom-scm.ko": "8932f0206f8a0083af352684cd64de8c9406346dd639606d045136cf27b079a5",
+    "out/twrp-a17-analysis/ramdisk/vendor/lib/modules/1.1/smcinvoke_dlkm.ko": "831a6db7570e66729db84cd0a7ddc63f8cdbc4b03fd250dee15b80b561969348",
+    "out/m3-qsee-static-v1/sm8550-source/smcinvoke.c": "9907468f34d72323e4f9919f9a3019a8fef0e0e70cb629a83f8951c2288a6b7f",
+    "out/m3-qsee-static-v1/sm8550-source/smcinvoke_kernel.c": "26b3716f8ec796cea6dace1b7adb9d8603ab1ac9eb51ecacac32c3ce8624272d",
+    "out/m3-qsee-static-v1/sm8550-source/IClientEnv.h": "e4efdfa386aef8105af11eb133e7eeeccb219014db06f5b43f11fac2e2528d2a",
+    "out/m3-qsee-static-v1/sm8550-source/smcinvoke_object.h": "46fcdb259980ea248a8adacae5008983628cc7018d2022ab76c7a11722b85aba"
+  },
+  "mutation_rejected": [
+    "out/twrp-a17-analysis/ramdisk/vendor/lib/modules/1.1/qcom-scm.ko",
+    "out/twrp-a17-analysis/ramdisk/vendor/lib/modules/1.1/smcinvoke_dlkm.ko",
+    "out/m3-qsee-static-v1/sm8550-source/smcinvoke.c",
+    "out/m3-qsee-static-v1/sm8550-source/smcinvoke_kernel.c",
+    "out/m3-qsee-static-v1/sm8550-source/IClientEnv.h",
+    "out/m3-qsee-static-v1/sm8550-source/smcinvoke_object.h"
+  ],
+  "reference_exact_device_match": false,
+  "scope": "Loader open/release wire and fixed local instruction patterns only; no TA image load, no KeyMint session, no key use or decryption"
+}

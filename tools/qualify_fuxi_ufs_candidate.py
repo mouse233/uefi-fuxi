@@ -59,6 +59,11 @@ def main():
     if candidate.get('m3_smci_root'):
         commands.append(('m3-smci', ['python3', str(root / 'tools/test_fuxi_m3_smci_root.py'),
                                    '--edk2', str(edk2), '--report', str(out / 'm3-smci-tests.json')]))
+    if candidate.get('m3_smci_loader'):
+        commands.append(('m3-loader', ['python3', str(root/'tools/test_fuxi_m3_smci_loader.py'),
+            '--edk2',str(edk2),'--report',str(out/'m3-loader-tests.json')]))
+        commands.append(('m3-loader-contract', ['python3',str(root/'tools/audit_fuxi_m3_loader_contract.py'),
+            '--output',str(out/'static-loader-contract')]))
     if candidate.get('m3_smc_context'):
         commands.append(('m3-context', ['python3', str(root / 'tools/test_fuxi_m3_smc_context.py'),
                                       '--edk2', str(edk2), '--report', str(out / 'm3-context-tests.json')]))

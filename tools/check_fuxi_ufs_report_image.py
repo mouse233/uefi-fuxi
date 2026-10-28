@@ -45,6 +45,8 @@ def main():
         extra += ("m3-blob-tests.json",)
     if candidate.get("m3_smci_root"):
         extra += ("m3-smci-tests.json",)
+    if candidate.get("m3_smci_loader"):
+        extra += ("m3-loader-tests.json", "m3-loader-contract-tests.json")
     if candidate.get("m3_smc_context"):
         extra += ("m3-context-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
@@ -126,7 +128,20 @@ def main():
         assert candidate["m3_smci_mode"] in ("legacy", "object")
         assert candidate["m3_smci_fnid"] == ("72000602" if candidate["m3_smci_mode"] == "object" else "72000600")
         assert candidate["m3_smci_arginfo"] == "224"
-        assert candidate["m3_smci_ops"] == ["root-register-null", "remote-release"]
+        expected_ops = ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if candidate.get("m3_smci_loader") else ["root-register-null", "remote-release"]
+        assert candidate["m3_smci_ops"] == expected_ops
+        if candidate.get("m3_smci_loader"):
+            assert candidate["m3_bridge_hlos"] and candidate["m3_smci_mode"] == "object"
+            for marker in ("FUXIM3 BATCH plan=root/open122/release-loader/release-env/delete; gated, no retry",
+                           "FUXIM3 SMCI loader-open BI offset=20 size=4 uid=7A; no TA load",
+                           "FUXIM3 SMCI loader-object=%x; UID122 only",
+                           "FUXIM3 BATCH loader-release=Success handle=%x",
+                           "FUXIM3 BATCH stop=%a passed=%x env=%x loader=%x retained=%u"):
+                assert marker.encode("utf-16-le") in ufs,marker
+            test=json.loads((out/"m3-loader-tests.json").read_text())
+            assert test["production_lifecycle"] and test["report_cache_exercised"] and test["sources"]
+            contract=json.loads((out/"m3-loader-contract-tests.json").read_text())
+            assert contract["uid"]==122 and contract["payload_offset"]==32 and contract["oo_offset"]==20
         if candidate.get("m3_bridge_hlos"):
             assert candidate["m3_smci_mode"] == "object"
             assert candidate["m3_bridge_abi"] == "standard64-a0-status-a1-service-a2-handle64"

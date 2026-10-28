@@ -110,6 +110,13 @@
 #error SMCI root must not read key blobs
 #endif
 
+#ifndef FUXI_M3_SMCI_LOADER
+#define FUXI_M3_SMCI_LOADER 0
+#endif
+#if FUXI_M3_SMCI_LOADER && (!FUXI_M3_SMCI_ROOT || !FUXI_M3_SMCI_OBJECT || !FUXI_M3_BRIDGE_HLOS || FUXI_M3_SMC_CONTEXT)
+#error Loader batch requires HLOS object root diagnostic, no context probe
+#endif
+
 #define FNU_POLLS(Microseconds) ((Microseconds) / 2U)
 #define FNU_TIMEOUT_NOP         200000U
 #define FNU_TIMEOUT_READ       1000000U

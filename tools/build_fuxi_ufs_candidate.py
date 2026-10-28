@@ -36,6 +36,7 @@ def main():
     parser.add_argument("--m3-smc-context", action="store_true", help="INFO-only context control, disables bridge and object execution")
     parser.add_argument("--m3-smci-mode", choices=["legacy", "object"], default="legacy",
                         help="explicit root invoke entry; no runtime fallback")
+    parser.add_argument("--m3-smci-loader", action="store_true", help="gated root/open UID122/release batch; no TA or keys")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
     parser.add_argument("--m3-bridge-hlos", action="store_true", help="one VMID3 RW bridge diagnostic; no blob/key/context")
     parser.add_argument("--m3-bridge-blob", action="store_true",
@@ -92,6 +93,8 @@ def main():
         parser.error("HLOS requires bridge availability; no blob/context/key")
     if args.m3_bridge_hlos and args.m3_smci_root and args.m3_smci_mode != "object":
         parser.error("HLOS C2 candidate requires explicit object mode; no legacy fallback")
+    if args.m3_smci_loader and (not args.m3_smci_root or not args.m3_bridge_hlos or args.m3_smci_mode != "object" or args.m3_smc_context):
+        parser.error("loader batch requires HLOS object root; no context mode")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -156,6 +159,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_BRIDGE"] = str(int(args.m3_scm_bridge))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMC_CONTEXT"] = str(int(args.m3_smc_context))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_OBJECT"] = str(int(args.m3_smci_mode == "object"))
+    ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_LOADER"] = str(int(args.m3_smci_loader))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_ROOT"] = str(int(args.m3_smci_root))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_HLOS"] = str(int(args.m3_bridge_hlos))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_BLOB"] = str(int(args.m3_bridge_blob))
@@ -202,11 +206,11 @@ def main():
                   m3_key_file_limit=8192 if args.m3_metadata_key else None,
                   m3_crypto_cap=args.m3_crypto_cap, m3_scm_bridge=args.m3_scm_bridge,
                   m3_smc_context=args.m3_smc_context,
-                  m3_smci_root=args.m3_smci_root,
+                  m3_smci_root=args.m3_smci_root, m3_smci_loader=args.m3_smci_loader,
                   m3_smci_mode=("context" if args.m3_smc_context else args.m3_smci_mode) if args.m3_smci_root else None,
                   m3_smci_fnid=("42000601" if args.m3_smc_context else "72000602" if args.m3_smci_mode == "object" else "72000600") if args.m3_smci_root else None,
                   m3_smci_arginfo=("1" if args.m3_smc_context else "224") if args.m3_smci_root else None,
-                  m3_smci_ops=(["standard-info-control"] if args.m3_smc_context else ["root-register-null", "remote-release"]) if args.m3_smci_root else None,
+                  m3_smci_ops=(["standard-info-control"] if args.m3_smc_context else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if args.m3_smci_loader else ["root-register-null", "remote-release"]) if args.m3_smci_root else None,
                   m3_smci_no_keys=True if args.m3_smci_root else None,
                   m3_bridge_abi="standard64-a0-status-a1-service-a2-handle64" if args.m3_bridge_call else None,
                   m3_bridge_fnids=["42000c1c","42000c1e","42000c1d"] if args.m3_bridge_call and not args.m3_smc_context else [],

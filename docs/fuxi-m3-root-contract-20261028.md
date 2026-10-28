@@ -40,3 +40,10 @@ root和invoke没有共用桥create的a1服务结果/a2句柄语义，不能混�
 实际raw返回、是否有可接受的remote OO、是否触发callback/piggyback，以及release/delete终态。
 成功之前不能推进TA会话；未知状态不resume、不重试、不擦写、delete或free未确认所有权的页面。
 即便该有限闭环通过，也只证明本次root/release，不证明通用对象管理器、TA、密钥转换或解密。
+
+## 2026-10-28 追加：C2/C3 组合批处理
+
+新增默认关闭的 --m3-smci-loader/FUXI_M3_SMCI_LOADER，仅在 HLOS object 模式下与本文件所述 root 探针串联：
+root register 成功后才 open UID122，再依次 release loader、release environment、delete 桥。
+loader 消息与固定模块指令模式的绑定见 fuxi-m3-smci-loader-20261028.md；本文件对 callback、
+缓存与所有权边界的结论同样适用于该批处理，未知态不继续、不重试、不释放未确认所有权的页面。
