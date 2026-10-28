@@ -33,6 +33,7 @@ def main():
     parser.add_argument("--ufs-report-hold-seconds", type=int, default=20,
                         help="photo hold before USB (0..60 seconds, default 20)")
     parser.add_argument("--m3-scm-bridge", action="store_true", help="query bridge service availability only")
+    parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
     parser.add_argument("--m3-bridge-blob", action="store_true",
                         help="C1: read the pinned metadata blob into an 8 KiB bridge; no TA")
     parser.add_argument("--m3-bridge-call", action="store_true",
@@ -77,6 +78,8 @@ def main():
         parser.error("bridge calls require --m3-scm-info and --m2-metadata-files")
     if args.m3_bridge_blob and not args.m3_bridge_call:
         parser.error("bridge blob requires --m3-bridge-call")
+    if args.m3_smci_root and (not (args.m3_bridge_call and args.m3_scm_invoke) or args.m3_bridge_blob or args.m3_metadata_key):
+        parser.error("SMCI root requires bridge call and invoke availability, with no key probes")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -139,6 +142,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_INVOKE"] = str(int(args.m3_scm_invoke))
     ctx.board["firmware"]["defines"]["FUXI_M3_CRYPTO_CAP"] = str(int(args.m3_crypto_cap))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_BRIDGE"] = str(int(args.m3_scm_bridge))
+    ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_ROOT"] = str(int(args.m3_smci_root))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_BLOB"] = str(int(args.m3_bridge_blob))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_BRIDGE_CALL"] = str(int(args.m3_bridge_call))
     ctx.board["firmware"]["defines"]["FUXI_UFS_DIAGNOSTIC_PARK"] = str(int(args.m2_metadata_files))
@@ -182,8 +186,13 @@ def main():
                                 if args.m3_metadata_key else None),
                   m3_key_file_limit=8192 if args.m3_metadata_key else None,
                   m3_crypto_cap=args.m3_crypto_cap, m3_scm_bridge=args.m3_scm_bridge,
+                  m3_smci_root=args.m3_smci_root,
+                  m3_smci_fnid="72000600" if args.m3_smci_root else None,
+                  m3_smci_arginfo="224" if args.m3_smci_root else None,
+                  m3_smci_ops=["root-register-null", "remote-release"] if args.m3_smci_root else None,
+                  m3_smci_no_keys=True if args.m3_smci_root else None,
                   m3_bridge_blob=args.m3_bridge_blob,
-                  m3_bridge_bytes=8192 if args.m3_bridge_blob else (4096 if args.m3_bridge_call else None),
+                  m3_bridge_bytes=8192 if (args.m3_bridge_blob or args.m3_smci_root) else (4096 if args.m3_bridge_call else None),
                   m3_blob_bytes=208 if args.m3_bridge_blob else None,
                   m3_blob_sha256="9a57f01af0b8c9836cdf04f9abc2f83ad21baf94527b2c80b18b06f04ab2321e" if args.m3_bridge_blob else None,
                   m3_blob_prefix_bytes=32 if args.m3_bridge_blob else None,
@@ -223,6 +232,7 @@ def write_sources(uefi, out):
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3KeyDiagnostic.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3BridgeBlob.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3BridgeDiagnostic.inc",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmciDiagnostic.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/APRIORI.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.dsc", uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.fdf",
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/DXE.inc",

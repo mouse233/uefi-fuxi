@@ -82,6 +82,16 @@
 #error Bridge blob requires bridge calls and the parked M2 diagnostic
 #endif
 
+#ifndef FUXI_M3_SMCI_ROOT
+#define FUXI_M3_SMCI_ROOT 0
+#endif
+#if FUXI_M3_SMCI_ROOT && (!FUXI_M3_SCM_BRIDGE_CALL || !FUXI_M3_SCM_INVOKE || !FUXI_UFS_DIAGNOSTIC_PARK)
+#error SMCI root requires bridge, invoke availability and diagnostic park
+#endif
+#if FUXI_M3_SMCI_ROOT && (FUXI_M3_BRIDGE_BLOB || FUXI_M3_METADATA_KEY)
+#error SMCI root must not read key blobs
+#endif
+
 #define FNU_POLLS(Microseconds) ((Microseconds) / 2U)
 #define FNU_TIMEOUT_NOP         200000U
 #define FNU_TIMEOUT_READ       1000000U
@@ -133,6 +143,9 @@ STATIC VOID FnuInspectSecurityProtocols(VOID) {
 
 #if FUXI_M3_SCM_INFO || FUXI_M3_SCM_BRIDGE_CALL
 STATIC BOOLEAN mScmAvailable;
+#if FUXI_M3_SMCI_ROOT
+STATIC BOOLEAN mInvokeLegacyAvailable;
+#endif
 #endif
 #if FUXI_M3_SCM_INFO
 // A single non-mutating INFO/IS_CALL_AVAILABLE query, asking about itself.
@@ -182,6 +195,10 @@ STATIC VOID FnuScmInfoProbe(VOID) {
       Status = FdpDecodeAvailability(Args.Arg0, Args.Arg1, &Available);
       FnuLog(L"FUXIM3 SCM64 subject=%08x a0=%lx a1=%lx decode=%r available=%u",
              Subjects[I], (UINT64)Args.Arg0, (UINT64)Args.Arg1, Status, (UINT32)Available);
+#if FUXI_M3_SMCI_ROOT
+      if (Subjects[I] == FDP_SCM_INVOKE_LEGACY)
+        mInvokeLegacyAvailable = (BOOLEAN)(!EFI_ERROR(Status) && Available);
+#endif
       if (EFI_ERROR(Status)) break;
     }
   }
@@ -240,6 +257,7 @@ STATIC VOID FnuCacheInv(FNU_OPS *Ops, VOID *Va, UINTN Bytes) {
 
 #include "M3BridgeBlob.inc"
 #include "M3BridgeDiagnostic.inc"
+#include "M3SmciDiagnostic.inc"
 
 STATIC UINT32 FnuSmmuRead(VOID *Context, UINTN Offset) {
   (VOID)Context;
@@ -706,11 +724,16 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
 #if FUXI_M3_SCM_INFO
   FnuScmInfoProbe();
 #endif
-#if FUXI_M3_SCM_BRIDGE_CALL && !FUXI_M3_BRIDGE_BLOB
+#if FUXI_M3_SCM_BRIDGE_CALL && !FUXI_M3_BRIDGE_BLOB && !FUXI_M3_SMCI_ROOT
   if (mScmAvailable) FnuBridgeCallProbe(NULL, NULL, NULL, NULL);
   else FnuLog(L"FUXIM3 BRIDGE skipped: INFO self-query unavailable");
 #endif
   RunDiagnostic();
+#if FUXI_M3_SMCI_ROOT
+  // Invoke after the existing UFS shutdown, with no outstanding read DMA.
+  if (!mPoisoned && mScmAvailable && mInvokeLegacyAvailable) FnuSmciRootProbe();
+  else FnuLog(L"FUXIM3 SMCI skipped: UFS/INFO/invoke availability not ready");
+#endif
   FnuLog(L"FUXIUFS final stage=%a poisoned=%u ready=%u smmu-configured=%u",
          mLastStage, (UINT32)mPoisoned, (UINT32)mReady, (UINT32)mSmmuConfigured);
   if (!mPoisoned) {

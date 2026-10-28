@@ -41,6 +41,8 @@ def main():
                                             candidate.get("m3_metadata_key")) else ()
     if candidate.get("m3_bridge_blob"):
         extra += ("m3-blob-tests.json",)
+    if candidate.get("m3_smci_root"):
+        extra += ("m3-smci-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
         report = json.loads((out / filename).read_text())
         assert report["result"] == "passed"
@@ -81,7 +83,7 @@ def main():
         for filename in ("m2-file-tests.json", "m2-tools-tests.json", "m2-draft-tests.json"):
             test=json.loads((out/filename).read_text());assert test["result"]=="passed"
             for name,digest in test["sources"].items():assert sha(root/name)==digest,name
-    if candidate.get("m3_bridge_call"):
+    if candidate.get("m3_bridge_call") and not candidate.get("m3_smci_root"):
         assert candidate["m3_scm_info"] and candidate["diagnostic_park_before_usb"]
         assert candidate["m3_bridge_ops"] == ["enable", "create", "delete"]
         for marker in ("FUXIM3 BRIDGE page phys=%lx bytes=%x",
@@ -104,6 +106,21 @@ def main():
                        "FUXIM3 BLOB read=%r; registered page, no TA, no decrypt",
                        "FUXIM3 BLOB result=%r delete=%r handle=%x; no TA, no decrypt"):
             assert marker.encode("utf-16-le") in ufs, marker
+    if candidate.get("m3_smci_root"):
+        assert candidate["m3_bridge_call"] and candidate["m3_scm_invoke"] and park
+        assert candidate["m3_bridge_bytes"] == 8192 and candidate["m3_smci_no_keys"]
+        assert not candidate["m3_bridge_blob"] and not candidate["m3_metadata_key"]
+        assert candidate["m3_smci_fnid"] == "72000600" and candidate["m3_smci_arginfo"] == "224"
+        assert candidate["m3_smci_ops"] == ["root-register-null", "remote-release"]
+        for marker in ("FUXIM3 SMCI %a begin x0=%lx x1=%lx in=%lx out=%lx handle=%x op=%x counts=%x",
+                       "FUXIM3 SMCI %a return a0=%lx a1=%lx a2=%lx a3=%lx",
+                       "FUXIM3 SMCI remote-object=%x; root register only",
+                       "FUXIM3 SMCI object-release=Success handle=%x",
+                       "FUXIM3 SMCI bridge-delete return a0=%lx a1=%lx",
+                       "FUXIM3 SMCI retained bridge=%x object=%x; unknown/error state, no retry",
+                       "FUXIM3 SMCI result=%r retained=%u; no TA, no key, no decrypt"):
+            assert marker.encode("utf-16-le") in ufs, marker
+        assert "FUXIM3 BLOB prefix32=%s".encode("utf-16-le") not in ufs
     if candidate.get("m3_metadata_key"):
         assert candidate["m2_metadata_files"] and park
         assert candidate["m3_key_paths"] == ["/vold", "/vold/metadata_encryption",

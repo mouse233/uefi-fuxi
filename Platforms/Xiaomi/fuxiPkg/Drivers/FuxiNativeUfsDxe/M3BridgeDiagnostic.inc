@@ -15,6 +15,7 @@ STATIC VOID FnuSmc64(CONST UINT64 Regs[8], ARM_SMC_ARGS *Out) {
   ArmCallSmc(Out);
 }
 
+#if !FUXI_M3_SMCI_ROOT
 STATIC VOID FnuBridgeCallProbe(CONST FDP_DISK *Disk,
                                CONST FDP_PARTITION *Metadata, VOID *Work,
                                CONST UINT8 *ExpectedSha) {
@@ -107,4 +108,5 @@ Release:
     FnuLog(L"FUXIM3 BRIDGE released bytes=%x", (UINT32)Bytes);
   }
 }
+#endif
 #endif
