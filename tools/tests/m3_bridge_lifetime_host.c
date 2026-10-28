@@ -29,7 +29,7 @@ static struct {EFI_STATUS (*AllocatePages)(int,int,UINTN,EFI_PHYSICAL_ADDRESS *)
 VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  ++Calls;assert(Calls<=3);assert(!a->Arg6 && !a->Arg7);
  if(Calls==1)assert(a->Arg0==0x42000c1c && !a->Arg1 && !a->Arg2);
- if(Calls==2)assert(a->Arg0==0x42000c1e && a->Arg1==4 && a->Arg2==(UINTN)Page && a->Arg3==((UINTN)Page|6) && a->Arg4==8192 && !a->Arg5);
+ if(Calls==2)assert(a->Arg0==0x42000c1e && a->Arg1==4 && a->Arg2==((UINTN)Page|(FUXI_M3_BRIDGE_HLOS?6:0)) && a->Arg3==((UINTN)Page|6) && a->Arg4==(8192|(FUXI_M3_BRIDGE_HLOS?0x200:0)) && a->Arg5==(FUXI_M3_BRIDGE_HLOS?3:0));
  if(Calls==3){assert(a->Arg0==0x42000c1d && a->Arg1==1 && a->Arg2==0x10000005cULL);for(UINTN i=0;i<8192;++i)assert(!Page[i]);}
  a->Arg0=a->Arg1=a->Arg2=a->Arg3=0;
  if(Calls==1){if(Mode==2)a->Arg0=1;if(Mode==3)a->Arg1=4;}

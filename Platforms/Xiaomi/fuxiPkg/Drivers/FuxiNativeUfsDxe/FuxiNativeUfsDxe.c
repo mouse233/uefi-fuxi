@@ -75,6 +75,12 @@
 #error Bridge calls require the parked diagnostic
 #endif
 
+#ifndef FUXI_M3_BRIDGE_HLOS
+#define FUXI_M3_BRIDGE_HLOS 0
+#endif
+#if FUXI_M3_BRIDGE_HLOS && (!FUXI_M3_SCM_BRIDGE_CALL || FUXI_M3_SMCI_ROOT || FUXI_M3_BRIDGE_BLOB || FUXI_M3_SMC_CONTEXT)
+#error HLOS bridge comparison requires bridge-only diagnostic, no objects/blob/context
+#endif
 #ifndef FUXI_M3_BRIDGE_BLOB
 #define FUXI_M3_BRIDGE_BLOB 0
 #endif

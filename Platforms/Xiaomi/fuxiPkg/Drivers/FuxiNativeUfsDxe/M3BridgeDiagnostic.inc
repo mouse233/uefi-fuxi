@@ -33,6 +33,11 @@ STATIC VOID FnuBridgeCallProbe(CONST FDP_DISK *Disk,
 
   FNU_STAGE("m3-bridge-standard");
   FnuLog(L"FUXIM3 BRIDGE ABI=standard64 status=a0 service=a1 handle=a2; no objects");
+#if FUXI_M3_BRIDGE_HLOS
+  FnuLog(L"FUXIM3 BRIDGE profile=hlos vm-count=1 vmid=3 ns-perm=6 tz-perm=6 hyp-flags=0");
+#else
+  FnuLog(L"FUXIM3 BRIDGE profile=zero-vm-control vm-count=0 ns-perm=0 tz-perm=6 hyp-flags=0");
+#endif
   if (gBS->AllocatePages(AllocateMaxAddress, EfiBootServicesData, Pages, &Raw) != EFI_SUCCESS) {
     FnuLog(L"FUXIM3 BRIDGE page=allocation-failed; no SMC");
     return;
@@ -54,7 +59,11 @@ STATIC VOID FnuBridgeCallProbe(CONST FDP_DISK *Disk,
          (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
   if (Out.Arg0 != 0 || Out.Arg1 != 0) goto Release;
 
+#if FUXI_M3_BRIDGE_HLOS
+  Status = FdpBuildBridgeCreateHlos((UINT64)Raw, Bytes, Regs);
+#else
   Status = FdpBuildBridgeCreate((UINT64)Raw, Bytes, 0, 0, Regs);
+#endif
   if (EFI_ERROR(Status)) {
     FnuLog(L"FUXIM3 BRIDGE create construct=%r; no call", Status);
     goto Release;

@@ -37,6 +37,7 @@ def main():
     parser.add_argument("--m3-smci-mode", choices=["legacy", "object"], default="legacy",
                         help="explicit root invoke entry; no runtime fallback")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
+    parser.add_argument("--m3-bridge-hlos", action="store_true", help="one VMID3 RW bridge-only comparison; no objects/blob/context")
     parser.add_argument("--m3-bridge-blob", action="store_true",
                         help="C1: read the pinned metadata blob into an 8 KiB bridge; no TA")
     parser.add_argument("--m3-bridge-call", action="store_true",
@@ -87,6 +88,8 @@ def main():
         parser.error("object invoke mode requires --m3-smci-root")
     if args.m3_smc_context and not args.m3_smci_root:
         parser.error("context control requires parked root diagnostic configuration")
+    if args.m3_bridge_hlos and (not args.m3_bridge_call or not args.m3_scm_bridge or args.m3_smci_root or args.m3_bridge_blob or args.m3_smc_context or args.m3_metadata_key):
+        parser.error("HLOS comparison requires bridge-only plus bridge availability; no objects/blob/context/key")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -152,6 +155,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SMC_CONTEXT"] = str(int(args.m3_smc_context))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_OBJECT"] = str(int(args.m3_smci_mode == "object"))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_ROOT"] = str(int(args.m3_smci_root))
+    ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_HLOS"] = str(int(args.m3_bridge_hlos))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_BLOB"] = str(int(args.m3_bridge_blob))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_BRIDGE_CALL"] = str(int(args.m3_bridge_call))
     ctx.board["firmware"]["defines"]["FUXI_UFS_DIAGNOSTIC_PARK"] = str(int(args.m2_metadata_files))
@@ -204,6 +208,12 @@ def main():
                   m3_smci_no_keys=True if args.m3_smci_root else None,
                   m3_bridge_abi="standard64-a0-status-a1-service-a2-handle64" if args.m3_bridge_call else None,
                   m3_bridge_fnids=["42000c1c","42000c1e","42000c1d"] if args.m3_bridge_call and not args.m3_smc_context else [],
+                  m3_bridge_hlos=args.m3_bridge_hlos,
+                  m3_bridge_profile=("hlos" if args.m3_bridge_hlos else "zero-vm-control") if args.m3_bridge_call and not args.m3_smc_context else None,
+                  m3_bridge_vm_count=1 if args.m3_bridge_hlos else 0,
+                  m3_bridge_vmid=3 if args.m3_bridge_hlos else 0,
+                  m3_bridge_ns_perm=6 if args.m3_bridge_hlos else 0,
+                  m3_bridge_tz_perm=6, m3_bridge_hyp_flags=0,
                   m3_bridge_blob=args.m3_bridge_blob,
                   m3_bridge_bytes=0 if args.m3_smc_context else 8192 if (args.m3_bridge_blob or args.m3_smci_root) else (8192 if args.m3_bridge_call else None),
                   m3_blob_bytes=208 if args.m3_bridge_blob else None,

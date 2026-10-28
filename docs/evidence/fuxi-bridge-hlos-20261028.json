@@ -1,0 +1,30 @@
+{
+  "module_sha256": "8932f0206f8a0083af352684cd64de8c9406346dd639606d045136cf27b079a5",
+  "dtb": {
+    "path": "Resources/DTBs/fuxi.dtb",
+    "sha256": "0590a46ca03be8de4cdf273f4ba4bc884e41555e771f55d2601ba9df121b5d5c",
+    "file_last_commit": "dec138d1004871ea7263a48157aa99a129b1a03d",
+    "bridge_support_hypervisor_property": false,
+    "deployed_dt_verified": false
+  },
+  "public_source": {
+    "url": "https://github.com/LineageOS/android_kernel_xiaomi_sm8550/blob/lineage-24.0/drivers/firmware/qtee_shmbridge.c",
+    "git_blob": "26fc6114172686534dba0d564a4c01de5b31a0d2",
+    "sha256": "a65d73cb952dcc0a9a69d81918bb06d2573dfccab81c32b533ba01de7ceee168",
+    "exact_device_match": false
+  },
+  "hlos": {
+    "vm_count": 1,
+    "vmid": 3,
+    "ns_perm": 6,
+    "tz_perm": 6,
+    "hyp_flags": 0,
+    "argument_shape": [
+      "phys|6",
+      "phys|6",
+      "size|0x200",
+      "3"
+    ]
+  },
+  "scope": "HLOS branch comparison, not deployed-DT proof, not decoding 5C or full Linux pool emulation"
+}

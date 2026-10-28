@@ -54,6 +54,15 @@ int main(void) {
   expect("enable rejects null", FdpBuildBridgeEnable(NULL) == EFI_INVALID_PARAMETER);
   expect("delete rejects null", FdpBuildBridgeDelete(1, NULL) == EFI_INVALID_PARAMETER);
 
+  assert(FdpBuildBridgeCreateHlos(0x10000000ULL,8192,Regs)==EFI_SUCCESS);
+  expect("HLOS standard fnid", Regs[0]==0x42000c1eULL && Regs[1]==4);
+  expect("HLOS NS permission6", Regs[2]==0x10000006ULL);
+  expect("HLOS secure permission6", Regs[3]==0x10000006ULL);
+  expect("HLOS one VM", Regs[4]==0x2200);
+  expect("HLOS VMID3", Regs[5]==3 && Regs[6]==0 && Regs[7]==0);
+  expect("HLOS rejects alignment", FdpBuildBridgeCreateHlos(0x10000001ULL,8192,Regs)==EFI_INVALID_PARAMETER);
+  expect("HLOS rejects null", FdpBuildBridgeCreateHlos(0x10000000ULL,8192,NULL)==EFI_INVALID_PARAMETER);
+
   // Generic builder: scalar path only, at most four arguments.
   memset(&Call, 0, sizeof(Call));
   Call.Svc = 0x0c; Call.Cmd = 0x1e; Call.ArgCount = 2;

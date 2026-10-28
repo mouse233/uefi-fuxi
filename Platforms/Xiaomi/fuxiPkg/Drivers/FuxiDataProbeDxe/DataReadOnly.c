@@ -221,6 +221,11 @@ EFI_STATUS FdpBuildBridgeCreate(UINT64 Phys, UINT64 Size, UINT32 VmCount,
   Args[3] = VmBits;
   return BuildBridgeCall(0x1eU, 4, Args, Regs);
 }
+EFI_STATUS FdpBuildBridgeCreateHlos(UINT64 Phys, UINT64 Size, UINT64 Regs[8]) {
+  EFI_STATUS Status=FdpBuildBridgeCreate(Phys,Size,1,3,Regs);
+  if (!EFI_ERROR(Status)) Regs[2] |= 6; // One NS HLOS VM, read/write.
+  return Status;
+}
 EFI_STATUS FdpDecodeBridgeCreate(UINT64 Result0, UINT64 Result1,
                                  UINT64 Result2, UINT64 *Handle) {
   if (Handle == NULL) return EFI_INVALID_PARAMETER;

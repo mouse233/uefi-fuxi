@@ -93,6 +93,11 @@ def main():
         assert candidate["m3_bridge_abi"] == "standard64-a0-status-a1-service-a2-handle64"
         assert candidate["m3_bridge_fnids"] == ["42000c1c","42000c1e","42000c1d"]
         assert candidate["m3_bridge_bytes"] == 8192
+        if candidate.get("m3_bridge_hlos"):
+            assert not candidate["m3_smci_root"] and not candidate["m3_bridge_blob"] and not candidate["m3_metadata_key"]
+            assert candidate["m3_bridge_profile"] == "hlos"
+            assert (candidate["m3_bridge_vm_count"],candidate["m3_bridge_vmid"],candidate["m3_bridge_ns_perm"],candidate["m3_bridge_tz_perm"],candidate["m3_bridge_hyp_flags"]) == (1,3,6,6,0)
+            assert "FUXIM3 BRIDGE profile=hlos vm-count=1 vmid=3 ns-perm=6 tz-perm=6 hyp-flags=0".encode("utf-16-le") in ufs
         for marker in ("FUXIM3 BRIDGE ABI=standard64 status=a0 service=a1 handle=a2; no objects",
                        "FUXIM3 BRIDGE page phys=%lx bytes=%x",
                        "FUXIM3 BRIDGE enable begin x0=%lx x1=%lx (no hardware timeout)",

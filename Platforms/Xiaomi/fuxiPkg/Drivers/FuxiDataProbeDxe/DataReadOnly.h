@@ -85,6 +85,9 @@ EFI_STATUS FdpBuildBridgeEnable(UINT64 Regs[8]);
 EFI_STATUS FdpBuildBridgeDelete(UINT64 Handle, UINT64 Regs[8]);
 EFI_STATUS FdpBuildBridgeCreate(UINT64 Phys, UINT64 Size, UINT32 VmCount,
                                 UINT64 VmBits, UINT64 Regs[8]);
+// Explicit non-hypervisor branch of the fixed module: one HLOS VMID3,
+// NS and secure read/write permission6, no conditional hypervisor flags.
+EFI_STATUS FdpBuildBridgeCreateHlos(UINT64 Phys, UINT64 Size, UINT64 Regs[8]);
 // Fixed wrapper: a0=SCM status, low32(a1)=service result, a2=64-bit handle.
 // Accept only the conservative zero-result/nonzero-handle subset, no retry.
 EFI_STATUS FdpDecodeBridgeCreate(UINT64 Result0, UINT64 Result1,
