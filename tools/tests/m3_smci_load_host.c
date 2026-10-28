@@ -57,20 +57,21 @@ static void Put(UINT8 *p,UINT32 v){for(UINTN i=0;i<4;++i)p[i]=(UINT8)(v>>(8*i));
 static UINT32 Loader(void){return Special==2?0x44:0x88;}
 static UINT32 App(void){return 0xa0;}
 static UINT64 Bridge(void){return Special==1?0x123456780000005cULL:0x5c;}
-static UINT8 *OutPage(void){return Page+TEST_BYTES-4096;}
+static UINT8 *OutPage(void){return Page+0x64000;}
 VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  ++Calls;assert(Calls<=9);
  UINT64 fn=a->Arg0;
  if(Calls==1)assert(fn==0x42000c1c && a->Arg1==0);
  else if(Calls==2)assert(fn==0x42000c1e && a->Arg1==4 && a->Arg2==((UINTN)Page|6) && a->Arg3==((UINTN)Page|6) && a->Arg4==(TEST_BYTES|0x200) && a->Arg5==3);
  else if(Calls>=3&&Calls<=5){
-   // The load message is the only one that spans the bridge; its out page sits
-   // in the last page, so the two ranges must not overlap.
-   UINT32 in_len=Calls==5?0x630d8U:4096U;
-   UINT8 *out=Calls==5?OutPage():Page+4096;
+   // The load message is page-rounded and the out page follows it directly,
+   // matching the shape every small call already proved.
+   UINT32 in_len=Calls==5?0x64000U:4096U;
+   UINT8 *out=Calls==5?Page+0x64000:Page+4096;
    assert(fn==0x72000602 && a->Arg1==0x224 && a->Arg2==(UINTN)Page && a->Arg3==in_len
           && a->Arg4==(UINTN)out && a->Arg5==4096 && !a->Arg6 && !a->Arg7);
-   assert((UINTN)(Page+in_len) <= (UINTN)out);
+   // The out page must sit on the page directly after the page-rounded message.
+   assert((UINTN)(Page+in_len) == (UINTN)out);
    if(Calls==3){
      assert(*((UINT32*)(Page+0))==1 && *((UINT32*)(Page+4))==5 && *((UINT32*)(Page+8))==0x1100);
    } else if(Calls==4){
@@ -113,7 +114,7 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  case 4:Put(Page+36,0);break;                             // no app object
  case 5:Put(Page+36,0x800000a0U);break;                   // tagged handle
  case 6:Page[16]^=1;break;                                // BI size tampered
- case 7:Page[TEST_BYTES-4096+12]=1;break;                 // out page dirty
+ case 7:Page[0x64000+12]=1;break;                         // out page dirty
  case 8:Put(Page+12,49);break;                            // ELF offset tampered
  case 9:a->Arg3=1;break;                                  // extra out register
  case 10:Put(Page+0,0x99);break;                          // handle echoed wrong

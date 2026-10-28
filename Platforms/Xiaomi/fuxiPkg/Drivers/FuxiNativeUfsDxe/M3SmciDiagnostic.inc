@@ -38,8 +38,8 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
 #if FUXI_M3_SMCI_LOAD
   UINT32 ElfOff=0, NameOff=0, BoOff=0;
   Load=(Kind==5);
-  // The TA message needs ~100 pages, so its out page moves to the bridge tail.
-  if (Load) { OutOff=Bytes-4096; Op=1; Counts=0x1012; Stage="loader-load"; }
+  // The TA message needs ~100 pages; its layout is fixed in the request block.
+  if (Load) { Op=1; Counts=0x1012; Stage="loader-load"; }
 #endif
 #if FUXI_M3_SMCI_LOADER
   Open=(Kind==2);
@@ -86,8 +86,12 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
     if (mTaImage==NULL || mTaImageBytes==0) return EFI_NOT_READY;
     ElfOff=48; NameOff=ElfOff+(UINT32)mTaImageBytes;
     BoOff=(NameOff+(UINT32)NameLen+7U)&~7U;
-    InLen=(UINTN)((BoOff+64U+7U)&~7U);
-    if (InLen>OutOff) return EFI_BAD_BUFFER_SIZE;
+    // Keep the shape the four small calls already proved: a page-rounded
+    // message with the out page on the page directly after it.
+    InLen=(UINTN)((BoOff+64U+4095U)&~(UINTN)4095U);
+    OutOff=InLen;
+    if (OutOff+4096U>Bytes) return EFI_BAD_BUFFER_SIZE;
+    ZeroMem(Page+OutOff,4096);
     SmciPut32(Page+12,ElfOff); SmciPut32(Page+16,(UINT32)mTaImageBytes);
     SmciPut32(Page+20,NameOff); SmciPut32(Page+24,(UINT32)NameLen);
     SmciPut32(Page+28,BoOff);   SmciPut32(Page+32,64);
