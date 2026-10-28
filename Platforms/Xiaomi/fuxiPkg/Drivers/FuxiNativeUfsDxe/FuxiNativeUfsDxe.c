@@ -134,6 +134,26 @@
 #if FUXI_M3_SMCI_LOOKUP && (!FUXI_M3_SMCI_LOADER || !FUXI_M3_SMCI_ROOT || !FUXI_M3_SMCI_OBJECT || !FUXI_M3_BRIDGE_HLOS || FUXI_M3_SMC_CONTEXT)
 #error Lookup batch requires the HLOS loader batch and no context probe
 #endif
+#ifndef FUXI_M3_SMCI_LOAD
+#define FUXI_M3_SMCI_LOAD 0
+#endif
+#if FUXI_M3_SMCI_LOAD && (!FUXI_M3_SMCI_LOADER || FUXI_M3_SMCI_LOOKUP || FUXI_M3_SMC_CONTEXT)
+#error Load stage requires the loader batch, no lookup and no context probe
+#endif
+#if FUXI_M3_SMCI_LOAD && (!FUXI_M3_BRIDGE_LARGE || !FUXI_UFS_LUN4_KEYS)
+#error Load stage requires the large bridge and the LUN4 keymaster input
+#endif
+// One load attempt per boot. The signed extent is read while the LUN4 queue is
+// still live; the M3 stage runs after ShutdownQueue and cannot read it again.
+#if FUXI_M3_SMCI_LOAD
+#ifndef FUXI_M3_SMCI_TA_BYTES
+#define FUXI_M3_SMCI_TA_BYTES 0x63058U
+#endif
+STATIC UINT8 *mTaImage = NULL;
+STATIC UINTN mTaImageBytes = 0;
+STATIC UINTN mTaImagePages = 0;
+STATIC EFI_STATUS mTaImageStatus = EFI_NOT_READY;
+#endif
 
 #define FNU_POLLS(Microseconds) ((Microseconds) / 2U)
 #define FNU_TIMEOUT_NOP         200000U
@@ -394,6 +414,43 @@ STATIC EFI_STATUS FnuHashKeymaster(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Pa
   FnuLog(L"%s", Line);
   return CompareMem(Digest, Expected, 32) == 0 ? EFI_SUCCESS : EFI_COMPROMISED_DATA;
 }
+#if FUXI_M3_SMCI_LOAD
+// Read the signed extent once, while the LUN4 queue is still live. Only the
+// declared MBNv7 extent is kept: the partition tail past it is zero fill.
+STATIC EFI_STATUS FnuLoadTaImage(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Part) {
+  EFI_PHYSICAL_ADDRESS Raw = SIZE_4GB - 1;
+  UINTN Blocks = (FUXI_M3_SMCI_TA_BYTES + 4095U) / 4096U;
+  UINTN Pages = EFI_SIZE_TO_PAGES(Blocks * 4096U);
+  FNU_SHA256_CTX Ctx;
+  UINT8 Digest[32];
+  CHAR16 Line[128];
+  UINTN I, At = 0;
+  EFI_STATUS Status;
+  if (mTaImage != NULL) return EFI_ALREADY_STARTED;
+  if (!Part->Present || Part->Last - Part->First + 1 < Blocks) return EFI_COMPROMISED_DATA;
+  if (gBS->AllocatePages(AllocateMaxAddress, EfiBootServicesData, Pages, &Raw) != EFI_SUCCESS)
+    return EFI_OUT_OF_RESOURCES;
+  mTaImage = (UINT8 *)(UINTN)Raw;
+  ZeroMem(mTaImage, EFI_PAGES_TO_SIZE(Pages));
+  Status = FdpReadPartition(Disk, Part, 0, Blocks, mTaImage);
+  if (EFI_ERROR(Status)) {
+    ZeroMem(mTaImage, EFI_PAGES_TO_SIZE(Pages));
+    gBS->FreePages(Raw, Pages);
+    mTaImage = NULL;
+    return Status;
+  }
+  FnuSha256Init(&Ctx);
+  FnuSha256Update(&Ctx, mTaImage, FUXI_M3_SMCI_TA_BYTES);
+  FnuSha256Final(&Ctx, Digest);
+  for (I = 0; I < 32; ++I)
+    At += (UINTN)UnicodeSPrint(Line + At, sizeof(Line) - At * sizeof(CHAR16), L"%02x", (UINT32)Digest[I]);
+  Line[At] = 0;
+  mTaImageBytes = FUXI_M3_SMCI_TA_BYTES;
+  mTaImagePages = Pages;
+  FnuLog(L"FUXIM3 TA extent bytes=%x sha256=%s", (UINT32)mTaImageBytes, Line);
+  return EFI_SUCCESS;
+}
+#endif
 STATIC BOOLEAN mLun4Passed = FALSE;
 STATIC BOOLEAN RunLun4Keys(VOID *Scratch) {
   FNU_DIAG_LUN Context = {4, 0};
@@ -422,6 +479,11 @@ STATIC BOOLEAN RunLun4Keys(VOID *Scratch) {
   Status = FnuHashKeymaster(&Disk, &Parts.KeymasterA, L"FUXILUN4 a-sha256=", HashA, Scratch);
   FnuLog(L"FUXILUN4 hash-a=%r", Status);
   if (EFI_ERROR(Status) || mPoisoned) return FALSE;
+#if FUXI_M3_SMCI_LOAD
+  mTaImageStatus = FnuLoadTaImage(&Disk, &Parts.KeymasterA);
+  FnuLog(L"FUXIM3 TA read=%r bytes=%x", mTaImageStatus, (UINT32)mTaImageBytes);
+  if (EFI_ERROR(mTaImageStatus)) return FALSE;
+#endif
   Status = FnuHashKeymaster(&Disk, &Parts.KeymasterB, L"FUXILUN4 b-sha256=", HashB, Scratch);
   FnuLog(L"FUXILUN4 hash-b=%r", Status);
   return (BOOLEAN)(!EFI_ERROR(Status) && !mPoisoned);

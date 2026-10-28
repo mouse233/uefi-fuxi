@@ -38,6 +38,8 @@ def main():
                         help="explicit root invoke entry; no runtime fallback")
     parser.add_argument("--m3-smci-loader", action="store_true", help="gated root/open UID122/release batch; no TA or keys")
     parser.add_argument("--m3-smci-lookup", action="store_true", help="loader lookup of keymaster64/keymaster only; no load or keys")
+    parser.add_argument("--m3-smci-load", action="store_true",
+                        help="one loadFromBuffer of the keymaster_a extent, then release; no command or key")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
     parser.add_argument("--m3-bridge-large", action="store_true", help="0x82000 HLOS bridge after LUN4 hashes")
     parser.add_argument("--m3-bridge-hlos", action="store_true", help="one VMID3 RW bridge diagnostic; no blob/key/context")
@@ -104,6 +106,8 @@ def main():
         parser.error("large bridge requires LUN4, HLOS bridge and INFO, no blob")
     if args.m3_smci_lookup and not args.m3_smci_loader:
         parser.error("lookup batch requires --m3-smci-loader")
+    if args.m3_smci_load and (not args.m3_smci_loader or args.m3_smci_lookup or not args.m3_bridge_large or not args.lun4_keymaster):
+        parser.error("load stage requires the large LUN4 loader batch and no lookup")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -172,6 +176,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_OBJECT"] = str(int(args.m3_smci_mode == "object"))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_LOADER"] = str(int(args.m3_smci_loader))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_LOOKUP"] = str(int(args.m3_smci_lookup))
+    ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_LOAD"] = str(int(args.m3_smci_load))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_ROOT"] = str(int(args.m3_smci_root))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_HLOS"] = str(int(args.m3_bridge_hlos))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_BLOB"] = str(int(args.m3_bridge_blob))
@@ -219,11 +224,12 @@ def main():
                   m3_crypto_cap=args.m3_crypto_cap, m3_scm_bridge=args.m3_scm_bridge,
                   m3_smc_context=args.m3_smc_context,
                   m3_smci_root=args.m3_smci_root, m3_smci_loader=args.m3_smci_loader,
-                  m3_smci_lookup=args.m3_smci_lookup,
+                  m3_smci_lookup=args.m3_smci_lookup, m3_smci_load=args.m3_smci_load,
                   m3_smci_mode=("context" if args.m3_smc_context else args.m3_smci_mode) if args.m3_smci_root else None,
                   m3_smci_fnid=("42000601" if args.m3_smc_context else "72000602" if args.m3_smci_mode == "object" else "72000600") if args.m3_smci_root else None,
                   m3_smci_arginfo=("1" if args.m3_smc_context else "224") if args.m3_smci_root else None,
-                  m3_smci_ops=(["standard-info-control"] if args.m3_smc_context else ["root-register-null", "open-loader-uid122", "lookup-keymaster64", "lookup-keymaster", "ta-release", "loader-release", "environment-release"] if args.m3_smci_lookup else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if args.m3_smci_loader else ["root-register-null", "remote-release"]) if args.m3_smci_root else None,
+                  m3_smci_ops=(["standard-info-control"] if args.m3_smc_context else ["root-register-null", "open-loader-uid122", "lookup-keymaster64", "lookup-keymaster", "ta-release", "loader-release", "environment-release"] if args.m3_smci_lookup else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "ta-release", "loader-release", "environment-release"] if args.m3_smci_load else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if args.m3_smci_loader else ["root-register-null", "remote-release"]) if args.m3_smci_root else None,
+                  m3_smci_ta_bytes=0x63058 if args.m3_smci_load else None,
                   m3_smci_no_keys=True if args.m3_smci_root else None,
                   m3_bridge_abi="standard64-a0-status-a1-service-a2-handle64" if args.m3_bridge_call else None,
                   m3_bridge_fnids=["42000c1c","42000c1e","42000c1d"] if args.m3_bridge_call and not args.m3_smc_context else [],

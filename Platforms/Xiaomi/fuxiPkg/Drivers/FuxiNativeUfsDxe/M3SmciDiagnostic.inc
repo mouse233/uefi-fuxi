@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause-Patent
-// C2 root-only, an explicit C2/C3 batch (root -> open UID122 -> release), or
-// the same batch plus loader lookup of keymaster64/keymaster. No TA load, key,
+// C2 root-only, an explicit C2/C3 batch (root -> open UID122 -> release), the
+// same batch plus loader lookup of keymaster64/keymaster, or the same batch
+// with one loadFromBuffer of the keymaster_a extent. No key, no command, no
 // callback execution or retry.
 #if FUXI_M3_SMCI_ROOT && !FUXI_M3_SMC_CONTEXT
 STATIC EFI_STATUS mSmciStatus = EFI_NOT_READY;
@@ -16,13 +17,30 @@ STATIC BOOLEAN SmciZero(CONST UINT8 *P, UINTN N) {
 STATIC UINT32 SmciNonZero(CONST UINT8 *P, UINTN N) {
   UINTN I; UINT32 C=0; for (I=0; I<N; ++I) if (P[I]) ++C; return C;
 }
-STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
+#if FUXI_M3_SMCI_LOAD
+// The image is plain RAM owned by this probe and was never registered with
+// secure world; wipe and release it on every exit path.
+STATIC VOID SmciReleaseTaImage(VOID) {
+  if (mTaImage == NULL) return;
+  ZeroMem(mTaImage, EFI_PAGES_TO_SIZE(mTaImagePages));
+  gBS->FreePages((EFI_PHYSICAL_ADDRESS)(UINTN)mTaImage, mTaImagePages);
+  FnuLog(L"FUXIM3 TA extent released bytes=%x", (UINT32)EFI_PAGES_TO_SIZE(mTaImagePages));
+  mTaImage=NULL; mTaImageBytes=0; mTaImagePages=0;
+}
+#endif
+STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object,
                               UINT32 Kind, UINT32 *Returned) {
   UINT64 Regs[8]; ARM_SMC_ARGS Out;
-  UINTN I;
-  BOOLEAN Register=(Kind==1), Open=FALSE;
+  UINTN I, OutOff=4096, InLen=4096;
+  BOOLEAN Register=(Kind==1), Open=FALSE, Load=FALSE;
   CONST CHAR8 *Stage=Register ? "register" : "release";
   UINT32 Op=Register ? 5 : 0xffffU, Counts=Register ? 0x1100 : 0;
+#if FUXI_M3_SMCI_LOAD
+  UINT32 ElfOff=0, NameOff=0, BoOff=0;
+  Load=(Kind==5);
+  // The TA message needs ~100 pages, so its out page moves to the bridge tail.
+  if (Load) { OutOff=Bytes-4096; Op=1; Counts=0x1012; Stage="loader-load"; }
+#endif
 #if FUXI_M3_SMCI_LOADER
   Open=(Kind==2);
   if (Open) { Op=0;Counts=0x1001;Stage="loader-open"; }
@@ -37,7 +55,8 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
     Stage=(Kind==3) ? "lookup-keymaster64" : "lookup-keymaster";
   }
 #endif
-  ZeroMem(Page, 8192);
+  ZeroMem(Page, 4096);
+  ZeroMem(Page+OutOff, 4096);
   SmciPut32(Page, Object); SmciPut32(Page+4, Op); SmciPut32(Page+8, Counts);
 #if FUXI_M3_SMCI_LOADER
   if (Open) {
@@ -57,29 +76,86 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
     FnuLog(L"FUXIM3 SMCI %a BI offset=32 bytes=%u name=%a; lookup only, no load", Stage, (UINT32)NameLen, Name);
   }
 #endif
+#if FUXI_M3_SMCI_LOAD
+  if (Load) {
+    // IQSEEComCompatAppLoader_loadFromBuffer: op1, counts BI2/BO1/OO1 = 0x1012.
+    // Header 12 + four 8-byte {offset,size} descriptors = 44, payload at 48.
+    // Filename is the TA's own metadata name; the BO is the 64-byte distName.
+    CONST CHAR8 *Name="keymaster64";
+    UINTN NameLen=11;
+    if (mTaImage==NULL || mTaImageBytes==0) return EFI_NOT_READY;
+    ElfOff=48; NameOff=ElfOff+(UINT32)mTaImageBytes;
+    BoOff=(NameOff+(UINT32)NameLen+7U)&~7U;
+    InLen=(UINTN)((BoOff+64U+7U)&~7U);
+    if (InLen>OutOff) return EFI_BAD_BUFFER_SIZE;
+    SmciPut32(Page+12,ElfOff); SmciPut32(Page+16,(UINT32)mTaImageBytes);
+    SmciPut32(Page+20,NameOff); SmciPut32(Page+24,(UINT32)NameLen);
+    SmciPut32(Page+28,BoOff);   SmciPut32(Page+32,64);
+    SmciPut32(Page+36,0);
+    CopyMem(Page+ElfOff,mTaImage,mTaImageBytes);
+    CopyMem(Page+NameOff,Name,NameLen);
+    FnuLog(L"FUXIM3 SMCI loader-load elf=%x name=%x bo=%x msg=%x; no key, no decrypt",
+           ElfOff,NameOff,BoOff,(UINT32)InLen);
+  }
+#endif
   // Two 4096-byte buffers in one registered 8192-byte contiguous range.
   // qcom-scm.ko: svc=6, cmd=0 or 2, owner=0x32, arginfo=0x224, call type=2.
   // __scm_smc_call: bit31=(type==1), bit30=SMC64, owner in [29:24].
   ZeroMem(Regs, sizeof(Regs));
   Regs[0]=FUXI_M3_SMCI_OBJECT ? 0x72000602ULL : 0x72000600ULL; Regs[1]=0x224;
-  Regs[2]=Raw; Regs[3]=4096; Regs[4]=Raw+4096; Regs[5]=4096;
-  FnuCacheCiv(&mOps, Page, 8192);
+  Regs[2]=Raw; Regs[3]=(UINT64)InLen; Regs[4]=Raw+OutOff; Regs[5]=4096;
+  FnuCacheCiv(&mOps, Page, Load ? Bytes : 8192);
   FnuLog(L"FUXIM3 SMCI %a begin x0=%lx x1=%lx in=%lx out=%lx handle=%x op=%x counts=%x",
          Stage, Regs[0], Regs[1], Regs[2], Regs[4], Object, Op, Counts);
   FnuSmc64(Regs, &Out);
-  FnuCacheInv(&mOps, Page, 8192);
+  FnuCacheInv(&mOps, Page, Load ? Bytes : 8192);
   FnuLog(L"FUXIM3 SMCI %a return a0=%lx a1=%lx a2=%lx a3=%lx",
          Stage, (UINT64)Out.Arg0, (UINT64)Out.Arg1,
          (UINT64)Out.Arg2, (UINT64)Out.Arg3);
+#if FUXI_M3_SMCI_LOAD
+  if (Load)
+    FnuLog(L"FUXIM3 SMCI %a desc %08x/%08x %08x/%08x %08x/%08x oo=%08x out=%08x/%08x nz=%u",
+           Stage, SmciU32(Page+12), SmciU32(Page+16), SmciU32(Page+20), SmciU32(Page+24),
+           SmciU32(Page+28), SmciU32(Page+32), SmciU32(Page+36),
+           SmciU32(Page+OutOff), SmciU32(Page+OutOff+4), SmciNonZero(Page+OutOff,4096));
+  else
+#endif
   FnuLog(L"FUXIM3 SMCI %a buffers hdr=%08x/%08x/%08x oi=%08x/%08x oo=%08x/%08x out=%08x/%08x/%08x/%08x nz=%u",
          Stage, SmciU32(Page), SmciU32(Page+4), SmciU32(Page+8),
          SmciU32(Page+12), SmciU32(Page+16), SmciU32(Page+20), SmciU32(Page+24),
-         SmciU32(Page+4096), SmciU32(Page+4100), SmciU32(Page+4104), SmciU32(Page+4108),
-         SmciNonZero(Page+4096,4096));
+         SmciU32(Page+OutOff), SmciU32(Page+OutOff+4), SmciU32(Page+OutOff+8), SmciU32(Page+OutOff+12),
+         SmciNonZero(Page+OutOff,4096));
   // Unknown SMC interruption, response type or data retains memory. A lookup
   // miss is the single interpreted case: it is reported as an object error in
   // a2 with a0/a1/a3 zero, and the raw value is logged before any fallback.
   if (Out.Arg0 || Out.Arg1 || Out.Arg3) return EFI_NOT_READY;
+#if FUXI_M3_SMCI_LOAD
+  if (Load) {
+    // The request page carries the image, so only the fixed words are compared;
+    // the payload itself is not re-read here (it was copied from the same read).
+    if (SmciU32(Page)!=Object || SmciU32(Page+4)!=Op || SmciU32(Page+8)!=Counts ||
+        SmciU32(Page+12)!=ElfOff || SmciU32(Page+16)!=(UINT32)mTaImageBytes ||
+        SmciU32(Page+20)!=NameOff || SmciU32(Page+24)!=11 ||
+        SmciU32(Page+28)!=BoOff || SmciU32(Page+32)!=64 ||
+        !SmciZero(Page+40,8))
+      return EFI_COMPROMISED_DATA;
+    if (SmciU32(Page+OutOff+8)!=0 || !SmciZero(Page+OutOff+12,4084))
+      return EFI_COMPROMISED_DATA;
+    if (Out.Arg2) {
+      // The fixed AppLoader header returns 10..26; an object-layer value cannot
+      // be separated from it from one sample, so the raw word is logged as is.
+      FnuLog(L"FUXIM3 SMCI loader-status=%x; stopped, retained", (UINT32)Out.Arg2);
+      return EFI_DEVICE_ERROR;
+    }
+    {
+      UINT32 App=SmciU32(Page+36);
+      if (App<=1 || (App&0x80000000U)) return EFI_COMPROMISED_DATA;
+      *Returned=App;
+      FnuLog(L"FUXIM3 SMCI loader-app=%x; no command, no key", App);
+    }
+    return EFI_SUCCESS;
+  }
+#endif
   // The out page is not part of the object result. The pinned reference reads
   // it only as a piggyback message (version/op at +0/+4, loop count at +8) and
   // never requires it to be zero; a tzcb_req reading would carry its count at
@@ -144,6 +220,9 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   UINT32 Loader=0, Passed=0;
   CONST CHAR8 *Step="allocate";
 #endif
+#if FUXI_M3_SMCI_LOAD
+  UINT32 App=0;
+#endif
 #if FUXI_M3_SMCI_LOOKUP
   UINT32 Ta=0;
   EFI_STATUS LookupStatus=EFI_NOT_FOUND;
@@ -152,6 +231,9 @@ STATIC VOID FnuSmciRootProbe(VOID) {
 #if FUXI_M3_SMCI_LOOKUP
   FNU_STAGE("m3-smci-lookup");
   FnuLog(L"FUXIM3 BATCH plan=root/open122/lookup64/lookup/ta-release/release-loader/release-env/delete; gated, no retry");
+#elif FUXI_M3_SMCI_LOAD
+  FNU_STAGE("m3-smci-load");
+  FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/ta-release/release-loader/release-env/delete; gated, no retry");
 #elif FUXI_M3_SMCI_LOADER
   FNU_STAGE("m3-smci-loader");
   FnuLog(L"FUXIM3 BATCH plan=root/open122/release-loader/release-env/delete; gated, no retry");
@@ -165,6 +247,9 @@ STATIC VOID FnuSmciRootProbe(VOID) {
     FnuLog(L"FUXIM3 SMCI page allocation failed; no call");
 #if FUXI_M3_SMCI_LOADER
     FnuLog(L"FUXIM3 BATCH stop=allocate passed=0; no call");
+#endif
+#if FUXI_M3_SMCI_LOAD
+    SmciReleaseTaImage();
 #endif
     return;
   }
@@ -200,23 +285,23 @@ STATIC VOID FnuSmciRootProbe(VOID) {
 #if FUXI_M3_SMCI_LOADER
   Step="root-register";
 #endif
-  mSmciStatus=SmciInvoke((UINT64)Raw,Page,1,1,&Object);
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,1,1,&Object);
   if (EFI_ERROR(mSmciStatus)) goto Done;
 #if FUXI_M3_SMCI_LOADER
   Passed|=1;
   FnuLog(L"FUXIM3 BATCH root-register=Success; continue loader-open");
   Step="loader-open";
-  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Object,2,&Loader);
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Object,2,&Loader);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   Passed|=2;
 #if FUXI_M3_SMCI_LOOKUP
   FnuLog(L"FUXIM3 BATCH loader-open=Success; continue lookup");
   Step="lookup-keymaster64";
-  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Loader,3,&Ta);
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Loader,3,&Ta);
   if (mSmciStatus==EFI_NOT_FOUND) {
     FnuLog(L"FUXIM3 BATCH lookup=keymaster64 result=Not Found; try keymaster");
     Step="lookup-keymaster";
-    mSmciStatus=SmciInvoke((UINT64)Raw,Page,Loader,4,&Ta);
+    mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Loader,4,&Ta);
   }
   if (mSmciStatus==EFI_NOT_FOUND) {
     FnuLog(L"FUXIM3 BATCH lookup=keymaster result=Not Found; cleanup only");
@@ -228,23 +313,36 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   }
   Step="ta-release";
   if (Ta) {
-    mSmciStatus=SmciInvoke((UINT64)Raw,Page,Ta,0,&Ignored);
+    mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Ta,0,&Ignored);
     if (EFI_ERROR(mSmciStatus)) goto Done;
     FnuLog(L"FUXIM3 BATCH ta-release=Success handle=%x",Ta);
     Ta=0;Passed|=0x200;
   }
   Step="loader-release";
+#elif FUXI_M3_SMCI_LOAD
+  FnuLog(L"FUXIM3 BATCH loader-open=Success; continue loader-load");
+  Step="loader-load";
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Loader,5,&App);
+  if (EFI_ERROR(mSmciStatus)) goto Done;
+  Passed|=0x20;
+  FnuLog(L"FUXIM3 BATCH loader-load=Success app=%x; continue app-release",App);
+  Step="app-release";
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,App,0,&Ignored);
+  if (EFI_ERROR(mSmciStatus)) goto Done;
+  FnuLog(L"FUXIM3 BATCH app-release=Success handle=%x",App);
+  App=0;Passed|=0x40;
+  Step="loader-release";
 #else
   FnuLog(L"FUXIM3 BATCH loader-open=Success; continue loader-release");
   Step="loader-release";
 #endif
-  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Loader,0,&Ignored);
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Loader,0,&Ignored);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   FnuLog(L"FUXIM3 BATCH loader-release=Success handle=%x",Loader);
   Loader=0;Passed|=4;
   Step="environment-release";
 #endif
-  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Object,0,&Ignored);
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Object,0,&Ignored);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   FnuLog(L"FUXIM3 SMCI object-release=Success handle=%x",Object);
   Object=0;
@@ -281,6 +379,11 @@ Done:
     ZeroMem(Page,Bytes);FnuCacheCiv(&mOps,Page,Bytes);gBS->FreePages(Raw,Pages);
     FnuLog(L"FUXIM3 SMCI released bytes=%x",(UINT32)Bytes);
   }
+#if FUXI_M3_SMCI_LOAD
+  FnuLog(L"FUXIM3 SMCI result=%r retained=%u; one load, no key, no decrypt",mSmciStatus,(UINT32)Retain);
+  SmciReleaseTaImage();
+#else
   FnuLog(L"FUXIM3 SMCI result=%r retained=%u; no TA, no key, no decrypt",mSmciStatus,(UINT32)Retain);
+#endif
 }
 #endif

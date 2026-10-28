@@ -69,6 +69,9 @@ def main():
             '--edk2',str(edk2),'--report',str(out/'m3-lookup-tests.json')]))
         commands.append(('m3-lookup-contract', ['python3',str(root/'tools/audit_fuxi_m3_lookup_contract.py'),
             '--output',str(out/'static-lookup-contract')]))
+    if candidate.get('m3_smci_load'):
+        commands.append(('m3-load', ['python3', str(root/'tools/test_fuxi_m3_smci_load.py'),
+            '--edk2',str(edk2),'--report',str(out/'m3-load-tests.json')]))
     if candidate.get('m3_smc_context'):
         commands.append(('m3-context', ['python3', str(root / 'tools/test_fuxi_m3_smc_context.py'),
                                       '--edk2', str(edk2), '--report', str(out / 'm3-context-tests.json')]))
