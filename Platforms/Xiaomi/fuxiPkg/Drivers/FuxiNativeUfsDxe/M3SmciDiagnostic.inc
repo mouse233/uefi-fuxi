@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause-Patent
-// C2 root-only, or explicit C2/C3 batch: root -> open UID122 loader -> release
-// loader -> release environment -> delete bridge. No TA, key, callback or retry.
+// C2 root-only, an explicit C2/C3 batch (root -> open UID122 -> release), or
+// the same batch plus loader lookup of keymaster64/keymaster. No TA load, key,
+// callback execution or retry.
 #if FUXI_M3_SMCI_ROOT && !FUXI_M3_SMC_CONTEXT
 STATIC EFI_STATUS mSmciStatus = EFI_NOT_READY;
 STATIC UINT32 SmciU32(CONST UINT8 *P) {
@@ -26,6 +27,16 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
   Open=(Kind==2);
   if (Open) { Op=0;Counts=0x1001;Stage="loader-open"; }
 #endif
+#if FUXI_M3_SMCI_LOOKUP
+  BOOLEAN Lookup=FALSE;
+  CONST CHAR8 *Name = (Kind==3) ? "keymaster64" : (Kind==4) ? "keymaster" : NULL;
+  UINTN NameLen=0;
+  if (Name) {
+    while (Name[NameLen]) ++NameLen;
+    Lookup=TRUE;Op=2;Counts=0x1001;
+    Stage=(Kind==3) ? "lookup-keymaster64" : "lookup-keymaster";
+  }
+#endif
   ZeroMem(Page, 8192);
   SmciPut32(Page, Object); SmciPut32(Page+4, Op); SmciPut32(Page+8, Counts);
 #if FUXI_M3_SMCI_LOADER
@@ -34,6 +45,16 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
     // Fixed IClientEnv_open: uint32 UID122, op0, counts0x1001. No TA name.
     SmciPut32(Page+12,32);SmciPut32(Page+16,4);SmciPut32(Page+32,122);
     FnuLog(L"FUXIM3 SMCI loader-open BI offset=20 size=4 uid=7A; no TA load");
+  }
+#endif
+#if FUXI_M3_SMCI_LOOKUP
+  if (Lookup) {
+    // IQSEEComCompatAppLoader_lookupTA(handle, name): BI1/OO1 at op2. The BI
+    // descriptor sits at +12 and the ASCII name at +32 (12 + 16 aligned to 8).
+    // Name is bounded to < 64 bytes and carries no path separator.
+    SmciPut32(Page+12,32);SmciPut32(Page+16,(UINT32)NameLen);
+    for (I=0; I<NameLen; ++I) Page[32+I]=(UINT8)Name[I];
+    FnuLog(L"FUXIM3 SMCI %a BI offset=32 bytes=%u name=%a; lookup only, no load", Stage, (UINT32)NameLen, Name);
   }
 #endif
   // Two 4096-byte buffers in one registered 8192-byte contiguous range.
@@ -55,9 +76,10 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
          SmciU32(Page+12), SmciU32(Page+16), SmciU32(Page+20), SmciU32(Page+24),
          SmciU32(Page+4096), SmciU32(Page+4100), SmciU32(Page+4104), SmciU32(Page+4108),
          SmciNonZero(Page+4096,4096));
-  // Deliberately accept only the all-zero terminal/no-callback tuple. Unknown
-  // SMC interruption, response type, object result or piggyback retains memory.
-  if (Out.Arg0 || Out.Arg1 || Out.Arg2 || Out.Arg3) return EFI_NOT_READY;
+  // Unknown SMC interruption, response type or data retains memory. A lookup
+  // miss is the single interpreted case: it is reported as an object error in
+  // a2 with a0/a1/a3 zero, and the raw value is logged before any fallback.
+  if (Out.Arg0 || Out.Arg1 || Out.Arg3) return EFI_NOT_READY;
   // The out page is not part of the object result. The pinned reference reads
   // it only as a piggyback message (version/op at +0/+4, loop count at +8) and
   // never requires it to be zero; a tzcb_req reading would carry its count at
@@ -67,19 +89,40 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
   if (SmciU32(Page)!=Object || SmciU32(Page+4)!=Op || SmciU32(Page+8)!=Counts ||
       SmciU32(Page+4104)!=0 || !SmciZero(Page+4108,4084))
     return EFI_COMPROMISED_DATA;
+  if (Out.Arg2) {
+#if FUXI_M3_SMCI_LOOKUP
+    if (Lookup) return EFI_NOT_FOUND;
+#endif
+    return EFI_NOT_READY;
+  }
+#if FUXI_M3_SMCI_LOOKUP
+  if (Register || Open || Lookup) {
+#else
   if (Register || Open) {
+#endif
     UINT32 Handle=SmciU32(Page+20);
     if (Handle<=1 || (Handle&0x80000000U)) return EFI_COMPROMISED_DATA;
     // Only OO low32 may change. The fixed BI descriptor and UID payload must
     // remain intact; reserved words, padding, tail and callback out stay zero.
     if (Open && (SmciU32(Page+12)!=32 || SmciU32(Page+16)!=4 ||
                  SmciU32(Page+32)!=122)) return EFI_COMPROMISED_DATA;
+#if FUXI_M3_SMCI_LOOKUP
+    if (Lookup && (SmciU32(Page+12)!=32 || SmciU32(Page+16)!=(UINT32)NameLen))
+      return EFI_COMPROMISED_DATA;
+#endif
     for (I=12; I<4096; ++I) {
       if (I>=20 && I<24) continue;
       if (Open && ((I>=12 && I<20) || (I>=32 && I<36))) continue;
+#if FUXI_M3_SMCI_LOOKUP
+      if (Lookup && ((I>=12 && I<20) || (I>=32 && I<32+NameLen))) continue;
+#endif
       if (Page[I]) return EFI_COMPROMISED_DATA;
     }
     *Returned=Handle;
+#if FUXI_M3_SMCI_LOOKUP
+    if (Lookup) FnuLog(L"FUXIM3 SMCI lookup-object=%x; %a only", Handle, Name);
+    else
+#endif
     if (Register) FnuLog(L"FUXIM3 SMCI remote-object=%x; root register only", Handle);
 #if FUXI_M3_SMCI_LOADER
     else FnuLog(L"FUXIM3 SMCI loader-object=%x; UID122 only", Handle);
@@ -99,8 +142,15 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   UINT32 Loader=0, Passed=0;
   CONST CHAR8 *Step="allocate";
 #endif
+#if FUXI_M3_SMCI_LOOKUP
+  UINT32 Ta=0;
+  EFI_STATUS LookupStatus=EFI_NOT_FOUND;
+#endif
   mSmciStatus=EFI_NOT_READY;
-#if FUXI_M3_SMCI_LOADER
+#if FUXI_M3_SMCI_LOOKUP
+  FNU_STAGE("m3-smci-lookup");
+  FnuLog(L"FUXIM3 BATCH plan=root/open122/lookup64/lookup/ta-release/release-loader/release-env/delete; gated, no retry");
+#elif FUXI_M3_SMCI_LOADER
   FNU_STAGE("m3-smci-loader");
   FnuLog(L"FUXIM3 BATCH plan=root/open122/release-loader/release-env/delete; gated, no retry");
 #else
@@ -157,8 +207,35 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   mSmciStatus=SmciInvoke((UINT64)Raw,Page,Object,2,&Loader);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   Passed|=2;
+#if FUXI_M3_SMCI_LOOKUP
+  FnuLog(L"FUXIM3 BATCH loader-open=Success; continue lookup");
+  Step="lookup-keymaster64";
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Loader,3,&Ta);
+  if (mSmciStatus==EFI_NOT_FOUND) {
+    FnuLog(L"FUXIM3 BATCH lookup=keymaster64 result=Not Found; try keymaster");
+    Step="lookup-keymaster";
+    mSmciStatus=SmciInvoke((UINT64)Raw,Page,Loader,4,&Ta);
+  }
+  if (mSmciStatus==EFI_NOT_FOUND) {
+    FnuLog(L"FUXIM3 BATCH lookup=keymaster result=Not Found; cleanup only");
+    mSmciStatus=EFI_SUCCESS;
+  } else if (EFI_ERROR(mSmciStatus)) goto Done;
+  else {
+    LookupStatus=EFI_SUCCESS;Passed|=0x100;
+    FnuLog(L"FUXIM3 BATCH lookup=Success handle=%x",Ta);
+  }
+  Step="ta-release";
+  if (Ta) {
+    mSmciStatus=SmciInvoke((UINT64)Raw,Page,Ta,0,&Ignored);
+    if (EFI_ERROR(mSmciStatus)) goto Done;
+    FnuLog(L"FUXIM3 BATCH ta-release=Success handle=%x",Ta);
+    Ta=0;Passed|=0x200;
+  }
+  Step="loader-release";
+#else
   FnuLog(L"FUXIM3 BATCH loader-open=Success; continue loader-release");
   Step="loader-release";
+#endif
   mSmciStatus=SmciInvoke((UINT64)Raw,Page,Loader,0,&Ignored);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   FnuLog(L"FUXIM3 BATCH loader-release=Success handle=%x",Loader);
@@ -183,10 +260,15 @@ STATIC VOID FnuSmciRootProbe(VOID) {
     Retain=FALSE;
 #if FUXI_M3_SMCI_LOADER
     Passed|=16;Step="complete";
+#if FUXI_M3_SMCI_LOOKUP
+    if (LookupStatus!=EFI_SUCCESS) { Step="lookup-missing";mSmciStatus=LookupStatus; }
+#endif
 #endif
   }
 Done:
-#if FUXI_M3_SMCI_LOADER
+#if FUXI_M3_SMCI_LOOKUP
+  FnuLog(L"FUXIM3 BATCH stop=%a passed=%x env=%x loader=%x ta=%x retained=%u",Step,Passed,Object,Loader,Ta,(UINT32)Retain);
+#elif FUXI_M3_SMCI_LOADER
   FnuLog(L"FUXIM3 BATCH stop=%a passed=%x env=%x loader=%x retained=%u",Step,Passed,Object,Loader,(UINT32)Retain);
 #endif
   if (Retain) {
