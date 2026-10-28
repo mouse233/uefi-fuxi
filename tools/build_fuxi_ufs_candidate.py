@@ -50,6 +50,7 @@ def main():
     parser.add_argument("--m3-scm-info", action="store_true", help="one SMC64 INFO self-availability query")
     parser.add_argument("--m3-metadata-key", action="store_true",
                         help="read-only listing and hashing of the metadata key directory")
+    parser.add_argument("--lun4-keymaster", action="store_true", help="read-only LUN4 keymaster hashes; no slot selection")
     parser.add_argument("--m2-metadata-files", action="store_true",
                         help="run bounded metadata file diagnostics and park before USB dispatch")
     parser.add_argument("--without-ufs", action="store_true",
@@ -76,6 +77,8 @@ def main():
         parser.error("ICE availability requires --m3-scm-info")
     if args.m3_scm_info and not args.m2_metadata_files:
         parser.error("M3 INFO requires the parked diagnostic")
+    if args.lun4_keymaster and not args.m2_metadata_files:
+        parser.error("LUN4 diagnostic requires parked M2")
     if args.m2_metadata_files and args.without_ufs:
         parser.error("M2 requires the native UFS diagnostic")
     if args.m3_metadata_key and not args.m2_metadata_files:
@@ -154,6 +157,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_DATA_PORT_UFS"] = "0" if args.without_ufs else "1"
     ctx.board["firmware"]["defines"]["FUXI_UFS_REPORT_HOLD_SECONDS"] = str(hold)
     ctx.board["firmware"]["defines"]["FUXI_UFS_M2_FILES"] = str(int(args.m2_metadata_files))
+    ctx.board["firmware"]["defines"]["FUXI_UFS_LUN4_KEYS"] = str(int(args.lun4_keymaster))
     ctx.board["firmware"]["defines"]["FUXI_M3_METADATA_KEY"] = str(int(args.m3_metadata_key))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_INFO"] = str(int(args.m3_scm_info))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_SUBJECTS"] = str(int(args.m3_scm_subjects))
@@ -194,7 +198,7 @@ def main():
     shutil.copyfile(image, out / alias)
     if args.m2_metadata_files:
         shutil.copyfile(image, out / "Mu-fuxi-m2-metadata.img")
-    report = dict(image=str(image), sha256=hashlib.sha256(image.read_bytes()).hexdigest(),
+    report = dict(lun4_keymaster=args.lun4_keymaster, image=str(image), sha256=hashlib.sha256(image.read_bytes()).hexdigest(),
                   bytes=image.stat().st_size,
                   mode=("M2 metadata read-only diagnostic; parks before USB" if args.m2_metadata_files else
                         "receiver-only image without the UFS diagnostic (A/B baseline)"

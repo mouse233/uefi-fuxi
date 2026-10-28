@@ -38,6 +38,17 @@ UINT32 FdpCrc32(CONST VOID *Data, UINTN Bytes) {
   }
   return ~Crc;
 }
+// Volatile byte operations prevent the freestanding optimizer introducing
+// unavailable libc memset/memcpy when the partition result grows.
+STATIC VOID ResultZero(FDP_PARTITIONS *Value) {
+  volatile UINT8 *P = (volatile UINT8 *)Value; UINTN I;
+  for (I = 0; I < sizeof(*Value); ++I) P[I] = 0;
+}
+STATIC VOID ResultCopy(FDP_PARTITIONS *Dst, CONST FDP_PARTITIONS *Src) {
+  volatile UINT8 *D = (volatile UINT8 *)Dst;
+  CONST volatile UINT8 *S = (CONST volatile UINT8 *)Src; UINTN I;
+  for (I = 0; I < sizeof(*Dst); ++I) D[I] = S[I];
+}
 EFI_STATUS FdpReadGpt(CONST FDP_DISK *Disk, VOID *Scratch, UINTN ScratchBytes,
                       FDP_PARTITIONS *Partitions) {
   UINT8 *P = Scratch;
@@ -45,9 +56,10 @@ EFI_STATUS FdpReadGpt(CONST FDP_DISK *Disk, VOID *Scratch, UINTN ScratchBytes,
   UINT64 FirstUsable, LastUsable, EntriesLba, ArrayBytes, ArrayBlocks;
   UINTN I, J;
   EFI_STATUS Status;
-  FDP_PARTITIONS Found = {0};
+  FDP_PARTITIONS Found;
   if (Partitions == NULL) return EFI_INVALID_PARAMETER;
-  *Partitions = Found;
+  ResultZero(&Found);
+  ResultZero(Partitions);
   if (!DiskValid(Disk) || P == NULL || ScratchBytes < FDP_SCRATCH_BYTES)
     return EFI_INVALID_PARAMETER;
   Status = Disk->Read(Disk->Context, 1, 1, P);
@@ -102,6 +114,8 @@ EFI_STATUS FdpReadGpt(CONST FDP_DISK *Disk, VOID *Scratch, UINTN ScratchBytes,
     }
     if (NameIs(Entry + 56, "metadata")) Selected = &Found.Metadata;
     if (NameIs(Entry + 56, "userdata")) Selected = &Found.Userdata;
+    if (NameIs(Entry + 56, "keymaster_a")) Selected = &Found.KeymasterA;
+    if (NameIs(Entry + 56, "keymaster_b")) Selected = &Found.KeymasterB;
     if (Selected != NULL) {
       if (Selected->Present) return EFI_VOLUME_CORRUPTED;
       Selected->First = First;
@@ -110,8 +124,9 @@ EFI_STATUS FdpReadGpt(CONST FDP_DISK *Disk, VOID *Scratch, UINTN ScratchBytes,
     }
   }
   // No partially validated partition identity escapes on any earlier failure.
-  *Partitions = Found;
-  return (Found.Metadata.Present || Found.Userdata.Present) ? EFI_SUCCESS : EFI_NOT_FOUND;
+  ResultCopy(Partitions, &Found);
+  return (Found.Metadata.Present || Found.Userdata.Present || Found.KeymasterA.Present ||
+          Found.KeymasterB.Present) ? EFI_SUCCESS : EFI_NOT_FOUND;
 }
 EFI_STATUS FdpReadPartition(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Partition,
                             UINT64 RelativeLba, UINTN Blocks, VOID *Buffer) {

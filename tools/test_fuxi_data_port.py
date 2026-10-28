@@ -50,6 +50,22 @@ def main():
         original = disk(block)
         checksums(original, block)
         cases.append((f"valid-{block}", block, original, 0))
+        both = original.copy()
+        for index, name, first, last in ((2, "keymaster_a", 241, 243), (3, "keymaster_b", 244, 246)):
+            pos = 2 * block + 128 * index
+            both[pos:pos+16] = bytes(range(1, 17))
+            both[pos+16:pos+32] = bytes([index+1]) * 16
+            struct.pack_into("<QQ", both, pos+32, first, last)
+            encoded = name.encode("utf-16-le")
+            both[pos+56:pos+56+len(encoded)] = encoded
+        checksums(both, block)
+        cases.append((f"keymaster-both-{block}", block, both, 0))
+        duplicate = both.copy()
+        pos = 2 * block + 128 * 3 + 56
+        duplicate[pos:pos+72] = bytes(72)
+        duplicate[pos:pos+len("keymaster_a".encode("utf-16-le"))] = "keymaster_a".encode("utf-16-le")
+        checksums(duplicate, block)
+        cases.append((f"keymaster-duplicate-{block}", block, duplicate, error(10)))
         for label, offset, data, expected, recalc in (
             ("bad-header-crc", block + 16, b"\0" * 4, error(27), False),
             ("bad-array-crc", 2 * block + 56, b"X", error(27), False),

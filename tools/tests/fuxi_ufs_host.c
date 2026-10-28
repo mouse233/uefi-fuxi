@@ -266,6 +266,25 @@ static void CommandScenarios(UINT8 *Dma, UINT64 DmaPhys) {
   assert(Buffer[0] == 3 && Buffer[1] == 10 && Buffer[4096] == (UINT8)(4096 * 7 + 3));
   assert(FnuReadBlocks(&Dev, &Ops, 0, FNU_DATA_LBAS + 1, Buffer, 1000) == EFI_INVALID_PARAMETER);
   assert(FnuReadBlocks(&Dev, &Ops, (UINT64)MAX_UINT32, 2, Buffer, 1000) == EFI_INVALID_PARAMETER);
+  ResetHc(&Hc, Dma, DmaPhys);
+  Hc.ExpectCommand = 1; Hc.ExpectLun = 4;
+  Status = FnuTestUnitReadyLun(&Dev, &Ops, 4, 1000);
+  ExpectStatus("lun4 tur", Status, EFI_SUCCESS);
+  ResetHc(&Hc, Dma, DmaPhys);
+  Hc.ExpectCommand = 1; Hc.ExpectLun = 4; Hc.ExpectCdb0 = 0x25;
+  Hc.ExpectDataBytes = 8; Hc.CapLastLba = 12345; Hc.CapBlockBytes = 4096;
+  Status = FnuReadCapacityLun(&Dev, &Ops, 4, &LastLba, &BlockBytes, 1000);
+  ExpectStatus("lun4 capacity", Status, EFI_SUCCESS);
+  assert(LastLba == 12345 && BlockBytes == 4096 && Hc.Failures == 0);
+  ResetHc(&Hc, Dma, DmaPhys);
+  Hc.ExpectCommand = 1; Hc.ExpectLun = 4; Hc.ExpectCdb0 = 0x28;
+  Hc.ExpectDataBytes = 8192;
+  Status = FnuReadBlocksLun(&Dev, &Ops, 4, 100, 2, Buffer, 1000);
+  ExpectStatus("lun4 read", Status, EFI_SUCCESS);
+  assert(Hc.Failures == 0 && Hc.Rings == 1);
+  assert(FnuReadBlocksLun(&Dev, &Ops, 5, 100, 2, Buffer, 1000) == EFI_ACCESS_DENIED);
+  assert(FnuTestUnitReadyLun(&Dev, &Ops, 5, 1000) == EFI_ACCESS_DENIED);
+  assert(Hc.Rings == 1);
   {
     UINT8 Cdb[10];
     assert(!FnuBuildRead10(Cdb, (UINT64)MAX_UINT32, 2));

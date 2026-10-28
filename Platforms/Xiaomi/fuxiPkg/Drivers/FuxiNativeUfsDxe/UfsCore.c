@@ -343,10 +343,11 @@ STATIC EFI_STATUS FnuScsiRun(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT8 Lun, UINT8 Fla
   return *ScsiStatus == 0 ? EFI_SUCCESS : EFI_NOT_READY;
 }
 
-EFI_STATUS FnuTestUnitReady(FNU_DEVICE *Dev, FNU_OPS *Ops, UINTN MaxPolls) {
+EFI_STATUS FnuTestUnitReadyLun(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT8 Lun, UINTN MaxPolls) {
+  if (Lun != 0 && Lun != 4) return EFI_ACCESS_DENIED;
   STATIC CONST UINT8 Tur[6] = {0x00, 0, 0, 0, 0, 0};
   UINT32 Scsi, Sense, Residual, Protocol;
-  return FnuScsiRun(Dev, Ops, 0, 0x00, Tur, sizeof(Tur), 0, MaxPolls,
+  return FnuScsiRun(Dev, Ops, Lun, 0x00, Tur, sizeof(Tur), 0, MaxPolls,
                     &Scsi, &Sense, &Residual, &Protocol);
 }
 
@@ -358,8 +359,9 @@ EFI_STATUS FnuStartStopUnit(FNU_DEVICE *Dev, FNU_OPS *Ops, UINTN MaxPolls) {
                     &Scsi, &Sense, &Residual, &Protocol);
 }
 
-EFI_STATUS FnuReadCapacity(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT32 *LastLba,
+EFI_STATUS FnuReadCapacityLun(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT8 Lun, UINT32 *LastLba,
                            UINT32 *BlockBytes, UINTN MaxPolls) {
+  if (Lun != 0 && Lun != 4) return EFI_ACCESS_DENIED;
   STATIC CONST UINT8 Cdb[10] = {0x25, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   UINT32 Scsi, Sense, Residual, Protocol;
   EFI_STATUS Status;
@@ -369,7 +371,7 @@ EFI_STATUS FnuReadCapacity(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT32 *LastLba,
   }
   *LastLba = 0;
   *BlockBytes = 0;
-  Status = FnuScsiRun(Dev, Ops, 0, 0x40, Cdb, sizeof(Cdb), 8, MaxPolls,
+  Status = FnuScsiRun(Dev, Ops, Lun, 0x40, Cdb, sizeof(Cdb), 8, MaxPolls,
                       &Scsi, &Sense, &Residual, &Protocol);
   if (EFI_ERROR(Status)) return Status;
   Data = (CONST UINT8 *)Dev->Dma + FNU_DATA_OFFSET;
@@ -378,8 +380,9 @@ EFI_STATUS FnuReadCapacity(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT32 *LastLba,
   return EFI_SUCCESS;
 }
 
-EFI_STATUS FnuReadBlocks(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT64 Lba, UINTN Blocks,
+EFI_STATUS FnuReadBlocksLun(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT8 Lun, UINT64 Lba, UINTN Blocks,
                          VOID *Dst, UINTN MaxPolls) {
+  if (Lun != 0 && Lun != 4) return EFI_ACCESS_DENIED;
   UINT8 Cdb[10];
   UINT32 Scsi, Sense, Residual, Protocol;
   EFI_STATUS Status;
@@ -388,11 +391,21 @@ EFI_STATUS FnuReadBlocks(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT64 Lba, UINTN Blocks
     return EFI_INVALID_PARAMETER;
   }
   if (!FnuBuildRead10(Cdb, Lba, Blocks)) return EFI_INVALID_PARAMETER;
-  Status = FnuScsiRun(Dev, Ops, 0, 0x40, Cdb, sizeof(Cdb), (UINT32)(Blocks * 4096U),
+  Status = FnuScsiRun(Dev, Ops, Lun, 0x40, Cdb, sizeof(Cdb), (UINT32)(Blocks * 4096U),
                       MaxPolls, &Scsi, &Sense, &Residual, &Protocol);
   if (EFI_ERROR(Status)) return Status;
   CopyBytes(Dst, Dev->Dma + FNU_DATA_OFFSET, Blocks * 4096U);
   return EFI_SUCCESS;
+}
+
+EFI_STATUS FnuTestUnitReady(FNU_DEVICE *Dev, FNU_OPS *Ops, UINTN MaxPolls) {
+  return FnuTestUnitReadyLun(Dev, Ops, 0, MaxPolls);
+}
+EFI_STATUS FnuReadCapacity(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT32 *LastLba, UINT32 *BlockBytes, UINTN MaxPolls) {
+  return FnuReadCapacityLun(Dev, Ops, 0, LastLba, BlockBytes, MaxPolls);
+}
+EFI_STATUS FnuReadBlocks(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT64 Lba, UINTN Blocks, VOID *Dst, UINTN MaxPolls) {
+  return FnuReadBlocksLun(Dev, Ops, 0, Lba, Blocks, Dst, MaxPolls);
 }
 
 EFI_STATUS FnuNop(FNU_DEVICE *Dev, FNU_OPS *Ops, UINTN MaxPolls) {

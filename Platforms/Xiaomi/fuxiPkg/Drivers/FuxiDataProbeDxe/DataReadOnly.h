@@ -24,6 +24,8 @@ typedef struct {
 typedef struct {
   FDP_PARTITION Metadata;
   FDP_PARTITION Userdata;
+  FDP_PARTITION KeymasterA;
+  FDP_PARTITION KeymasterB;
 } FDP_PARTITIONS;
 typedef struct {
   UINT64 Blocks;

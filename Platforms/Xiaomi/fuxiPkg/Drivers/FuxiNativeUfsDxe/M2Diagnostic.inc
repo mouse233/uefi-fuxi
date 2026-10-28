@@ -52,6 +52,16 @@ STATIC VOID RunM2(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Metadata,
     FnuSha256Update(&Hash,Data,Bytes); Offset+=Bytes;
   }
   FnuSha256Final(&Hash,Digest);
+#if FUXI_UFS_LUN4_KEYS
+  {
+    STATIC CONST UINT8 Expected[32] = {0x14,0xf3,0xd8,0x67,0x54,0x23,0x91,0x7e,0x38,0x3a,0x71,0xc9,0x36,0xf4,0xd9,0xa8,0x1a,0x29,0x48,0x0f,0x34,0xae,0x3c,0x55,0x0e,0x0f,0x4c,0x34,0xe5,0x3a,0x09,0x91};
+    if (Offset != 10527 || CompareMem(Digest,Expected,sizeof(Expected)) != 0) {
+      mM2Status=EFI_COMPROMISED_DATA;
+      FnuLog(L"FUXIM2 pinned-file mismatch; stop before LUN4");
+      goto Done;
+    }
+  }
+#endif
   for (I=0; I<32; ++I) { Hex[I*2]=Digits[Digest[I]>>4]; Hex[I*2+1]=Digits[Digest[I]&15]; }
   Hex[64]=0;
   FnuLog(L"FUXIM2 file-read=Success bytes=%lu",Offset);

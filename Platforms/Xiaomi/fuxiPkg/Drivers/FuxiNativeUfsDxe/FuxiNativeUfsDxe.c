@@ -47,6 +47,12 @@
 #ifndef FUXI_M3_SCM_INFO
 #define FUXI_M3_SCM_INFO 0
 #endif
+#ifndef FUXI_UFS_LUN4_KEYS
+#define FUXI_UFS_LUN4_KEYS 0
+#endif
+#if FUXI_UFS_LUN4_KEYS && !FUXI_UFS_DIAGNOSTIC_PARK
+#error LUN4 keymaster diagnostic requires parked mode
+#endif
 #ifndef FUXI_UFS_M2_FILES
 #define FUXI_UFS_M2_FILES 0
 #endif
@@ -349,6 +355,70 @@ STATIC EFI_STATUS FnuReadBlocksFdp(VOID *Context, UINT64 Lba, UINTN Blocks, VOID
   }
   return FnuReadBlocks(&mDev, &mOps, Lba, Blocks, Buffer, FNU_POLLS(FNU_TIMEOUT_READ));
 }
+
+#if FUXI_UFS_LUN4_KEYS
+// Restricted diagnostic: never selects a slot or publishes the partition.
+typedef struct { UINT8 Lun; UINT64 Last; } FNU_DIAG_LUN;
+STATIC EFI_STATUS FnuLun4Read(VOID *Context, UINT64 Lba, UINTN Blocks, VOID *Buffer) {
+  FNU_DIAG_LUN *C = Context;
+  if (!mReady || mPoisoned || C == NULL || C->Lun != 4) return EFI_NOT_READY;
+  if (Blocks == 0 || Lba > C->Last || Blocks - 1 > C->Last - Lba) return EFI_INVALID_PARAMETER;
+  return FnuReadBlocksLun(&mDev, &mOps, C->Lun, Lba, Blocks, Buffer, FNU_POLLS(FNU_TIMEOUT_READ));
+}
+STATIC EFI_STATUS FnuHashKeymaster(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Part,
+                                   CONST CHAR16 *Name, CONST UINT8 Expected[32], VOID *Scratch) {
+  FNU_SHA256_CTX Ctx;
+  UINT8 Digest[32];
+  CHAR16 Line[128];
+  UINTN I, At = 0;
+  UINT64 Offset;
+  EFI_STATUS Status;
+  if (!Part->Present || Part->Last - Part->First + 1 != 128) return EFI_COMPROMISED_DATA;
+  FnuSha256Init(&Ctx);
+  for (Offset = 0; Offset < 128; Offset += 16) {
+    Status = FdpReadPartition(Disk, Part, Offset, 16, Scratch);
+    if (EFI_ERROR(Status)) return Status;
+    FnuSha256Update(&Ctx, Scratch, 65536);
+  }
+  FnuSha256Final(&Ctx, Digest);
+  for (I = 0; Name[I] && At < 64; ++I) Line[At++] = Name[I];
+  for (I = 0; I < 32; ++I)
+    At += (UINTN)UnicodeSPrint(Line + At, sizeof(Line) - At * sizeof(CHAR16), L"%02x", (UINT32)Digest[I]);
+  Line[At] = 0;
+  FnuLog(L"%s", Line);
+  return CompareMem(Digest, Expected, 32) == 0 ? EFI_SUCCESS : EFI_COMPROMISED_DATA;
+}
+STATIC VOID RunLun4Keys(VOID *Scratch) {
+  FNU_DIAG_LUN Context = {4, 0};
+  FDP_DISK Disk;
+  FDP_PARTITIONS Parts;
+  UINT32 Last, Block;
+  EFI_STATUS Status;
+  STATIC CONST UINT8 HashA[32] = {0x2f,0xc8,0x38,0xa8,0xf0,0xed,0x57,0x2e,0xc7,0x7b,0x7d,0xb2,0xfe,0x39,0xab,0x4e,0x81,0xd0,0xaa,0x03,0x8b,0xfa,0xd4,0x82,0xb8,0x80,0x87,0xa2,0x7b,0xf4,0x3c,0xc6};
+  STATIC CONST UINT8 HashB[32] = {0xfe,0x18,0xa4,0x67,0xcb,0xbd,0x94,0x57,0xcc,0x8e,0x2e,0x4a,0x05,0x82,0x2f,0xf0,0x56,0x23,0x83,0x42,0x88,0x1c,0xfc,0x55,0x8a,0x04,0x5a,0xea,0x6d,0x46,0x7e,0xac};
+  FnuLog(L"FUXILUN4 slot=unknown; no automatic slot selection");
+  Status = FnuTestUnitReadyLun(&mDev, &mOps, 4, FNU_POLLS(FNU_TIMEOUT_NOP));
+  FnuLog(L"FUXILUN4 tur=%r", Status);
+  if (EFI_ERROR(Status) || mPoisoned) return;
+  Status = FnuReadCapacityLun(&mDev, &mOps, 4, &Last, &Block, FNU_POLLS(FNU_TIMEOUT_READ));
+  FnuLog(L"FUXILUN4 capacity=%r last=%x block=%u", Status, Last, Block);
+  if (EFI_ERROR(Status) || mPoisoned || Block != 4096) return;
+  Context.Last = Last;
+  Disk.Context = &Context; Disk.Read = FnuLun4Read; Disk.BlockSize = Block; Disk.LastBlock = Last;
+  Status = FdpReadGpt(&Disk, Scratch, FDP_SCRATCH_BYTES, &Parts);
+  FnuLog(L"FUXILUN4 GPT=%r", Status);
+  if (EFI_ERROR(Status) || mPoisoned) return;
+  FnuLog(L"FUXILUN4 a=%u %lx..%lx b=%u %lx..%lx", (UINT32)Parts.KeymasterA.Present,
+         Parts.KeymasterA.First, Parts.KeymasterA.Last, (UINT32)Parts.KeymasterB.Present,
+         Parts.KeymasterB.First, Parts.KeymasterB.Last);
+  if (!Parts.KeymasterA.Present || !Parts.KeymasterB.Present) return;
+  Status = FnuHashKeymaster(&Disk, &Parts.KeymasterA, L"FUXILUN4 a-sha256=", HashA, Scratch);
+  FnuLog(L"FUXILUN4 hash-a=%r", Status);
+  if (EFI_ERROR(Status) || mPoisoned) return;
+  Status = FnuHashKeymaster(&Disk, &Parts.KeymasterB, L"FUXILUN4 b-sha256=", HashB, Scratch);
+  FnuLog(L"FUXILUN4 hash-b=%r", Status);
+}
+#endif
 
 // Stop the request list again so the controller is left idle with the
 // doorbell clear; a poisoned transport is reported without register writes.
@@ -713,6 +783,10 @@ STATIC VOID RunDiagnostic(VOID) {
       InspectPartition(&Disk, &Parts.Userdata, L"userdata", Scratch);
 #if FUXI_UFS_M2_FILES
       RunM2(&Disk, &Parts.Metadata, Scratch, Repeat);
+#if FUXI_UFS_LUN4_KEYS
+      if (!mPoisoned && !EFI_ERROR(mM2Status)) { FNU_STAGE("lun4-keymaster"); RunLun4Keys(Scratch); }
+      else FnuLog(L"FUXILUN4 skipped: M2 failed or DMA quarantined");
+#endif
 #endif
 #if FUXI_M3_METADATA_KEY
       RunM3Key(&Disk, &Parts.Metadata, Scratch, Repeat);

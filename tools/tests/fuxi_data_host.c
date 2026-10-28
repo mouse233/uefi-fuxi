@@ -105,7 +105,14 @@ int main(int Argc, char **Argv) {
             (unsigned long long)Expected);
     return 1;
   }
-  if (!EFI_ERROR(Status)) PartitionBounds(&Disk, &Parts, &Image);
+  if (!EFI_ERROR(Status)) {
+    PartitionBounds(&Disk, &Parts, &Image);
+    if (Parts.KeymasterA.Present || Parts.KeymasterB.Present) {
+      assert(Parts.KeymasterA.Present && Parts.KeymasterB.Present);
+      assert(Parts.KeymasterA.First == 241 && Parts.KeymasterA.Last == 243);
+      assert(Parts.KeymasterB.First == 244 && Parts.KeymasterB.Last == 246);
+    }
+  }
   else assert(!Parts.Metadata.Present && !Parts.Userdata.Present);
   Image.Fail = TRUE;
   assert(FdpReadGpt(&Disk, Scratch, FDP_SCRATCH_BYTES, &Parts) == EFI_DEVICE_ERROR);

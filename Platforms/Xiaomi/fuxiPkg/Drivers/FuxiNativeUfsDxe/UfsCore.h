@@ -148,6 +148,9 @@ EFI_STATUS FnuNop(FNU_DEVICE *Dev, FNU_OPS *Ops, UINTN MaxPolls);
 // SCSI commands this driver exposes. No-data: TEST UNIT READY (0x00) on LUN 0
 // and START STOP UNIT with power condition ACTIVE (0x1b) on the device LU
 // 0xd0 only. Reads: READ CAPACITY(10) and READ(10) of 4096-byte blocks.
+EFI_STATUS FnuTestUnitReadyLun(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT8 Lun, UINTN MaxPolls);
+EFI_STATUS FnuReadCapacityLun(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT8 Lun, UINT32 *LastLba, UINT32 *BlockBytes, UINTN MaxPolls);
+EFI_STATUS FnuReadBlocksLun(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT8 Lun, UINT64 Lba, UINTN Blocks, VOID *Dst, UINTN MaxPolls);
 EFI_STATUS FnuTestUnitReady(FNU_DEVICE *Dev, FNU_OPS *Ops, UINTN MaxPolls);
 EFI_STATUS FnuStartStopUnit(FNU_DEVICE *Dev, FNU_OPS *Ops, UINTN MaxPolls);
 EFI_STATUS FnuReadCapacity(FNU_DEVICE *Dev, FNU_OPS *Ops, UINT32 *LastLba,
