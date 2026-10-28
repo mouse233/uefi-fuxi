@@ -420,6 +420,7 @@ STATIC EFI_STATUS FnuHashKeymaster(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Pa
 STATIC EFI_STATUS FnuLoadTaImage(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Part) {
   EFI_PHYSICAL_ADDRESS Raw = SIZE_4GB - 1;
   UINTN Blocks = (FUXI_M3_SMCI_TA_BYTES + 4095U) / 4096U;
+  UINTN Chunk = FDP_MAX_GPT_BYTES / 4096U;
   UINTN Pages = EFI_SIZE_TO_PAGES(Blocks * 4096U);
   FNU_SHA256_CTX Ctx;
   UINT8 Digest[32];
@@ -432,7 +433,13 @@ STATIC EFI_STATUS FnuLoadTaImage(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Part
     return EFI_OUT_OF_RESOURCES;
   mTaImage = (UINT8 *)(UINTN)Raw;
   ZeroMem(mTaImage, EFI_PAGES_TO_SIZE(Pages));
-  Status = FdpReadPartition(Disk, Part, 0, Blocks, mTaImage);
+  // FdpReadPartition rejects any single transfer above FDP_MAX_GPT_BYTES, so
+  // the extent is read in chunks of that size instead of one 100-block call.
+  Status = EFI_SUCCESS;
+  for (UINTN Offset = 0; Offset < Blocks; Offset += Chunk) {
+    Status = FdpReadPartition(Disk, Part, Offset, Chunk, mTaImage + Offset * 4096U);
+    if (EFI_ERROR(Status)) break;
+  }
   if (EFI_ERROR(Status)) {
     ZeroMem(mTaImage, EFI_PAGES_TO_SIZE(Pages));
     gBS->FreePages(Raw, Pages);
@@ -479,14 +486,17 @@ STATIC BOOLEAN RunLun4Keys(VOID *Scratch) {
   Status = FnuHashKeymaster(&Disk, &Parts.KeymasterA, L"FUXILUN4 a-sha256=", HashA, Scratch);
   FnuLog(L"FUXILUN4 hash-a=%r", Status);
   if (EFI_ERROR(Status) || mPoisoned) return FALSE;
+  Status = FnuHashKeymaster(&Disk, &Parts.KeymasterB, L"FUXILUN4 b-sha256=", HashB, Scratch);
+  FnuLog(L"FUXILUN4 hash-b=%r", Status);
+  if (EFI_ERROR(Status) || mPoisoned) return FALSE;
 #if FUXI_M3_SMCI_LOAD
+  // Read the load input only after both slot hashes regressed, so a read
+  // failure cannot hide the LUN4 verification of the pair.
   mTaImageStatus = FnuLoadTaImage(&Disk, &Parts.KeymasterA);
   FnuLog(L"FUXIM3 TA read=%r bytes=%x", mTaImageStatus, (UINT32)mTaImageBytes);
   if (EFI_ERROR(mTaImageStatus)) return FALSE;
 #endif
-  Status = FnuHashKeymaster(&Disk, &Parts.KeymasterB, L"FUXILUN4 b-sha256=", HashB, Scratch);
-  FnuLog(L"FUXILUN4 hash-b=%r", Status);
-  return (BOOLEAN)(!EFI_ERROR(Status) && !mPoisoned);
+  return TRUE;
 }
 #endif
 
