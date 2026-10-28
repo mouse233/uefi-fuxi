@@ -58,3 +58,26 @@ loader open/release 编进同一镜像，一次启动即可覆盖到对象释放
 
 一次实机启动需回答：桥 create 是否仍成功、root register 的原始返回与 OO、loader open 的返回与句柄、
 两个 release 的终态、delete 与 released/PARK。出现未知态即停在对应 `stop=`，不继续后续阶段。
+
+## attempt-01 实机结论：停在 root-register
+
+照片IMG_7176..JPG，SHA256 b56e533fbdd4172ec896b39dfa9e50d9ba73e32fa8d272c7a0daff95457a35eb。本批在root-register阶段按设计停止，loader未尝试。
+
+- 桥：page phys=C6A3D000（8KiB）；enable x0=42000C1C返回a0..a3=0；
+  create x0=42000C1E，参数C6A3D006/C6A3D006/2200/3，返回a0=0、a1=0、a2=2EC81021、a3=0。
+  显式HLOS配置再次被接受，桥句柄2EC81021。
+- root register：x0=72000602、x1=224、handle=1、op=5、counts=1100，in=C6A3D000、out=C6A3E000。
+  原始返回a0=a1=a2=a3=0；缓冲区回读hdr=1/5/1100、oi=0/0、oo=2/0，
+  输出页首两字为00010002/0000FFFD，其余打印字为0。
+- 判定：探针要求输出页全零且单一OO描述符可解析，因此返回EFI_COMPROMISED_DATA，
+  BATCH stop=root-register passed=0 retained=1；未做句柄判断，未open loader，
+  保留桥句柄与8KiB页，未擦写、未free、未重试。a0..a3全零只通过传输元组检查，不等于对象成功。
+- OO回读为offset=2/size=0不是可用对象描述符；00010002/0000FFFD的含义尚未归类，
+  本轮不把FFFD写成错误码，也不据此判固件ABI错误。
+- UFS stop=1、db=tdb=run=0、hcs=0000010F、is=0、poisoned=0、ready=0；
+  SMMU GFSR=0、FSR=00000400、far=1BBAE7DF98DF仍残留，不宣称完整路由恢复。
+  M2的10527字节与SHA256 14f3d867…0991仍一致；PARK与cached report end可见。
+- 镜像12b094bf368046687ee6b9851ff843758d5c3069f8c58420f5fcdb0af8a99c91与提交a4e0fc5023c9f0316cf1b54675ba9f305b286ffd的56个源码绑定、18项检查、78/148/24向量仍有效。
+  无TA加载、无密钥使用、无转换、无解密；C2未通过，C3未开始。
+- 下一步是离线把输出页布局与object-cmd2的返回分层对上，再决定是否放宽/改写接受子集；
+  在此之前不重复上机。
