@@ -43,6 +43,8 @@ def main():
         extra += ("m3-blob-tests.json",)
     if candidate.get("m3_smci_root"):
         extra += ("m3-smci-tests.json",)
+    if candidate.get("m3_smc_context"):
+        extra += ("m3-context-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
         report = json.loads((out / filename).read_text())
         assert report["result"] == "passed"
@@ -106,7 +108,7 @@ def main():
                        "FUXIM3 BLOB read=%r; registered page, no TA, no decrypt",
                        "FUXIM3 BLOB result=%r delete=%r handle=%x; no TA, no decrypt"):
             assert marker.encode("utf-16-le") in ufs, marker
-    if candidate.get("m3_smci_root"):
+    if candidate.get("m3_smci_root") and not candidate.get("m3_smc_context"):
         assert candidate["m3_bridge_call"] and candidate["m3_scm_invoke"] and park
         assert candidate["m3_bridge_bytes"] == 8192 and candidate["m3_smci_no_keys"]
         assert not candidate["m3_bridge_blob"] and not candidate["m3_metadata_key"]
@@ -123,6 +125,17 @@ def main():
                        "FUXIM3 SMCI result=%r retained=%u; no TA, no key, no decrypt"):
             assert marker.encode("utf-16-le") in ufs, marker
         assert "FUXIM3 BLOB prefix32=%s".encode("utf-16-le") not in ufs
+    if candidate.get("m3_smc_context"):
+        assert candidate["m3_smci_root"] and park and candidate["m3_scm_info"]
+        assert candidate["m3_smci_ops"] == ["standard-info-control"] and candidate["m3_bridge_ops"] == []
+        assert candidate["m3_bridge_bytes"] == 0 and candidate["m3_smci_fnid"] == "42000601" and candidate["m3_smci_arginfo"] == "1"
+        for marker in ("FUXIM3 CTX CurrentEL=%lx DAIF=%lx fast-info=%u",
+                       "FUXIM3 CTX std-info begin x0=%lx x1=%lx subject=%lx; one call",
+                       "FUXIM3 CTX std-info return a0=%lx a1=%lx a2=%lx a3=%lx",
+                       "FUXIM3 CTX END: no bridge, no objects, no key, no retry"):
+            assert marker.encode("utf-16-le") in ufs, marker
+        for marker in ("FUXIM3 SMCI bridge-create begin", "FUXIM3 SMCI %a begin x0=%lx x1=%lx in=%lx out=%lx handle=%x op=%x counts=%x"):
+            assert marker.encode("utf-16-le") not in ufs, marker
     if candidate.get("m3_metadata_key"):
         assert candidate["m2_metadata_files"] and park
         assert candidate["m3_key_paths"] == ["/vold", "/vold/metadata_encryption",

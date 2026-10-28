@@ -56,6 +56,9 @@ def main():
     if candidate.get('m3_smci_root'):
         commands.append(('m3-smci', ['python3', str(root / 'tools/test_fuxi_m3_smci_root.py'),
                                    '--edk2', str(edk2), '--report', str(out / 'm3-smci-tests.json')]))
+    if candidate.get('m3_smc_context'):
+        commands.append(('m3-context', ['python3', str(root / 'tools/test_fuxi_m3_smc_context.py'),
+                                      '--edk2', str(edk2), '--report', str(out / 'm3-context-tests.json')]))
     commands += [
         ('image', ['python3', str(device / 'scripts/check-fuxi-usb-ram-image.py'),
                    '--uefi', str(root), '--output', str(out)]),

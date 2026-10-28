@@ -33,6 +33,7 @@ def main():
     parser.add_argument("--ufs-report-hold-seconds", type=int, default=20,
                         help="photo hold before USB (0..60 seconds, default 20)")
     parser.add_argument("--m3-scm-bridge", action="store_true", help="query bridge service availability only")
+    parser.add_argument("--m3-smc-context", action="store_true", help="INFO-only context control, disables bridge and object execution")
     parser.add_argument("--m3-smci-mode", choices=["legacy", "object"], default="legacy",
                         help="explicit root invoke entry; no runtime fallback")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
@@ -84,6 +85,8 @@ def main():
         parser.error("SMCI root requires bridge call and invoke availability, with no key probes")
     if args.m3_smci_mode == "object" and not args.m3_smci_root:
         parser.error("object invoke mode requires --m3-smci-root")
+    if args.m3_smc_context and not args.m3_smci_root:
+        parser.error("context control requires parked root diagnostic configuration")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -146,6 +149,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_INVOKE"] = str(int(args.m3_scm_invoke))
     ctx.board["firmware"]["defines"]["FUXI_M3_CRYPTO_CAP"] = str(int(args.m3_crypto_cap))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_BRIDGE"] = str(int(args.m3_scm_bridge))
+    ctx.board["firmware"]["defines"]["FUXI_M3_SMC_CONTEXT"] = str(int(args.m3_smc_context))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_OBJECT"] = str(int(args.m3_smci_mode == "object"))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_ROOT"] = str(int(args.m3_smci_root))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_BLOB"] = str(int(args.m3_bridge_blob))
@@ -191,19 +195,20 @@ def main():
                                 if args.m3_metadata_key else None),
                   m3_key_file_limit=8192 if args.m3_metadata_key else None,
                   m3_crypto_cap=args.m3_crypto_cap, m3_scm_bridge=args.m3_scm_bridge,
+                  m3_smc_context=args.m3_smc_context,
                   m3_smci_root=args.m3_smci_root,
-                  m3_smci_mode=args.m3_smci_mode if args.m3_smci_root else None,
-                  m3_smci_fnid=("72000602" if args.m3_smci_mode == "object" else "72000600") if args.m3_smci_root else None,
-                  m3_smci_arginfo="224" if args.m3_smci_root else None,
-                  m3_smci_ops=["root-register-null", "remote-release"] if args.m3_smci_root else None,
+                  m3_smci_mode=("context" if args.m3_smc_context else args.m3_smci_mode) if args.m3_smci_root else None,
+                  m3_smci_fnid=("42000601" if args.m3_smc_context else "72000602" if args.m3_smci_mode == "object" else "72000600") if args.m3_smci_root else None,
+                  m3_smci_arginfo=("1" if args.m3_smc_context else "224") if args.m3_smci_root else None,
+                  m3_smci_ops=(["standard-info-control"] if args.m3_smc_context else ["root-register-null", "remote-release"]) if args.m3_smci_root else None,
                   m3_smci_no_keys=True if args.m3_smci_root else None,
                   m3_bridge_blob=args.m3_bridge_blob,
-                  m3_bridge_bytes=8192 if (args.m3_bridge_blob or args.m3_smci_root) else (4096 if args.m3_bridge_call else None),
+                  m3_bridge_bytes=0 if args.m3_smc_context else 8192 if (args.m3_bridge_blob or args.m3_smci_root) else (4096 if args.m3_bridge_call else None),
                   m3_blob_bytes=208 if args.m3_bridge_blob else None,
                   m3_blob_sha256="9a57f01af0b8c9836cdf04f9abc2f83ad21baf94527b2c80b18b06f04ab2321e" if args.m3_bridge_blob else None,
                   m3_blob_prefix_bytes=32 if args.m3_bridge_blob else None,
                   m3_bridge_call=args.m3_bridge_call,
-                  m3_bridge_ops=(["enable", "create", "delete"] if args.m3_bridge_call else None), m3_scm_info=args.m3_scm_info, m3_scm_subjects=args.m3_scm_subjects, m3_scm_invoke=args.m3_scm_invoke, diagnostic_park_before_usb=args.m2_metadata_files,
+                  m3_bridge_ops=([] if args.m3_smc_context else ["enable", "create", "delete"] if args.m3_bridge_call else None), m3_scm_info=args.m3_scm_info, m3_scm_subjects=args.m3_scm_subjects, m3_scm_invoke=args.m3_scm_invoke, diagnostic_park_before_usb=args.m2_metadata_files,
                   m2_target_path="/aconfig/maps/system.package.map" if args.m2_metadata_files else None,
                   m2_reference_bytes=10527 if args.m2_metadata_files else None,
                   m2_reference_sha256="14f3d8675423917e383a71c936f4d9a81a29480f34ae3c550e0f4c34e53a0991" if args.m2_metadata_files else None,
@@ -239,6 +244,7 @@ def write_sources(uefi, out):
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3BridgeBlob.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3BridgeDiagnostic.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmciDiagnostic.inc",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmcContext.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/APRIORI.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.dsc", uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.fdf",
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/DXE.inc",

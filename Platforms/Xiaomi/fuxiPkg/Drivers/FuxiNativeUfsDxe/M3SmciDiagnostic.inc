@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause-Patent
 // C2: one root register with null credentials, then release the returned object.
 // No app-loader, KeyMint, storage key, callback execution or retry.
-#if FUXI_M3_SMCI_ROOT
+#if FUXI_M3_SMCI_ROOT && !FUXI_M3_SMC_CONTEXT
 STATIC EFI_STATUS mSmciStatus = EFI_NOT_READY;
 STATIC UINT32 SmciU32(CONST UINT8 *P) {
   return P[0] | ((UINT32)P[1]<<8) | ((UINT32)P[2]<<16) | ((UINT32)P[3]<<24);

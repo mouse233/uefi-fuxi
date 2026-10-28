@@ -85,6 +85,12 @@
 #ifndef FUXI_M3_SMCI_ROOT
 #define FUXI_M3_SMCI_ROOT 0
 #endif
+#ifndef FUXI_M3_SMC_CONTEXT
+#define FUXI_M3_SMC_CONTEXT 0
+#endif
+#if FUXI_M3_SMC_CONTEXT && !FUXI_M3_SMCI_ROOT
+#error Context probe requires the parked root diagnostic configuration
+#endif
 #ifndef FUXI_M3_SMCI_OBJECT
 #define FUXI_M3_SMCI_OBJECT 0
 #endif
@@ -264,6 +270,7 @@ STATIC VOID FnuCacheInv(FNU_OPS *Ops, VOID *Va, UINTN Bytes) {
 #include "M3BridgeBlob.inc"
 #include "M3BridgeDiagnostic.inc"
 #include "M3SmciDiagnostic.inc"
+#include "M3SmcContext.inc"
 
 STATIC UINT32 FnuSmmuRead(VOID *Context, UINTN Offset) {
   (VOID)Context;
@@ -735,7 +742,16 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
   else FnuLog(L"FUXIM3 BRIDGE skipped: INFO self-query unavailable");
 #endif
   RunDiagnostic();
-#if FUXI_M3_SMCI_ROOT
+#if FUXI_M3_SMC_CONTEXT
+  {
+    UINT64 El, Daif;
+    __asm__ __volatile__("mrs %0, CurrentEL" : "=r"(El));
+    __asm__ __volatile__("mrs %0, DAIF" : "=r"(Daif));
+    (VOID)mInvokeAvailable;
+    if (!mPoisoned) FnuSmcContextProbe(El,Daif);
+    else FnuLog(L"FUXIM3 CTX skipped: UFS poisoned");
+  }
+#elif FUXI_M3_SMCI_ROOT
   // Invoke after the existing UFS shutdown, with no outstanding read DMA.
   if (!mPoisoned && mScmAvailable && mInvokeAvailable) FnuSmciRootProbe();
   else FnuLog(L"FUXIM3 SMCI skipped: UFS/INFO/invoke availability not ready");

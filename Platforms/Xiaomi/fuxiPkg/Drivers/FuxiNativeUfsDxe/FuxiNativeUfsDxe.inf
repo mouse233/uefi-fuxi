@@ -18,6 +18,7 @@
   M3BridgeBlob.inc
   M3BridgeDiagnostic.inc
   M3SmciDiagnostic.inc
+  M3SmcContext.inc
   ../../Include/Protocol/FuxiUfsReport.h
   ../FuxiDataProbeDxe/DataReadOnly.c
   ../FuxiDataProbeDxe/F2fsReadOnly.c
