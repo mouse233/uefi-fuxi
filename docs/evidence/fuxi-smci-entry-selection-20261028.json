@@ -1,0 +1,17 @@
+{
+  "repo": "LineageOS/android_kernel_xiaomi_sm8550-devicetrees",
+  "commit": "43b5ada5654ed84c25f74789bc8f6326b7bacd20",
+  "file": "qcom/kalama.dtsi",
+  "sha256": "95bab1d5546c89e24640a5945461e931f4a068cfd004be853e13384dc0cf3ff7",
+  "url": "https://github.com/LineageOS/android_kernel_xiaomi_sm8550-devicetrees/blob/43b5ada5654ed84c25f74789bc8f6326b7bacd20/qcom/kalama.dtsi",
+  "node": "qcom_smcinvoke",
+  "support_legacy_property_in_node": false,
+  "exact_device_match": false,
+  "limit": "public platform reference; runtime DT or overlays from the phone not captured",
+  "driver_repo": "LineageOS/android_kernel_xiaomi_sm8550-modules",
+  "driver_commit": "9e8972287159837a256d0afcddc3f636f67ce8dd",
+  "driver_file": "qcom/opensource/securemsm-kernel/smcinvoke/smcinvoke.c",
+  "driver_sha256": "9907468f34d72323e4f9919f9a3019a8fef0e0e70cb629a83f8951c2288a6b7f",
+  "property": "qcom,support-legacy_smc",
+  "inference": "public kalama node selects command 2 in the pinned reference driver; deployed phone DT and overlays are not verified"
+}

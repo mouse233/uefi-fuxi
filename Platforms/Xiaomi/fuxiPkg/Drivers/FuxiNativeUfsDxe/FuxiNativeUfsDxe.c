@@ -85,6 +85,12 @@
 #ifndef FUXI_M3_SMCI_ROOT
 #define FUXI_M3_SMCI_ROOT 0
 #endif
+#ifndef FUXI_M3_SMCI_OBJECT
+#define FUXI_M3_SMCI_OBJECT 0
+#endif
+#if FUXI_M3_SMCI_OBJECT && !FUXI_M3_SMCI_ROOT
+#error Object invoke mode requires the root diagnostic
+#endif
 #if FUXI_M3_SMCI_ROOT && (!FUXI_M3_SCM_BRIDGE_CALL || !FUXI_M3_SCM_INVOKE || !FUXI_UFS_DIAGNOSTIC_PARK)
 #error SMCI root requires bridge, invoke availability and diagnostic park
 #endif
@@ -144,7 +150,7 @@ STATIC VOID FnuInspectSecurityProtocols(VOID) {
 #if FUXI_M3_SCM_INFO || FUXI_M3_SCM_BRIDGE_CALL
 STATIC BOOLEAN mScmAvailable;
 #if FUXI_M3_SMCI_ROOT
-STATIC BOOLEAN mInvokeLegacyAvailable;
+STATIC BOOLEAN mInvokeAvailable;
 #endif
 #endif
 #if FUXI_M3_SCM_INFO
@@ -196,8 +202,8 @@ STATIC VOID FnuScmInfoProbe(VOID) {
       FnuLog(L"FUXIM3 SCM64 subject=%08x a0=%lx a1=%lx decode=%r available=%u",
              Subjects[I], (UINT64)Args.Arg0, (UINT64)Args.Arg1, Status, (UINT32)Available);
 #if FUXI_M3_SMCI_ROOT
-      if (Subjects[I] == FDP_SCM_INVOKE_LEGACY)
-        mInvokeLegacyAvailable = (BOOLEAN)(!EFI_ERROR(Status) && Available);
+      if (Subjects[I] == (FUXI_M3_SMCI_OBJECT ? FDP_SCM_INVOKE_OBJECT : FDP_SCM_INVOKE_LEGACY))
+        mInvokeAvailable = (BOOLEAN)(!EFI_ERROR(Status) && Available);
 #endif
       if (EFI_ERROR(Status)) break;
     }
@@ -731,7 +737,7 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
   RunDiagnostic();
 #if FUXI_M3_SMCI_ROOT
   // Invoke after the existing UFS shutdown, with no outstanding read DMA.
-  if (!mPoisoned && mScmAvailable && mInvokeLegacyAvailable) FnuSmciRootProbe();
+  if (!mPoisoned && mScmAvailable && mInvokeAvailable) FnuSmciRootProbe();
   else FnuLog(L"FUXIM3 SMCI skipped: UFS/INFO/invoke availability not ready");
 #endif
   FnuLog(L"FUXIUFS final stage=%a poisoned=%u ready=%u smmu-configured=%u",

@@ -22,6 +22,8 @@ def main():
     [r'mov w9, #0x6',r'mov w8, #0x224',r'mov w8, #0x32',r'mov w4, #0x2',
      r'stp x0, x1, \[sp, #0x30\]',r'stp x2, x3, \[sp, #0x40\]',
      r'ldr x8, \[sp, #0x10\]',r'ldr x8, \[sp, #0x8\]',r'ldr x8, \[sp, #0x18\]']),
+  'invoke-object-descriptor':('qcom-scm.ko',['--start-address=0x7270','--stop-address=0x733c'],
+    [r'mov x9, #0x6',r'movk x9, #0x2, lsl #32',r'mov w8, #0x224',r'mov w8, #0x32',r'mov w4, #0x2']),
   'fnid':('qcom-scm.ko',['--start-address=0x85e8','--stop-address=0x8680'],
     [r'cmp w2, #0x2',r'cmp w4, #0x1',r'lsl w8, w20, #30',r'lsl w9, w19, #24',
      r'and x9, x9, #0x3f000000',r'bfi w8, w12, #31, #1']),
@@ -48,7 +50,7 @@ def main():
    else:raise RuntimeError('tampered module accepted')
    path.write_bytes(raw)
  report=dict(result='passed',files_sha256=EXPECTED,modified_inputs_rejected=rejected,
-  owner=0x32,service=6,command=0,arginfo=0x224,standard_smc64_fnid='72000600',
+  owner=0x32,service=6,command=0,arginfo=0x224,standard_smc64_fnid='72000600',object_smc64_fnid='72000602',
   returned_registers=dict(scm_status='a0',response_type='a1',object_result='low32(a2)',data='low32(a3)'),
   register=dict(root=1,op=5,counts='1100',null_input=True),release=dict(op='ffff',input_bytes=4096,output_bytes=4096),
   scope='Fixed binary local facts only; standard call and all-zero terminal policy remain hardware-unverified. No callbacks, interruption resume, TA or keys.')

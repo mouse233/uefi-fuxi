@@ -33,6 +33,8 @@ def main():
     parser.add_argument("--ufs-report-hold-seconds", type=int, default=20,
                         help="photo hold before USB (0..60 seconds, default 20)")
     parser.add_argument("--m3-scm-bridge", action="store_true", help="query bridge service availability only")
+    parser.add_argument("--m3-smci-mode", choices=["legacy", "object"], default="legacy",
+                        help="explicit root invoke entry; no runtime fallback")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
     parser.add_argument("--m3-bridge-blob", action="store_true",
                         help="C1: read the pinned metadata blob into an 8 KiB bridge; no TA")
@@ -80,6 +82,8 @@ def main():
         parser.error("bridge blob requires --m3-bridge-call")
     if args.m3_smci_root and (not (args.m3_bridge_call and args.m3_scm_invoke) or args.m3_bridge_blob or args.m3_metadata_key):
         parser.error("SMCI root requires bridge call and invoke availability, with no key probes")
+    if args.m3_smci_mode == "object" and not args.m3_smci_root:
+        parser.error("object invoke mode requires --m3-smci-root")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -142,6 +146,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_INVOKE"] = str(int(args.m3_scm_invoke))
     ctx.board["firmware"]["defines"]["FUXI_M3_CRYPTO_CAP"] = str(int(args.m3_crypto_cap))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_BRIDGE"] = str(int(args.m3_scm_bridge))
+    ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_OBJECT"] = str(int(args.m3_smci_mode == "object"))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_ROOT"] = str(int(args.m3_smci_root))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_BLOB"] = str(int(args.m3_bridge_blob))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_BRIDGE_CALL"] = str(int(args.m3_bridge_call))
@@ -187,7 +192,8 @@ def main():
                   m3_key_file_limit=8192 if args.m3_metadata_key else None,
                   m3_crypto_cap=args.m3_crypto_cap, m3_scm_bridge=args.m3_scm_bridge,
                   m3_smci_root=args.m3_smci_root,
-                  m3_smci_fnid="72000600" if args.m3_smci_root else None,
+                  m3_smci_mode=args.m3_smci_mode if args.m3_smci_root else None,
+                  m3_smci_fnid=("72000602" if args.m3_smci_mode == "object" else "72000600") if args.m3_smci_root else None,
                   m3_smci_arginfo="224" if args.m3_smci_root else None,
                   m3_smci_ops=["root-register-null", "remote-release"] if args.m3_smci_root else None,
                   m3_smci_no_keys=True if args.m3_smci_root else None,

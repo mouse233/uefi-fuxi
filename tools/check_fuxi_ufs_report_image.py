@@ -110,7 +110,9 @@ def main():
         assert candidate["m3_bridge_call"] and candidate["m3_scm_invoke"] and park
         assert candidate["m3_bridge_bytes"] == 8192 and candidate["m3_smci_no_keys"]
         assert not candidate["m3_bridge_blob"] and not candidate["m3_metadata_key"]
-        assert candidate["m3_smci_fnid"] == "72000600" and candidate["m3_smci_arginfo"] == "224"
+        assert candidate["m3_smci_mode"] in ("legacy", "object")
+        assert candidate["m3_smci_fnid"] == ("72000602" if candidate["m3_smci_mode"] == "object" else "72000600")
+        assert candidate["m3_smci_arginfo"] == "224"
         assert candidate["m3_smci_ops"] == ["root-register-null", "remote-release"]
         for marker in ("FUXIM3 SMCI %a begin x0=%lx x1=%lx in=%lx out=%lx handle=%x op=%x counts=%x",
                        "FUXIM3 SMCI %a return a0=%lx a1=%lx a2=%lx a3=%lx",

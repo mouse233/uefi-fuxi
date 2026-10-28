@@ -36,7 +36,7 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  if(Calls==1)assert(fn==0xc2000c1c && a->Arg1==0);
  else if(Calls==2)assert(fn==0xc2000c1e && a->Arg1==4 && a->Arg2==(UINTN)Page && a->Arg3==((UINTN)Page|6) && a->Arg4==8192);
  else if(Calls==3 || Calls==4){
-   assert(fn==0x72000600 && a->Arg1==0x224 && a->Arg2==(UINTN)Page && a->Arg3==4096 && a->Arg4==(UINTN)(Page+4096) && a->Arg5==4096 && !a->Arg6 && !a->Arg7);
+   assert(fn==(FUXI_M3_SMCI_OBJECT ? 0x72000602 : 0x72000600) && a->Arg1==0x224 && a->Arg2==(UINTN)Page && a->Arg3==4096 && a->Arg4==(UINTN)(Page+4096) && a->Arg5==4096 && !a->Arg6 && !a->Arg7);
    assert(Get(Page)==(Calls==3?1:0x44));
    assert(Get(Page+4)==(Calls==3?5:0xffff) && Get(Page+8)==(Calls==3?0x1100:0));
    for(UINTN i=12;i<8192;++i)assert(!Page[i]);
@@ -46,6 +46,7 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  if(Calls==2){a->Arg1=0x5c;if(Mode==3)a->Arg0=1;}
  if(Calls==3){
    Page[20]=0x44;
+   if(Mode==27)a->Arg0=0xffffffff80000001ULL; // Observed v1 raw failure.
    if(Mode==4)a->Arg0=1; // Interrupted: no resumption implemented.
    if(Mode==5)a->Arg0=2; // Wait queue: no polling or guessing.
    if(Mode==6)a->Arg0=0xffffffffffffffffULL;
@@ -76,16 +77,16 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
 #include "M3BridgeDiagnostic.inc"
 #include "M3SmciDiagnostic.inc"
 int main(void){
- for(Mode=0;Mode<=26;++Mode){
+ for(Mode=0;Mode<=27;++Mode){
    Calls=Frees=0;assert(!Page);FnuSmciRootProbe();
    if(Mode==0)assert(Calls==5 && Frees==1 && !Page && mSmciStatus==EFI_SUCCESS);
    else if(Mode==1)assert(Calls==0 && Frees==0 && !Page && mSmciStatus==EFI_OUT_OF_RESOURCES);
    else if(Mode==2)assert(Calls==1 && Frees==1 && !Page && EFI_ERROR(mSmciStatus));
    else {
-     int expected=Mode==3?2:Mode<=20?3:Mode<=25?4:5;
+     int expected=Mode==27?3:Mode==3?2:Mode<=20?3:Mode<=25?4:5;
      assert(Calls==expected && Frees==0 && Page && EFI_ERROR(mSmciStatus));
      free(Page);Page=NULL; // Test teardown only; firmware retains this memory.
    }
  }
- puts("PASS 27 C2 production lifecycle vectors: no key, no device, simulated SMC");return 0;
+ puts("PASS 28 C2 production lifecycle vectors: no key, no device, simulated SMC");return 0;
 }

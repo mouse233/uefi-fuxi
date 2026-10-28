@@ -20,10 +20,10 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
   ZeroMem(Page, 8192);
   SmciPut32(Page, Object); SmciPut32(Page+4, Op); SmciPut32(Page+8, Counts);
   // Two 4096-byte buffers in one registered 8192-byte contiguous range.
-  // qcom-scm.ko: svc=6, cmd=0, owner=0x32, arginfo=0x224, call type=2.
+  // qcom-scm.ko: svc=6, cmd=0 or 2, owner=0x32, arginfo=0x224, call type=2.
   // __scm_smc_call: bit31=(type==1), bit30=SMC64, owner in [29:24].
   ZeroMem(Regs, sizeof(Regs));
-  Regs[0]=0x72000600ULL; Regs[1]=0x224;
+  Regs[0]=FUXI_M3_SMCI_OBJECT ? 0x72000602ULL : 0x72000600ULL; Regs[1]=0x224;
   Regs[2]=Raw; Regs[3]=4096; Regs[4]=Raw+4096; Regs[5]=4096;
   FnuCacheCiv(&mOps, Page, 8192);
   FnuLog(L"FUXIM3 SMCI %a begin x0=%lx x1=%lx in=%lx out=%lx handle=%x op=%x counts=%x",
@@ -62,6 +62,8 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   BOOLEAN Retain=FALSE;
   mSmciStatus=EFI_NOT_READY;
   FNU_STAGE("m3-smci-root");
+  FnuLog(L"FUXIM3 SMCI mode=%a; one register/release, no fallback",
+         FUXI_M3_SMCI_OBJECT ? "object-cmd2" : "legacy-cmd0");
   if (gBS->AllocatePages(AllocateMaxAddress,EfiBootServicesData,2,&Raw)!=EFI_SUCCESS) {
     mSmciStatus=EFI_OUT_OF_RESOURCES;
     FnuLog(L"FUXIM3 SMCI page allocation failed; no call"); return;
