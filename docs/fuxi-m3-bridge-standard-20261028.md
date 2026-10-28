@@ -38,3 +38,19 @@ create未知完成或delete失败时，不再擦写、删除或释放页；只�
 12个ASan/UBSan生产桥生命周期向量覆盖高64位句柄、enable服务错误、create原始/服务/零句柄错误、
 delete错误和未知态不擦写/释放。既有C2双模式56向量、C1生产F2FS/SHA和INFO五向量回归通过。
 15项完整交付检查退出0，56个交付源码绑定。硬件pending；C2仍未通过。
+
+## attempt-01 实机结论
+
+照片IMG_7170..JPG，SHA256 8563c25f02596aed3fc1ed2752d409c406b082dde2797bafd01bb6e8cd61ff8a。标准桥生命周期未通过：
+ABI=standard64；页phys=C6A40000、bytes=2000。
+enable x0=42000C1C/x1=0，返回a0=a1=a2=a3=0。
+create x0=42000C1E，参数C6A40000/C6A40006/2000/0，返回a0=0/a1=5C/a2=0/a3=0。
+按本候选采用的固定模块ABI，没有可接受的零服务结果及非零a2句柄，decode=Not Ready。
+retained handle=0 bytes=2000；照片可见无delete，按生产失败路径未擦写/释放页，无自动重试。
+与旧fast桥照片同样raw create返回，故改变call-type未解决创建接受问题。
+不能把5C猜作具体权限/地址/VM错误，也不能排除部署固件ABI与模块参考不同。
+UFS stop=1、db=tdb=run=0、hcs=10F、is=0、poisoned=0、ready=0，stage=m3-bridge-standard。
+SMMU GFSR=0、FSR=400残留，完整恢复未证明；PARK和cached report end可见。
+未调用root/对象、TA、密钥或解密。15项检查、镜像59ef12959f32ef2869f328eaf258abeeca5c6f2b1f2880c56303756f701d2ad8及提交33e50f3aefb23346e407a25302efab7c44dfe3cc的56个源码绑定仍有效。
+本次把未验收点定位到对象调用之前的桥创建契约；准确5C含义及VM/DT/permission/pool要求仍待静态核对。
+C2仍未通过，不继续猜句柄或进入对象调用。
