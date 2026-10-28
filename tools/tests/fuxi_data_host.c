@@ -106,7 +106,8 @@ int main(int Argc, char **Argv) {
     return 1;
   }
   if (!EFI_ERROR(Status)) {
-    PartitionBounds(&Disk, &Parts, &Image);
+    if (Parts.Metadata.Present && Parts.Userdata.Present) PartitionBounds(&Disk, &Parts, &Image);
+    else assert(!Parts.Metadata.Present && !Parts.Userdata.Present);
     if (Parts.KeymasterA.Present || Parts.KeymasterB.Present) {
       assert(Parts.KeymasterA.Present && Parts.KeymasterB.Present);
       assert(Parts.KeymasterA.First == 241 && Parts.KeymasterA.Last == 243);

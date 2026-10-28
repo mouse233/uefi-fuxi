@@ -60,6 +60,10 @@ def main():
             both[pos+56:pos+56+len(encoded)] = encoded
         checksums(both, block)
         cases.append((f"keymaster-both-{block}", block, both, 0))
+        only = both.copy()
+        only[2 * block:2 * block + 256] = bytes(256)
+        checksums(only, block)
+        cases.append((f"keymaster-only-{block}", block, only, 0))
         duplicate = both.copy()
         pos = 2 * block + 128 * 3 + 56
         duplicate[pos:pos+72] = bytes(72)
