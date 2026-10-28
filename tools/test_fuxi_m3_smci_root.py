@@ -20,9 +20,10 @@ def main():
        '-I',str(a.edk2/'MdePkg/Include'/arch),'-I',str(src),'-I',str(native),
        str(root/'tools/tests/m3_smci_root_host.c'),str(src/'DataReadOnly.c'),'-o',str(binary)]
   for mode in (0,1):
-   subprocess.run([*cmd, "-DFUXI_M3_SMCI_OBJECT="+str(mode)],check=True)
-   subprocess.run([str(binary)],check=True)
- report=dict(result='passed',vectors=56,vectors_per_mode=28,modes=["legacy","object"],sanitizers=['address','undefined'],
+   for profile in (0,1):
+    subprocess.run([*cmd, "-DFUXI_M3_SMCI_OBJECT="+str(mode), "-DFUXI_M3_BRIDGE_HLOS="+str(profile)],check=True)
+    subprocess.run([str(binary)],check=True)
+ report=dict(result='passed',vectors=148,vectors_per_configuration=37,modes=["legacy","object"],bridge_profiles=["zero-vm-control","hlos"],sanitizers=['address','undefined'],
   scope='Production C2 root register/release and bridge lifetime, all register/response/object/buffer errors retain resources; simulated SMC only',
   sources={str(x.relative_to(root)):hashlib.sha256(x.read_bytes()).hexdigest() for x in paths})
  a.report.parent.mkdir(parents=True,exist_ok=True);a.report.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))

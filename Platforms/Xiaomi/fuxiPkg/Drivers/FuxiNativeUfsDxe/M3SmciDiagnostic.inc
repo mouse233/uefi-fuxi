@@ -74,13 +74,22 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   mSmciStatus=FdpBuildBridgeEnable(Regs);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   FnuLog(L"FUXIM3 SMCI bridge-enable begin");FnuSmc64(Regs,&Out);
-  FnuLog(L"FUXIM3 SMCI bridge-enable return a0=%lx a1=%lx",(UINT64)Out.Arg0,(UINT64)Out.Arg1);
+  FnuLog(L"FUXIM3 SMCI bridge-enable return a0=%lx a1=%lx a2=%lx a3=%lx",
+         (UINT64)Out.Arg0,(UINT64)Out.Arg1,(UINT64)Out.Arg2,(UINT64)Out.Arg3);
   if (Out.Arg0 || Out.Arg1) { mSmciStatus=EFI_NOT_READY;goto Done; }
+#if FUXI_M3_BRIDGE_HLOS
+  FnuLog(L"FUXIM3 SMCI bridge-profile=hlos vm-count=1 vmid=3 ns-perm=6 tz-perm=6 hyp-flags=0");
+  mSmciStatus=FdpBuildBridgeCreateHlos((UINT64)Raw,8192,Regs);
+#else
   mSmciStatus=FdpBuildBridgeCreate((UINT64)Raw,8192,0,0,Regs);
+#endif
   if (EFI_ERROR(mSmciStatus)) goto Done;
   Retain=TRUE;
+  FnuLog(L"FUXIM3 SMCI bridge-create args x0=%lx x1=%lx p0=%lx p1=%lx p2=%lx p3=%lx",
+         Regs[0],Regs[1],Regs[2],Regs[3],Regs[4],Regs[5]);
   FnuLog(L"FUXIM3 SMCI bridge-create begin");FnuSmc64(Regs,&Out);
-  FnuLog(L"FUXIM3 SMCI bridge-create return a0=%lx a1=%lx",(UINT64)Out.Arg0,(UINT64)Out.Arg1);
+  FnuLog(L"FUXIM3 SMCI bridge-create return a0=%lx a1=%lx a2=%lx a3=%lx",
+         (UINT64)Out.Arg0,(UINT64)Out.Arg1,(UINT64)Out.Arg2,(UINT64)Out.Arg3);
   mSmciStatus=FdpDecodeBridgeCreate(Out.Arg0,Out.Arg1,Out.Arg2,&Bridge);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   mSmciStatus=SmciInvoke((UINT64)Raw,Page,1,TRUE,&Object);
@@ -93,7 +102,8 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   mSmciStatus=FdpBuildBridgeDelete(Bridge,Regs);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   FnuLog(L"FUXIM3 SMCI bridge-delete begin handle=%lx",Bridge);FnuSmc64(Regs,&Out);
-  FnuLog(L"FUXIM3 SMCI bridge-delete return a0=%lx a1=%lx",(UINT64)Out.Arg0,(UINT64)Out.Arg1);
+  FnuLog(L"FUXIM3 SMCI bridge-delete return a0=%lx a1=%lx a2=%lx a3=%lx",
+         (UINT64)Out.Arg0,(UINT64)Out.Arg1,(UINT64)Out.Arg2,(UINT64)Out.Arg3);
   mSmciStatus=Out.Arg0 ? EFI_NOT_READY : EFI_SUCCESS;
   if (!EFI_ERROR(mSmciStatus)) Retain=FALSE;
 Done:

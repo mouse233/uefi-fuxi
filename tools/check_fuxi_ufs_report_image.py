@@ -39,7 +39,7 @@ def main():
         assert sha(root / name) == digest, name
     extra = ("m3-transport-tests.json",) if (candidate.get("m3_bridge_call") or
                                             candidate.get("m3_metadata_key")) else ()
-    if candidate.get("m3_bridge_call") and not candidate.get("m3_smci_root"):
+    if candidate.get("m3_bridge_call") and (not candidate.get("m3_smci_root") or candidate.get("m3_bridge_hlos")):
         extra += ("m3-bridge-lifetime-tests.json", "m3-bridge-abi-tests.json")
     if candidate.get("m3_bridge_blob"):
         extra += ("m3-blob-tests.json",)
@@ -127,11 +127,23 @@ def main():
         assert candidate["m3_smci_fnid"] == ("72000602" if candidate["m3_smci_mode"] == "object" else "72000600")
         assert candidate["m3_smci_arginfo"] == "224"
         assert candidate["m3_smci_ops"] == ["root-register-null", "remote-release"]
+        if candidate.get("m3_bridge_hlos"):
+            assert candidate["m3_smci_mode"] == "object"
+            assert candidate["m3_bridge_abi"] == "standard64-a0-status-a1-service-a2-handle64"
+            assert candidate["m3_bridge_fnids"] == ["42000c1c","42000c1e","42000c1d"]
+            assert candidate["m3_bridge_profile"] == "hlos"
+            assert (candidate["m3_bridge_vm_count"],candidate["m3_bridge_vmid"],candidate["m3_bridge_ns_perm"],candidate["m3_bridge_tz_perm"],candidate["m3_bridge_hyp_flags"]) == (1,3,6,6,0)
+            for marker in ("FUXIM3 SMCI bridge-profile=hlos vm-count=1 vmid=3 ns-perm=6 tz-perm=6 hyp-flags=0",
+                           "FUXIM3 SMCI context CurrentEL=%lx DAIF=%lx",
+                           "FUXIM3 SMCI bridge-create args x0=%lx x1=%lx p0=%lx p1=%lx p2=%lx p3=%lx",
+                           "FUXIM3 SMCI bridge-create return a0=%lx a1=%lx a2=%lx a3=%lx"):
+                assert marker.encode("utf-16-le") in ufs,marker
+            assert "FUXIM3 KEY dir=%a open=%r".encode("utf-16-le") not in ufs
         for marker in ("FUXIM3 SMCI %a begin x0=%lx x1=%lx in=%lx out=%lx handle=%x op=%x counts=%x",
                        "FUXIM3 SMCI %a return a0=%lx a1=%lx a2=%lx a3=%lx",
                        "FUXIM3 SMCI remote-object=%x; root register only",
                        "FUXIM3 SMCI object-release=Success handle=%x",
-                       "FUXIM3 SMCI bridge-delete return a0=%lx a1=%lx",
+                       "FUXIM3 SMCI bridge-delete return a0=%lx a1=%lx a2=%lx a3=%lx",
                        "FUXIM3 SMCI retained bridge=%lx object=%x; unknown/error state, no retry",
                        "FUXIM3 SMCI result=%r retained=%u; no TA, no key, no decrypt"):
             assert marker.encode("utf-16-le") in ufs, marker

@@ -37,7 +37,7 @@ def main():
     parser.add_argument("--m3-smci-mode", choices=["legacy", "object"], default="legacy",
                         help="explicit root invoke entry; no runtime fallback")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
-    parser.add_argument("--m3-bridge-hlos", action="store_true", help="one VMID3 RW bridge-only comparison; no objects/blob/context")
+    parser.add_argument("--m3-bridge-hlos", action="store_true", help="one VMID3 RW bridge diagnostic; no blob/key/context")
     parser.add_argument("--m3-bridge-blob", action="store_true",
                         help="C1: read the pinned metadata blob into an 8 KiB bridge; no TA")
     parser.add_argument("--m3-bridge-call", action="store_true",
@@ -88,8 +88,10 @@ def main():
         parser.error("object invoke mode requires --m3-smci-root")
     if args.m3_smc_context and not args.m3_smci_root:
         parser.error("context control requires parked root diagnostic configuration")
-    if args.m3_bridge_hlos and (not args.m3_bridge_call or not args.m3_scm_bridge or args.m3_smci_root or args.m3_bridge_blob or args.m3_smc_context or args.m3_metadata_key):
-        parser.error("HLOS comparison requires bridge-only plus bridge availability; no objects/blob/context/key")
+    if args.m3_bridge_hlos and (not args.m3_bridge_call or not args.m3_scm_bridge or args.m3_bridge_blob or args.m3_smc_context or args.m3_metadata_key):
+        parser.error("HLOS requires bridge availability; no blob/context/key")
+    if args.m3_bridge_hlos and args.m3_smci_root and args.m3_smci_mode != "object":
+        parser.error("HLOS C2 candidate requires explicit object mode; no legacy fallback")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:

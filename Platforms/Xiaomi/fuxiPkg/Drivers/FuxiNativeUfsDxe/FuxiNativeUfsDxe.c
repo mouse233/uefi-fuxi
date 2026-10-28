@@ -78,8 +78,8 @@
 #ifndef FUXI_M3_BRIDGE_HLOS
 #define FUXI_M3_BRIDGE_HLOS 0
 #endif
-#if FUXI_M3_BRIDGE_HLOS && (!FUXI_M3_SCM_BRIDGE_CALL || FUXI_M3_SMCI_ROOT || FUXI_M3_BRIDGE_BLOB || FUXI_M3_SMC_CONTEXT)
-#error HLOS bridge comparison requires bridge-only diagnostic, no objects/blob/context
+#if FUXI_M3_BRIDGE_HLOS && (!FUXI_M3_SCM_BRIDGE_CALL || FUXI_M3_BRIDGE_BLOB || FUXI_M3_SMC_CONTEXT)
+#error HLOS bridge requires diagnostic with no blob/context
 #endif
 #ifndef FUXI_M3_BRIDGE_BLOB
 #define FUXI_M3_BRIDGE_BLOB 0
@@ -759,7 +759,13 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
   }
 #elif FUXI_M3_SMCI_ROOT
   // Invoke after the existing UFS shutdown, with no outstanding read DMA.
-  if (!mPoisoned && mScmAvailable && mInvokeAvailable) FnuSmciRootProbe();
+  if (!mPoisoned && mScmAvailable && mInvokeAvailable) {
+    UINT64 El, Daif;
+    __asm__ __volatile__("mrs %0, CurrentEL" : "=r"(El));
+    __asm__ __volatile__("mrs %0, DAIF" : "=r"(Daif));
+    FnuLog(L"FUXIM3 SMCI context CurrentEL=%lx DAIF=%lx",El,Daif);
+    FnuSmciRootProbe();
+  }
   else FnuLog(L"FUXIM3 SMCI skipped: UFS/INFO/invoke availability not ready");
 #endif
   FnuLog(L"FUXIUFS final stage=%a poisoned=%u ready=%u smmu-configured=%u",
