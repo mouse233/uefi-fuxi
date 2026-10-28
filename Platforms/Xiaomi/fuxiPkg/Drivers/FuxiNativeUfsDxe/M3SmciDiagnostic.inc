@@ -12,6 +12,9 @@ STATIC VOID SmciPut32(UINT8 *P, UINT32 Value) {
 STATIC BOOLEAN SmciZero(CONST UINT8 *P, UINTN N) {
   UINTN I; for (I=0; I<N; ++I) if (P[I]) return FALSE; return TRUE;
 }
+STATIC UINT32 SmciNonZero(CONST UINT8 *P, UINTN N) {
+  UINTN I; UINT32 C=0; for (I=0; I<N; ++I) if (P[I]) ++C; return C;
+}
 STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
                               UINT32 Kind, UINT32 *Returned) {
   UINT64 Regs[8]; ARM_SMC_ARGS Out;
@@ -47,15 +50,23 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINT32 Object,
   FnuLog(L"FUXIM3 SMCI %a return a0=%lx a1=%lx a2=%lx a3=%lx",
          Stage, (UINT64)Out.Arg0, (UINT64)Out.Arg1,
          (UINT64)Out.Arg2, (UINT64)Out.Arg3);
-  FnuLog(L"FUXIM3 SMCI %a buffers hdr=%08x/%08x/%08x oi=%08x/%08x oo=%08x/%08x out=%08x/%08x/%08x/%08x",
+  FnuLog(L"FUXIM3 SMCI %a buffers hdr=%08x/%08x/%08x oi=%08x/%08x oo=%08x/%08x out=%08x/%08x/%08x/%08x nz=%u",
          Stage, SmciU32(Page), SmciU32(Page+4), SmciU32(Page+8),
          SmciU32(Page+12), SmciU32(Page+16), SmciU32(Page+20), SmciU32(Page+24),
-         SmciU32(Page+4096), SmciU32(Page+4100), SmciU32(Page+4104), SmciU32(Page+4108));
+         SmciU32(Page+4096), SmciU32(Page+4100), SmciU32(Page+4104), SmciU32(Page+4108),
+         SmciNonZero(Page+4096,4096));
   // Deliberately accept only the all-zero terminal/no-callback tuple. Unknown
   // SMC interruption, response type, object result or piggyback retains memory.
   if (Out.Arg0 || Out.Arg1 || Out.Arg2 || Out.Arg3) return EFI_NOT_READY;
+  // The out page is not part of the object result. The pinned reference reads
+  // it only as a piggyback message (version/op at +0/+4, loop count at +8) and
+  // never requires it to be zero; a tzcb_req reading would carry its count at
+  // +12. Requiring +8..end to be zero therefore covers both readings: the first
+  // two words may hold the device's version/op, but no object operation may be
+  // pending. The object itself is the handle at +20 of the request page.
   if (SmciU32(Page)!=Object || SmciU32(Page+4)!=Op || SmciU32(Page+8)!=Counts ||
-      !SmciZero(Page+4096,4096)) return EFI_COMPROMISED_DATA;
+      SmciU32(Page+4104)!=0 || !SmciZero(Page+4108,4084))
+    return EFI_COMPROMISED_DATA;
   if (Register || Open) {
     UINT32 Handle=SmciU32(Page+20);
     if (Handle<=1 || (Handle&0x80000000U)) return EFI_COMPROMISED_DATA;

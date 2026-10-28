@@ -52,6 +52,7 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  }
  if(Calls==3){
    Page[20]=0x44;
+   Page[4096]=2;Page[4098]=1;Page[4100]=0xfd;Page[4101]=0xff; // version/op, counts 0.
    if(Mode==33){a->Arg0=1;Page[8191]=0xa5;}
    if(Mode==27)a->Arg0=0xffffffff80000001ULL; // Observed v1 raw failure.
    if(Mode==4)a->Arg0=1; // Interrupted: no resumption implemented.
@@ -69,16 +70,17 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
    if(Mode==16)Page[0]=2;
    if(Mode==17)Page[12]=1;
    if(Mode==18)Page[4095]=1;
-   if(Mode==19)Page[4096]=1;
+   if(Mode==19)Page[4108]=1;
    if(Mode==20)Page[8191]=1;
  }
  if(Calls==4){
+   Page[4096]=2;Page[4098]=1;Page[4100]=0xfd;Page[4101]=0xff; // version/op, counts 0.
    if(Mode==34){a->Arg0=1;Page[8191]=0xa5;}
    if(Mode==21)a->Arg0=1;
    if(Mode==22)a->Arg1=3;
    if(Mode==23)a->Arg2=1;
    if(Mode==24)Page[12]=1;
-   if(Mode==25)Page[4096]=1;
+   if(Mode==25)Page[4108]=1;
  }
  if(Calls==5){a->Arg1=0x59;if(Mode==26)a->Arg0=1;if(Mode==35){a->Arg0=1;Page[137]=0xa5;}}
 }

@@ -55,6 +55,8 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  if(Calls==2)a->Arg2=Bridge();
  if(Calls==3)Put(Page+20,0x44);
  if(Calls==4)Put(Page+20,Loader());
+ // The device returned a non-empty out page: version/op only, counts zero.
+ if(Calls>=3&&Calls<=6){Put(Page+4096,0x00010002);Put(Page+4100,0x0000fffd);}
  // Delete service a1 is not consumed by the fixed wrapper; only SCM a0.
  if(Calls==7)a->Arg1=0x59;
  if(Calls!=Phase)return;
@@ -77,7 +79,8 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  case 7:Page[8]^=1;break;
  case 8:Page[12]^=1;break;
  case 9:Page[4095]=1;break;
- case 10:Page[4096]=1;break;
+ case 22:Put(Page+4104,1);break;
+ case 23:Page[4108]=1;break;
  case 11:a->Arg0=0xffffffff80000001ULL;Page[8191]=0xa5;break;
  case 12:Page[24]=1;break;
  case 13:Page[8191]=1;break;
@@ -118,12 +121,13 @@ int main(void){
  Run(0,0,0);Run(8,0,0);
  for(int f=1;f<=3;++f)Run(1,f,0);
  for(int f=1;f<=4;++f)Run(2,f,0);
- for(int p=3;p<=6;++p)for(int f=1;f<=13;++f)Run(p,f,0);
+ for(int p=3;p<=6;++p)for(int f=1;f<=13;++f)if(f!=10)Run(p,f,0);
+ for(int p=3;p<=6;++p)for(int f=22;f<=23;++f)Run(p,f,0);
  for(int p=3;p<=4;++p)for(int f=14;f<=18;++f)Run(p,f,0);
  for(int f=19;f<=21;++f)Run(4,f,0);
  Run(7,1,0);Run(7,2,0);
  Run(0,0,1);Run(0,0,2); // 64-bit bridge and two owned refs to alias handle.
- assert(Vectors==78);
+ assert(Vectors==82);
  printf("PASS %d production C2/C3 vectors; max batch logs=%d plus128 baseline; no hardware\n",Vectors,MaxLogCalls);
  return 0;
 }
