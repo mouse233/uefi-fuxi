@@ -4,6 +4,11 @@
 #define FUXI_M3_SCM_BRIDGE_CALL 1
 #define FUXI_M3_BRIDGE_BLOB 0
 #define FUXI_M3_SMCI_ROOT 0
+#ifndef FUXI_M3_BRIDGE_LARGE
+#define FUXI_M3_BRIDGE_LARGE 0
+#endif
+#define TEST_PAGES (FUXI_M3_BRIDGE_LARGE ? 130U : 2U)
+#define TEST_BYTES (TEST_PAGES * 4096U)
 #include "DataReadOnly.h"
 #include <Library/ArmSmcLib.h>
 #include <assert.h>
@@ -15,13 +20,13 @@ static unsigned char *Page;
 static int Mode,Calls,Frees,mOps;
 static void *ZeroMem(void *p,UINTN n){return memset(p,0,n);}
 static void FnuLog(CONST CHAR16 *f,...){(void)f;}
-static void FnuCacheCiv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && n==8192);}
+static void FnuCacheCiv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && n==TEST_BYTES);}
 static EFI_STATUS AllocatePages(int t,int m,UINTN n,EFI_PHYSICAL_ADDRESS *p){
- (void)t;(void)m;assert(n==2 && !Page);if(Mode==1)return EFI_OUT_OF_RESOURCES;
- assert(posix_memalign((void **)&Page,4096,8192)==0);*p=(UINTN)Page;return EFI_SUCCESS;
+ (void)t;(void)m;assert(n==TEST_PAGES && !Page);if(Mode==1)return EFI_OUT_OF_RESOURCES;
+ assert(posix_memalign((void **)&Page,4096,TEST_BYTES)==0);*p=(UINTN)Page;return EFI_SUCCESS;
 }
 static EFI_STATUS FreePages(EFI_PHYSICAL_ADDRESS p,UINTN n){
- assert(p==(UINTN)Page && n==2);for(UINTN i=0;i<8192;++i)assert(!Page[i]);
+ assert(p==(UINTN)Page && n==TEST_PAGES);for(UINTN i=0;i<TEST_BYTES;++i)assert(!Page[i]);
  ++Frees;free(Page);Page=NULL;return EFI_SUCCESS;
 }
 static struct {EFI_STATUS (*AllocatePages)(int,int,UINTN,EFI_PHYSICAL_ADDRESS *);
@@ -29,8 +34,8 @@ static struct {EFI_STATUS (*AllocatePages)(int,int,UINTN,EFI_PHYSICAL_ADDRESS *)
 VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  ++Calls;assert(Calls<=3);assert(!a->Arg6 && !a->Arg7);
  if(Calls==1)assert(a->Arg0==0x42000c1c && !a->Arg1 && !a->Arg2);
- if(Calls==2)assert(a->Arg0==0x42000c1e && a->Arg1==4 && a->Arg2==((UINTN)Page|(FUXI_M3_BRIDGE_HLOS?6:0)) && a->Arg3==((UINTN)Page|6) && a->Arg4==(8192|(FUXI_M3_BRIDGE_HLOS?0x200:0)) && a->Arg5==(FUXI_M3_BRIDGE_HLOS?3:0));
- if(Calls==3){assert(a->Arg0==0x42000c1d && a->Arg1==1 && a->Arg2==0x10000005cULL);for(UINTN i=0;i<8192;++i)assert(!Page[i]);}
+ if(Calls==2)assert(a->Arg0==0x42000c1e && a->Arg1==4 && a->Arg2==((UINTN)Page|(FUXI_M3_BRIDGE_HLOS?6:0)) && a->Arg3==((UINTN)Page|6) && a->Arg4==(TEST_BYTES|(FUXI_M3_BRIDGE_HLOS?0x200:0)) && a->Arg5==(FUXI_M3_BRIDGE_HLOS?3:0));
+ if(Calls==3){assert(a->Arg0==0x42000c1d && a->Arg1==1 && a->Arg2==0x10000005cULL);for(UINTN i=0;i<TEST_BYTES;++i)assert(!Page[i]);}
  a->Arg0=a->Arg1=a->Arg2=a->Arg3=0;
  if(Calls==1){if(Mode==2)a->Arg0=1;if(Mode==3)a->Arg1=4;}
  if(Calls==2){

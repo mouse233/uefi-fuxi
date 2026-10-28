@@ -96,7 +96,9 @@ def main():
         assert candidate["m3_bridge_ops"] == ["enable", "create", "delete"]
         assert candidate["m3_bridge_abi"] == "standard64-a0-status-a1-service-a2-handle64"
         assert candidate["m3_bridge_fnids"] == ["42000c1c","42000c1e","42000c1d"]
-        assert candidate["m3_bridge_bytes"] == 8192
+        assert candidate["m3_bridge_bytes"] == (0x82000 if candidate.get("m3_bridge_large") else 8192)
+        if candidate.get("m3_bridge_large"):
+            assert candidate.get("lun4_keymaster") and candidate.get("m3_bridge_hlos")
         if candidate.get("m3_bridge_hlos"):
             assert not candidate["m3_smci_root"] and not candidate["m3_bridge_blob"] and not candidate["m3_metadata_key"]
             assert candidate["m3_bridge_profile"] == "hlos"

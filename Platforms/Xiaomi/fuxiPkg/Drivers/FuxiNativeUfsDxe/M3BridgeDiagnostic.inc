@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause-Patent
+#ifndef FUXI_M3_BRIDGE_LARGE
+#define FUXI_M3_BRIDGE_LARGE 0
+#endif
 #if FUXI_M3_SCM_BRIDGE_CALL
 // Enable/create/delete with explicit ownership: a registered page is retained
 // until delete succeeds. Every synchronous SMC logs before entering secure world.
@@ -27,7 +30,7 @@ STATIC VOID FnuBridgeCallProbe(CONST FDP_DISK *Disk,
   UINT64 Handle = 0;
   BOOLEAN Created = FALSE;
   EFI_STATUS BlobStatus = EFI_SUCCESS;
-  UINTN Pages = 2; // Match the two-page input/output range needed by C2.
+  UINTN Pages = FUXI_M3_BRIDGE_LARGE ? 130 : 2; // 0x82000 full-partition message + minimum output, no objects.
   UINTN Bytes = EFI_PAGES_TO_SIZE(Pages);
   (VOID)Disk; (VOID)Metadata; (VOID)Work; (VOID)ExpectedSha;
 

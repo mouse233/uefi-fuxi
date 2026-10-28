@@ -6,7 +6,7 @@ args=parser.parse_args()
 ufs=root/'Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe'
 data=root/'Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe'
 s=(ufs/'FuxiNativeUfsDxe.c').read_text()
-start=s.index('STATIC EFI_STATUS FnuHashKeymaster(');end=s.index('\nSTATIC VOID RunLun4Keys',start)
+start=s.index('STATIC EFI_STATUS FnuHashKeymaster(');end=s.index('\nSTATIC BOOLEAN mLun4Passed',start)
 production=s[start:end]
 harness=r'''
 #include "DataReadOnly.h"

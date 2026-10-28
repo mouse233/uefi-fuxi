@@ -47,6 +47,12 @@
 #ifndef FUXI_M3_SCM_INFO
 #define FUXI_M3_SCM_INFO 0
 #endif
+#ifndef FUXI_M3_BRIDGE_LARGE
+#define FUXI_M3_BRIDGE_LARGE 0
+#endif
+#if FUXI_M3_BRIDGE_LARGE && (!FUXI_UFS_LUN4_KEYS || !FUXI_M3_BRIDGE_HLOS || !FUXI_M3_SCM_BRIDGE_CALL || FUXI_M3_SMCI_ROOT)
+#error Large bridge requires LUN4, HLOS bridge, and no object invoke
+#endif
 #ifndef FUXI_UFS_LUN4_KEYS
 #define FUXI_UFS_LUN4_KEYS 0
 #endif
@@ -388,7 +394,8 @@ STATIC EFI_STATUS FnuHashKeymaster(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Pa
   FnuLog(L"%s", Line);
   return CompareMem(Digest, Expected, 32) == 0 ? EFI_SUCCESS : EFI_COMPROMISED_DATA;
 }
-STATIC VOID RunLun4Keys(VOID *Scratch) {
+STATIC BOOLEAN mLun4Passed = FALSE;
+STATIC BOOLEAN RunLun4Keys(VOID *Scratch) {
   FNU_DIAG_LUN Context = {4, 0};
   FDP_DISK Disk;
   FDP_PARTITIONS Parts;
@@ -399,24 +406,25 @@ STATIC VOID RunLun4Keys(VOID *Scratch) {
   FnuLog(L"FUXILUN4 slot=unknown; no automatic slot selection");
   Status = FnuTestUnitReadyLun(&mDev, &mOps, 4, FNU_POLLS(FNU_TIMEOUT_NOP));
   FnuLog(L"FUXILUN4 tur=%r", Status);
-  if (EFI_ERROR(Status) || mPoisoned) return;
+  if (EFI_ERROR(Status) || mPoisoned) return FALSE;
   Status = FnuReadCapacityLun(&mDev, &mOps, 4, &Last, &Block, FNU_POLLS(FNU_TIMEOUT_READ));
   FnuLog(L"FUXILUN4 capacity=%r last=%x block=%u", Status, Last, Block);
-  if (EFI_ERROR(Status) || mPoisoned || Block != 4096) return;
+  if (EFI_ERROR(Status) || mPoisoned || Block != 4096) return FALSE;
   Context.Last = Last;
   Disk.Context = &Context; Disk.Read = FnuLun4Read; Disk.BlockSize = Block; Disk.LastBlock = Last;
   Status = FdpReadGpt(&Disk, Scratch, FDP_SCRATCH_BYTES, &Parts);
   FnuLog(L"FUXILUN4 GPT=%r", Status);
-  if (EFI_ERROR(Status) || mPoisoned) return;
+  if (EFI_ERROR(Status) || mPoisoned) return FALSE;
   FnuLog(L"FUXILUN4 a=%u %lx..%lx b=%u %lx..%lx", (UINT32)Parts.KeymasterA.Present,
          Parts.KeymasterA.First, Parts.KeymasterA.Last, (UINT32)Parts.KeymasterB.Present,
          Parts.KeymasterB.First, Parts.KeymasterB.Last);
-  if (!Parts.KeymasterA.Present || !Parts.KeymasterB.Present) return;
+  if (!Parts.KeymasterA.Present || !Parts.KeymasterB.Present) return FALSE;
   Status = FnuHashKeymaster(&Disk, &Parts.KeymasterA, L"FUXILUN4 a-sha256=", HashA, Scratch);
   FnuLog(L"FUXILUN4 hash-a=%r", Status);
-  if (EFI_ERROR(Status) || mPoisoned) return;
+  if (EFI_ERROR(Status) || mPoisoned) return FALSE;
   Status = FnuHashKeymaster(&Disk, &Parts.KeymasterB, L"FUXILUN4 b-sha256=", HashB, Scratch);
   FnuLog(L"FUXILUN4 hash-b=%r", Status);
+  return (BOOLEAN)(!EFI_ERROR(Status) && !mPoisoned);
 }
 #endif
 
@@ -784,7 +792,7 @@ STATIC VOID RunDiagnostic(VOID) {
 #if FUXI_UFS_M2_FILES
       RunM2(&Disk, &Parts.Metadata, Scratch, Repeat);
 #if FUXI_UFS_LUN4_KEYS
-      if (!mPoisoned && !EFI_ERROR(mM2Status)) { FNU_STAGE("lun4-keymaster"); RunLun4Keys(Scratch); }
+      if (!mPoisoned && !EFI_ERROR(mM2Status)) { FNU_STAGE("lun4-keymaster"); mLun4Passed=RunLun4Keys(Scratch); }
       else FnuLog(L"FUXILUN4 skipped: M2 failed or DMA quarantined");
 #endif
 #endif
@@ -832,8 +840,13 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
 #endif
   RunDiagnostic();
 #if FUXI_M3_SCM_BRIDGE_CALL && !FUXI_M3_BRIDGE_BLOB && !FUXI_M3_SMCI_ROOT
+#if FUXI_M3_BRIDGE_LARGE
+  if (!mPoisoned && mScmAvailable && mLun4Passed) FnuBridgeCallProbe(NULL, NULL, NULL, NULL);
+  else FnuLog(L"FUXIM3 BRIDGE skipped: LUN4/INFO/queue not ready");
+#else
   if (!mPoisoned && mScmAvailable) FnuBridgeCallProbe(NULL, NULL, NULL, NULL);
   else FnuLog(L"FUXIM3 BRIDGE skipped: UFS/INFO not ready");
+#endif
 #endif
 #if FUXI_M3_SMC_CONTEXT
   {

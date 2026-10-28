@@ -39,6 +39,7 @@ def main():
     parser.add_argument("--m3-smci-loader", action="store_true", help="gated root/open UID122/release batch; no TA or keys")
     parser.add_argument("--m3-smci-lookup", action="store_true", help="loader lookup of keymaster64/keymaster only; no load or keys")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
+    parser.add_argument("--m3-bridge-large", action="store_true", help="0x82000 HLOS bridge after LUN4 hashes; no objects")
     parser.add_argument("--m3-bridge-hlos", action="store_true", help="one VMID3 RW bridge diagnostic; no blob/key/context")
     parser.add_argument("--m3-bridge-blob", action="store_true",
                         help="C1: read the pinned metadata blob into an 8 KiB bridge; no TA")
@@ -99,6 +100,8 @@ def main():
         parser.error("HLOS C2 candidate requires explicit object mode; no legacy fallback")
     if args.m3_smci_loader and (not args.m3_smci_root or not args.m3_bridge_hlos or args.m3_smci_mode != "object" or args.m3_smc_context):
         parser.error("loader batch requires HLOS object root; no context mode")
+    if args.m3_bridge_large and not (args.lun4_keymaster and args.m3_bridge_hlos and args.m3_scm_bridge and args.m3_bridge_call and not args.m3_smci_root and not args.m3_bridge_blob):
+        parser.error("large bridge requires LUN4, HLOS bridge and INFO, no object/blob")
     if args.m3_smci_lookup and not args.m3_smci_loader:
         parser.error("lookup batch requires --m3-smci-loader")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
@@ -158,6 +161,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_UFS_REPORT_HOLD_SECONDS"] = str(hold)
     ctx.board["firmware"]["defines"]["FUXI_UFS_M2_FILES"] = str(int(args.m2_metadata_files))
     ctx.board["firmware"]["defines"]["FUXI_UFS_LUN4_KEYS"] = str(int(args.lun4_keymaster))
+    ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_LARGE"] = str(int(args.m3_bridge_large))
     ctx.board["firmware"]["defines"]["FUXI_M3_METADATA_KEY"] = str(int(args.m3_metadata_key))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_INFO"] = str(int(args.m3_scm_info))
     ctx.board["firmware"]["defines"]["FUXI_M3_SCM_SUBJECTS"] = str(int(args.m3_scm_subjects))
@@ -198,7 +202,7 @@ def main():
     shutil.copyfile(image, out / alias)
     if args.m2_metadata_files:
         shutil.copyfile(image, out / "Mu-fuxi-m2-metadata.img")
-    report = dict(lun4_keymaster=args.lun4_keymaster, image=str(image), sha256=hashlib.sha256(image.read_bytes()).hexdigest(),
+    report = dict(lun4_keymaster=args.lun4_keymaster, m3_bridge_large=args.m3_bridge_large, image=str(image), sha256=hashlib.sha256(image.read_bytes()).hexdigest(),
                   bytes=image.stat().st_size,
                   mode=("M2 metadata read-only diagnostic; parks before USB" if args.m2_metadata_files else
                         "receiver-only image without the UFS diagnostic (A/B baseline)"
@@ -230,7 +234,7 @@ def main():
                   m3_bridge_ns_perm=6 if args.m3_bridge_hlos else 0,
                   m3_bridge_tz_perm=6, m3_bridge_hyp_flags=0,
                   m3_bridge_blob=args.m3_bridge_blob,
-                  m3_bridge_bytes=0 if args.m3_smc_context else 8192 if (args.m3_bridge_blob or args.m3_smci_root) else (8192 if args.m3_bridge_call else None),
+                  m3_bridge_bytes=0x82000 if args.m3_bridge_large else 0 if args.m3_smc_context else 8192 if (args.m3_bridge_blob or args.m3_smci_root) else (8192 if args.m3_bridge_call else None),
                   m3_blob_bytes=208 if args.m3_bridge_blob else None,
                   m3_blob_sha256="9a57f01af0b8c9836cdf04f9abc2f83ad21baf94527b2c80b18b06f04ab2321e" if args.m3_bridge_blob else None,
                   m3_blob_prefix_bytes=32 if args.m3_bridge_blob else None,
