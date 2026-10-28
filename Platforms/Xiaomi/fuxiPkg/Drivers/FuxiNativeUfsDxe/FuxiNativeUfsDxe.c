@@ -75,6 +75,13 @@
 #error Bridge calls require the parked diagnostic
 #endif
 
+#ifndef FUXI_M3_BRIDGE_BLOB
+#define FUXI_M3_BRIDGE_BLOB 0
+#endif
+#if FUXI_M3_BRIDGE_BLOB && (!FUXI_M3_SCM_BRIDGE_CALL || !FUXI_UFS_M2_FILES)
+#error Bridge blob requires bridge calls and the parked M2 diagnostic
+#endif
+
 #define FNU_POLLS(Microseconds) ((Microseconds) / 2U)
 #define FNU_TIMEOUT_NOP         200000U
 #define FNU_TIMEOUT_READ       1000000U
@@ -231,84 +238,8 @@ STATIC VOID FnuCacheInv(FNU_OPS *Ops, VOID *Va, UINTN Bytes) {
   InvalidateDataCacheRange(Va, Bytes);
 }
 
-#if FUXI_M3_SCM_BRIDGE_CALL
-// Closed loop over one page: enable, create, delete. The page is never freed
-// before the delete attempt. Every step logs before the synchronous SMC.
-STATIC VOID FnuSmc64(CONST UINT64 Regs[8], ARM_SMC_ARGS *Out) {
-  ZeroMem(Out, sizeof(*Out));
-  Out->Arg0 = (UINTN)Regs[0];
-  Out->Arg1 = (UINTN)Regs[1];
-  Out->Arg2 = (UINTN)Regs[2];
-  Out->Arg3 = (UINTN)Regs[3];
-  Out->Arg4 = (UINTN)Regs[4];
-  Out->Arg5 = (UINTN)Regs[5];
-  Out->Arg6 = (UINTN)Regs[6];
-  Out->Arg7 = (UINTN)Regs[7];
-  ArmCallSmc(Out);
-}
-
-STATIC VOID FnuBridgeCallProbe(VOID) {
-  EFI_PHYSICAL_ADDRESS Raw = SIZE_4GB - 1;
-  VOID *Page;
-  UINT64 Regs[8];
-  ARM_SMC_ARGS Out;
-  EFI_STATUS Status;
-  UINT32 Handle = 0;
-
-  FNU_STAGE("m3-bridge-call");
-  if (gBS->AllocatePages(AllocateMaxAddress, EfiBootServicesData, 1, &Raw) != EFI_SUCCESS) {
-    FnuLog(L"FUXIM3 BRIDGE page=allocation-failed; no SMC");
-    return;
-  }
-  Page = (VOID *)(UINTN)Raw;
-  ZeroMem(Page, EFI_PAGE_SIZE);
-  FnuCacheCiv(&mOps, Page, EFI_PAGE_SIZE);
-  FnuLog(L"FUXIM3 BRIDGE page phys=%lx bytes=%x", (UINT64)Raw, (UINT32)EFI_PAGE_SIZE);
-
-  Status = FdpBuildBridgeEnable(Regs);
-  if (EFI_ERROR(Status)) {
-    FnuLog(L"FUXIM3 BRIDGE enable construct=%r; no call", Status);
-    goto Release;
-  }
-  FnuLog(L"FUXIM3 BRIDGE enable begin x0=%lx x1=%lx (no hardware timeout)",
-         Regs[0], Regs[1]);
-  FnuSmc64(Regs, &Out);
-  FnuLog(L"FUXIM3 BRIDGE enable return a0=%lx a1=%lx a2=%lx a3=%lx",
-         (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
-  if (Out.Arg0 != 0) goto Release;
-
-  Status = FdpBuildBridgeCreate((UINT64)Raw, EFI_PAGE_SIZE, 0, 0, Regs);
-  if (EFI_ERROR(Status)) {
-    FnuLog(L"FUXIM3 BRIDGE create construct=%r; no call", Status);
-    goto Release;
-  }
-  FnuLog(L"FUXIM3 BRIDGE create begin x0=%lx arg0=%lx arg1=%lx arg2=%lx arg3=%lx",
-         Regs[0], Regs[2], Regs[3], Regs[4], Regs[5]);
-  FnuSmc64(Regs, &Out);
-  FnuLog(L"FUXIM3 BRIDGE create return a0=%lx a1=%lx a2=%lx a3=%lx",
-         (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
-  Status = FdpDecodeBridgeCreate(Out.Arg0, Out.Arg1, &Handle);
-  if (EFI_ERROR(Status)) {
-    FnuLog(L"FUXIM3 BRIDGE create decode=%r; no delete", Status);
-    goto Release;
-  }
-  Status = FdpBuildBridgeDelete(Handle, Regs);
-  if (EFI_ERROR(Status)) {
-    FnuLog(L"FUXIM3 BRIDGE delete construct=%r; no call", Status);
-    goto Release;
-  }
-  FnuLog(L"FUXIM3 BRIDGE delete begin handle=%x", Handle);
-  FnuSmc64(Regs, &Out);
-  FnuLog(L"FUXIM3 BRIDGE delete return a0=%lx a1=%lx a2=%lx a3=%lx",
-         (UINT64)Out.Arg0, (UINT64)Out.Arg1, (UINT64)Out.Arg2, (UINT64)Out.Arg3);
-  Status = (Out.Arg0 == 0) ? EFI_SUCCESS : EFI_NOT_READY;
-  FnuLog(L"FUXIM3 BRIDGE result=%r handle=%x; closed loop, no key, no TA, no decrypt",
-         Status, Handle);
-Release:
-  ZeroMem(Page, EFI_PAGE_SIZE);
-  gBS->FreePages(Raw, 1);
-}
-#endif
+#include "M3BridgeBlob.inc"
+#include "M3BridgeDiagnostic.inc"
 
 STATIC UINT32 FnuSmmuRead(VOID *Context, UINTN Offset) {
   (VOID)Context;
@@ -736,6 +667,11 @@ STATIC VOID RunDiagnostic(VOID) {
 #if FUXI_M3_METADATA_KEY
       RunM3Key(&Disk, &Parts.Metadata, Scratch, Repeat);
 #endif
+#if FUXI_M3_BRIDGE_BLOB
+      if (!mPoisoned && Parts.Metadata.Present && mScmAvailable)
+        FnuBridgeCallProbe(&Disk, &Parts.Metadata, Scratch, mM3BlobExpectedSha);
+      else FnuLog(L"FUXIM3 BLOB skipped: UFS/metadata/INFO unavailable");
+#endif
     }
 ReleaseScratch:
     ZeroMem(Repeat, 4096);
@@ -770,8 +706,8 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
 #if FUXI_M3_SCM_INFO
   FnuScmInfoProbe();
 #endif
-#if FUXI_M3_SCM_BRIDGE_CALL
-  if (mScmAvailable) FnuBridgeCallProbe();
+#if FUXI_M3_SCM_BRIDGE_CALL && !FUXI_M3_BRIDGE_BLOB
+  if (mScmAvailable) FnuBridgeCallProbe(NULL, NULL, NULL, NULL);
   else FnuLog(L"FUXIM3 BRIDGE skipped: INFO self-query unavailable");
 #endif
   RunDiagnostic();

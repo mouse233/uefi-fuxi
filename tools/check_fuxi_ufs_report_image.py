@@ -39,6 +39,8 @@ def main():
         assert sha(root / name) == digest, name
     extra = ("m3-transport-tests.json",) if (candidate.get("m3_bridge_call") or
                                             candidate.get("m3_metadata_key")) else ()
+    if candidate.get("m3_bridge_blob"):
+        extra += ("m3-blob-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
         report = json.loads((out / filename).read_text())
         assert report["result"] == "passed"
@@ -89,7 +91,18 @@ def main():
                        "FUXIM3 BRIDGE create return a0=%lx a1=%lx a2=%lx a3=%lx",
                        "FUXIM3 BRIDGE delete begin handle=%x",
                        "FUXIM3 BRIDGE delete return a0=%lx a1=%lx a2=%lx a3=%lx",
-                       "FUXIM3 BRIDGE result=%r handle=%x; closed loop, no key, no TA, no decrypt"):
+                       "FUXIM3 BRIDGE retained: create/delete unresolved handle=%x bytes=%x",
+                       "FUXIM3 BRIDGE released bytes=%x"):
+            assert marker.encode("utf-16-le") in ufs, marker
+    if candidate.get("m3_bridge_blob"):
+        assert candidate["m3_bridge_call"] and candidate["m3_bridge_bytes"] == 8192
+        assert candidate["m3_blob_bytes"] == 208 and candidate["m3_blob_prefix_bytes"] == 32
+        assert candidate["m3_blob_sha256"] == "9a57f01af0b8c9836cdf04f9abc2f83ad21baf94527b2c80b18b06f04ab2321e"
+        assert "/vold/metadata_encryption/key/keymaster_key_blob".encode() in ufs
+        for marker in ("FUXIM3 BLOB page-sha256=%s bytes=%u match=1",
+                       "FUXIM3 BLOB prefix32=%s",
+                       "FUXIM3 BLOB read=%r; registered page, no TA, no decrypt",
+                       "FUXIM3 BLOB result=%r delete=%r handle=%x; no TA, no decrypt"):
             assert marker.encode("utf-16-le") in ufs, marker
     if candidate.get("m3_metadata_key"):
         assert candidate["m2_metadata_files"] and park

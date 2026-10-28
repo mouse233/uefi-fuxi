@@ -50,6 +50,9 @@ def main():
     elif candidate.get('m3_metadata_key'):
         commands.append(('m3-transport', ['python3', str(root / 'tools/test_fuxi_m3_key_paths.py'),
                                           '--edk2', str(edk2), '--report', str(out / 'm3-transport-tests.json')]))
+    if candidate.get('m3_bridge_blob'):
+        commands.append(('m3-blob', ['python3', str(root / 'tools/test_fuxi_m3_bridge_blob.py'),
+                                   '--edk2', str(edk2), '--report', str(out / 'm3-blob-tests.json')]))
     commands += [
         ('image', ['python3', str(device / 'scripts/check-fuxi-usb-ram-image.py'),
                    '--uefi', str(root), '--output', str(out)]),
