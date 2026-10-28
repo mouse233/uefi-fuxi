@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: BSD-2-Clause-Patent
 // Production gated C2/C3 lifecycle; monitor is simulated, never a real SMC.
 #define _POSIX_C_SOURCE 200112L
+#ifndef FUXI_M3_BRIDGE_LARGE
+#define FUXI_M3_BRIDGE_LARGE 0
+#endif
+#define TEST_PAGES (FUXI_M3_BRIDGE_LARGE ? 130 : 2)
+#define TEST_BYTES (TEST_PAGES * 4096)
 #define FUXI_M3_SMCI_ROOT 1
 #define FUXI_M3_SMCI_LOADER 1
 #define FUXI_M3_SMCI_OBJECT 1
@@ -20,16 +25,16 @@ static int Calls,Frees,Phase,Fault,Special,mOps,LogCalls;
 static FNU_REPORT Report;
 static void *ZeroMem(void *p,UINTN n){return memset(p,0,n);}
 static void FnuLog(CONST CHAR16 *f,...){++LogCalls;FnuReportAppend(&Report,f);}
-static void FnuCacheCiv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && n==8192);}
-static void FnuCacheInv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && n==8192);}
+static void FnuCacheCiv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && (n==8192 || n==TEST_BYTES));}
+static void FnuCacheInv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && (n==8192 || n==TEST_BYTES));}
 static EFI_STATUS AllocatePages(int t,int m,UINTN n,EFI_PHYSICAL_ADDRESS *p){
- (void)t;(void)m;assert(n==2 && !Page);
+ (void)t;(void)m;assert(n==TEST_PAGES && !Page);
  if(Phase==8)return EFI_OUT_OF_RESOURCES;
- assert(posix_memalign((void **)&Page,4096,8192)==0);*p=(UINTN)Page;return EFI_SUCCESS;
+ assert(posix_memalign((void **)&Page,4096,TEST_BYTES)==0);*p=(UINTN)Page;return EFI_SUCCESS;
 }
 static EFI_STATUS FreePages(EFI_PHYSICAL_ADDRESS raw,UINTN n){
- assert((UINTN)Page==raw && n==2);
- for(UINTN i=0;i<8192;++i)assert(!Page[i]);
+ assert((UINTN)Page==raw && n==TEST_PAGES);
+ for(UINTN i=0;i<TEST_BYTES;++i)assert(!Page[i]);
  ++Frees;free(Page);Page=NULL;return EFI_SUCCESS;
 }
 static struct {EFI_STATUS (*AllocatePages)(int,int,UINTN,EFI_PHYSICAL_ADDRESS *);
@@ -41,7 +46,7 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  ++Calls;assert(Calls<=7);
  UINT64 fn=a->Arg0;
  if(Calls==1)assert(fn==0x42000c1c && a->Arg1==0);
- else if(Calls==2)assert(fn==0x42000c1e && a->Arg1==4 && a->Arg2==((UINTN)Page|6) && a->Arg3==((UINTN)Page|6) && a->Arg4==0x2200 && a->Arg5==3);
+ else if(Calls==2)assert(fn==0x42000c1e && a->Arg1==4 && a->Arg2==((UINTN)Page|6) && a->Arg3==((UINTN)Page|6) && a->Arg4==(TEST_BYTES|0x200) && a->Arg5==3);
  else if(Calls<=6){
    assert(fn==0x72000602 && a->Arg1==0x224 && a->Arg2==(UINTN)Page && a->Arg3==4096 && a->Arg4==(UINTN)(Page+4096) && a->Arg5==4096 && !a->Arg6 && !a->Arg7);
    UINT8 expected[8192]={0};

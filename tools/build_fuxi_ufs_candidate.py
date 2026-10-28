@@ -39,7 +39,7 @@ def main():
     parser.add_argument("--m3-smci-loader", action="store_true", help="gated root/open UID122/release batch; no TA or keys")
     parser.add_argument("--m3-smci-lookup", action="store_true", help="loader lookup of keymaster64/keymaster only; no load or keys")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
-    parser.add_argument("--m3-bridge-large", action="store_true", help="0x82000 HLOS bridge after LUN4 hashes; no objects")
+    parser.add_argument("--m3-bridge-large", action="store_true", help="0x82000 HLOS bridge after LUN4 hashes")
     parser.add_argument("--m3-bridge-hlos", action="store_true", help="one VMID3 RW bridge diagnostic; no blob/key/context")
     parser.add_argument("--m3-bridge-blob", action="store_true",
                         help="C1: read the pinned metadata blob into an 8 KiB bridge; no TA")
@@ -100,8 +100,8 @@ def main():
         parser.error("HLOS C2 candidate requires explicit object mode; no legacy fallback")
     if args.m3_smci_loader and (not args.m3_smci_root or not args.m3_bridge_hlos or args.m3_smci_mode != "object" or args.m3_smc_context):
         parser.error("loader batch requires HLOS object root; no context mode")
-    if args.m3_bridge_large and not (args.lun4_keymaster and args.m3_bridge_hlos and args.m3_scm_bridge and args.m3_bridge_call and not args.m3_smci_root and not args.m3_bridge_blob):
-        parser.error("large bridge requires LUN4, HLOS bridge and INFO, no object/blob")
+    if args.m3_bridge_large and not (args.lun4_keymaster and args.m3_bridge_hlos and args.m3_scm_bridge and args.m3_bridge_call and not args.m3_bridge_blob):
+        parser.error("large bridge requires LUN4, HLOS bridge and INFO, no blob")
     if args.m3_smci_lookup and not args.m3_smci_loader:
         parser.error("lookup batch requires --m3-smci-loader")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds

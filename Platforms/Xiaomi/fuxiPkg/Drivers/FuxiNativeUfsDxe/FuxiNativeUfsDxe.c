@@ -50,8 +50,8 @@
 #ifndef FUXI_M3_BRIDGE_LARGE
 #define FUXI_M3_BRIDGE_LARGE 0
 #endif
-#if FUXI_M3_BRIDGE_LARGE && (!FUXI_UFS_LUN4_KEYS || !FUXI_M3_BRIDGE_HLOS || !FUXI_M3_SCM_BRIDGE_CALL || FUXI_M3_SMCI_ROOT)
-#error Large bridge requires LUN4, HLOS bridge, and no object invoke
+#if FUXI_M3_BRIDGE_LARGE && (!FUXI_UFS_LUN4_KEYS || !FUXI_M3_BRIDGE_HLOS || !FUXI_M3_SCM_BRIDGE_CALL )
+#error Large bridge requires LUN4 and HLOS bridge
 #endif
 #ifndef FUXI_UFS_LUN4_KEYS
 #define FUXI_UFS_LUN4_KEYS 0
@@ -859,7 +859,11 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
   }
 #elif FUXI_M3_SMCI_ROOT
   // Invoke after the existing UFS shutdown, with no outstanding read DMA.
-  if (!mPoisoned && mScmAvailable && mInvokeAvailable) {
+  if (!mPoisoned && mScmAvailable && mInvokeAvailable
+#if FUXI_M3_BRIDGE_LARGE
+      && mLun4Passed
+#endif
+      ) {
     UINT64 El, Daif;
     __asm__ __volatile__("mrs %0, CurrentEL" : "=r"(El));
     __asm__ __volatile__("mrs %0, DAIF" : "=r"(Daif));
