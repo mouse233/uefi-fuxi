@@ -28,6 +28,21 @@ STATIC VOID SmciReleaseTaImage(VOID) {
   mTaImage=NULL; mTaImageBytes=0; mTaImagePages=0;
 }
 #endif
+#if FUXI_M3_SMCI_RESUME
+// Resume only the same interrupted SMC, with the returned Qualcomm x6 state.
+// The shared buffers remain owned and unchanged until a terminal result.
+#define FUXI_M3_SCM_RESUME_LIMIT 8U
+STATIC UINT32 SmciCallWithResume(CONST UINT64 Regs[8], ARM_SMC_ARGS *Out) {
+  UINT64 Next[8]; UINT32 Count=0;
+  FnuSmc64(Regs,Out);
+  while (Out->Arg0==1 && Count<FUXI_M3_SCM_RESUME_LIMIT) {
+    CopyMem(Next,Regs,sizeof(Next));
+    Next[0]=1; Next[6]=(UINT64)Out->Arg6; Next[7]=0;
+    ++Count; FnuSmc64(Next,Out);
+  }
+  return Count;
+}
+#endif
 STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object,
                               UINT32 Kind, UINT32 *Returned) {
   UINT64 Regs[8]; ARM_SMC_ARGS Out;
@@ -140,7 +155,14 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
 #endif
   FnuLog(L"FUXIM3 SMCI %a begin x0=%lx x1=%lx in=%lx out=%lx handle=%x op=%x counts=%x",
          Stage, Regs[0], Regs[1], Regs[2], Regs[4], Object, Op, Counts);
+#if FUXI_M3_SMCI_RESUME
+  {
+    UINT32 Count=SmciCallWithResume(Regs,&Out);
+    FnuLog(L"FUXIM3 SMCI %a resume-count=%u final-a0=%lx",Stage,Count,(UINT64)Out.Arg0);
+  }
+#else
   FnuSmc64(Regs, &Out);
+#endif
   #if FUXI_M3_SMCI_VERSION
   FnuCacheInv(&mOps, Page, (Load || Version) ? Bytes : 8192);
 #else

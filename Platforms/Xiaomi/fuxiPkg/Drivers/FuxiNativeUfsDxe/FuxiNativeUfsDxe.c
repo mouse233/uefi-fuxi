@@ -149,6 +149,12 @@
 #if FUXI_M3_SMCI_VERSION && !FUXI_M3_SMCI_LOAD
 #error Version diagnostic requires the bounded loader stage
 #endif
+#ifndef FUXI_M3_SMCI_RESUME
+#define FUXI_M3_SMCI_RESUME 0
+#endif
+#if FUXI_M3_SMCI_RESUME && !FUXI_M3_SMCI_VERSION
+#error SCM continuation requires the bounded version diagnostic
+#endif
 // One load attempt per boot. The signed extent is read while the LUN4 queue is
 // still live; the M3 stage runs after ShutdownQueue and cannot read it again.
 #if FUXI_M3_SMCI_LOAD
