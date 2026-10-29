@@ -52,7 +52,7 @@ def main():
     if candidate.get("m3_smci_load"):
         extra += ("m3-load-tests.json",)
     if candidate.get("m3_smci_version"):
-        extra += ("m3-version-tests.json",)
+        extra += ("m3-version-tests.json", "ta-read-tests.json")
     if candidate.get("m3_smc_context"):
         extra += ("m3-context-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
@@ -167,6 +167,7 @@ def main():
                 assert marker.encode("utf-16-le") in ufs,marker
             if candidate.get("m3_smci_version"):
                 assert candidate.get("m3_smci_load")
+                assert "FUXIM3 TA extent digest mismatch; no load".encode("utf-16-le") in ufs
                 marker="FUXIM3 SMCI version bytes=%x fields=%08x/%08x/%08x/%08x"
                 assert marker.encode("utf-16-le") in ufs, marker
                 version=json.loads((out/"m3-version-tests.json").read_text())

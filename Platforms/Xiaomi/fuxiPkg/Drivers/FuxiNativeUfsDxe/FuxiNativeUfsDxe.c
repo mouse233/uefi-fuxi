@@ -443,7 +443,9 @@ STATIC EFI_STATUS FnuLoadTaImage(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Part
   // the extent is read in chunks of that size instead of one 100-block call.
   Status = EFI_SUCCESS;
   for (UINTN Offset = 0; Offset < Blocks; Offset += Chunk) {
-    Status = FdpReadPartition(Disk, Part, Offset, Chunk, mTaImage + Offset * 4096U);
+    UINTN Remaining = (UINTN)(Blocks - Offset);
+    UINTN ThisChunk = Remaining < Chunk ? Remaining : Chunk;
+    Status = FdpReadPartition(Disk, Part, Offset, ThisChunk, mTaImage + Offset * 4096U);
     if (EFI_ERROR(Status)) break;
   }
   if (EFI_ERROR(Status)) {
@@ -455,6 +457,19 @@ STATIC EFI_STATUS FnuLoadTaImage(CONST FDP_DISK *Disk, CONST FDP_PARTITION *Part
   FnuSha256Init(&Ctx);
   FnuSha256Update(&Ctx, mTaImage, FUXI_M3_SMCI_TA_BYTES);
   FnuSha256Final(&Ctx, Digest);
+  {
+    STATIC CONST UINT8 Expected[32] = {
+      0x9a,0xf7,0x2d,0xfb,0x96,0x68,0x7f,0x5d,0x85,0x87,0x44,0x22,0xac,0x94,0x4a,0x4a,
+      0x07,0x04,0x71,0xbe,0x55,0x2d,0xb0,0x06,0xae,0x44,0x5a,0x30,0xa2,0x62,0xfb,0x62
+    };
+    if (CompareMem(Digest, Expected, sizeof(Expected)) != 0) {
+      FnuLog(L"FUXIM3 TA extent digest mismatch; no load");
+      ZeroMem(mTaImage, EFI_PAGES_TO_SIZE(Pages));
+      gBS->FreePages(Raw, Pages);
+      mTaImage = NULL;
+      return EFI_COMPROMISED_DATA;
+    }
+  }
   for (I = 0; I < 32; ++I)
     At += (UINTN)UnicodeSPrint(Line + At, sizeof(Line) - At * sizeof(CHAR16), L"%02x", (UINT32)Digest[I]);
   Line[At] = 0;
