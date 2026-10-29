@@ -161,6 +161,12 @@
 #if FUXI_M3_SMCI_SETVER && (!FUXI_M3_SMCI_VERSION || !FUXI_M3_SMCI_RESUME)
 #error KeyMint version negotiation requires the version and continuation stages
 #endif
+#ifndef FUXI_M3_SMCI_DATE
+#define FUXI_M3_SMCI_DATE 0
+#endif
+#if FUXI_M3_SMCI_DATE && (!FUXI_M3_SMCI_VERSION || !FUXI_M3_SMCI_RESUME || FUXI_M3_SMCI_SETVER)
+#error Date capability requires version and resume, and forbids setVersion
+#endif
 // One load attempt per boot. The signed extent is read while the LUN4 queue is
 // still live; the M3 stage runs after ShutdownQueue and cannot read it again.
 #if FUXI_M3_SMCI_LOAD

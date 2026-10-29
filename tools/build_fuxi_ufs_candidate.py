@@ -42,6 +42,7 @@ def main():
                         help="one loadFromBuffer of the keymaster_a extent, then release; no command or key")
     parser.add_argument("--m3-smci-version", action="store_true", help="one KeyMint getVersion after load; no key or decrypt")
     parser.add_argument("--m3-smci-resume", action="store_true", help="bounded SCM interrupted-call continuation")
+    parser.add_argument("--m3-smci-date", action="store_true", help="read-only KeyMint date capability query")
     parser.add_argument("--m3-smci-setver", action="store_true", help="one bounded KeyMint set-version 200 request")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
     parser.add_argument("--m3-bridge-large", action="store_true", help="0x82000 HLOS bridge after LUN4 hashes")
@@ -117,6 +118,8 @@ def main():
         parser.error("SCM resume requires --m3-smci-version")
     if args.m3_smci_setver and not (args.m3_smci_version and args.m3_smci_resume):
         parser.error("set-version requires version and resume")
+    if args.m3_smci_date and (not (args.m3_smci_version and args.m3_smci_resume) or args.m3_smci_setver):
+        parser.error("date query requires version and resume and excludes set-version")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -188,6 +191,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_LOAD"] = str(int(args.m3_smci_load))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_VERSION"] = str(int(args.m3_smci_version))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_RESUME"] = str(int(args.m3_smci_resume))
+    ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_DATE"] = str(int(args.m3_smci_date))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_SETVER"] = str(int(args.m3_smci_setver))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_ROOT"] = str(int(args.m3_smci_root))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_HLOS"] = str(int(args.m3_bridge_hlos))
@@ -237,11 +241,11 @@ def main():
                   m3_smc_context=args.m3_smc_context,
                   m3_smci_root=args.m3_smci_root, m3_smci_loader=args.m3_smci_loader,
                   m3_smci_lookup=args.m3_smci_lookup, m3_smci_load=args.m3_smci_load,
-                  m3_smci_version=args.m3_smci_version, m3_smci_resume=args.m3_smci_resume, m3_smci_setver=args.m3_smci_setver,
+                  m3_smci_version=args.m3_smci_version, m3_smci_resume=args.m3_smci_resume, m3_smci_setver=args.m3_smci_setver, m3_smci_date=args.m3_smci_date,
                   m3_smci_mode=("context" if args.m3_smc_context else args.m3_smci_mode) if args.m3_smci_root else None,
                   m3_smci_fnid=("42000601" if args.m3_smc_context else "72000602" if args.m3_smci_mode == "object" else "72000600") if args.m3_smci_root else None,
                   m3_smci_arginfo=("1" if args.m3_smc_context else "224") if args.m3_smci_root else None,
-                  m3_smci_ops=(["standard-info-control"] if args.m3_smc_context else ["root-register-null", "open-loader-uid122", "lookup-keymaster64", "lookup-keymaster", "ta-release", "loader-release", "environment-release"] if args.m3_smci_lookup else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "set-version-200", "ta-release", "loader-release", "environment-release"] if args.m3_smci_setver else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "ta-release", "loader-release", "environment-release"] if args.m3_smci_version else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "ta-release", "loader-release", "environment-release"] if args.m3_smci_load else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if args.m3_smci_loader else ["root-register-null", "remote-release"]) if args.m3_smci_root else None,
+                  m3_smci_ops=(["standard-info-control"] if args.m3_smc_context else ["root-register-null", "open-loader-uid122", "lookup-keymaster64", "lookup-keymaster", "ta-release", "loader-release", "environment-release"] if args.m3_smci_lookup else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "set-version-200", "ta-release", "loader-release", "environment-release"] if args.m3_smci_setver else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "date-support", "ta-release", "loader-release", "environment-release"] if args.m3_smci_date else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "ta-release", "loader-release", "environment-release"] if args.m3_smci_version else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "ta-release", "loader-release", "environment-release"] if args.m3_smci_load else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if args.m3_smci_loader else ["root-register-null", "remote-release"]) if args.m3_smci_root else None,
                   m3_smci_ta_bytes=0x63058 if args.m3_smci_load else None,
                   m3_smci_no_keys=True if args.m3_smci_root else None,
                   m3_bridge_abi="standard64-a0-status-a1-service-a2-handle64" if args.m3_bridge_call else None,

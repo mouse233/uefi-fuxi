@@ -1,0 +1,5 @@
+# M3 date-support diagnostic, 2026-10-29
+
+The runtime Android context for serial fcde91e was collected read-only. Runtime system and vendor security patches are 2026-10-05; slot is _a. SHA-256 for libqtikeymint.so, libkeymasterdeviceutils.so, libqcbor.so and libQSEEComAPI.so matches the extracted PixelOS OTA. Static OTA property values differ, so they are not substituted for runtime values. Context and hashes are recorded in out/m3-setversion-macos-20261029/android-context-20261029.json; root access was used only to hash protected files.
+
+The pinned vendor library's legacy_get_date_support issues command 0x215 with a 12-byte request and a 0x9ff4-byte response capacity. The pinned TA's command table includes 0x215; its handler at 0xdcf8 returns zero. This is static evidence, not a secure-world execution trace. A separate diagnostic candidate tests this read-only capability after getVersion, without setVersion or configuration command 0x2116. The prior setVersion error gate is unchanged. Unknown errors stop and retain the bridge. This experiment does not claim KeyMint configuration or data decryption.
