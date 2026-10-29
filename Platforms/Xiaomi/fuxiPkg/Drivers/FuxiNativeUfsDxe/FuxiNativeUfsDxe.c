@@ -155,6 +155,12 @@
 #if FUXI_M3_SMCI_RESUME && !FUXI_M3_SMCI_VERSION
 #error SCM continuation requires the bounded version diagnostic
 #endif
+#ifndef FUXI_M3_SMCI_SETVER
+#define FUXI_M3_SMCI_SETVER 0
+#endif
+#if FUXI_M3_SMCI_SETVER && (!FUXI_M3_SMCI_VERSION || !FUXI_M3_SMCI_RESUME)
+#error KeyMint version negotiation requires the version and continuation stages
+#endif
 // One load attempt per boot. The signed extent is read while the LUN4 queue is
 // still live; the M3 stage runs after ShutdownQueue and cannot read it again.
 #if FUXI_M3_SMCI_LOAD

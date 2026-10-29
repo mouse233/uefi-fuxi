@@ -50,6 +50,9 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
   BOOLEAN Register=(Kind==1), Open=FALSE, Load=FALSE;
 #if FUXI_M3_SMCI_VERSION
   BOOLEAN Version=(Kind==6);
+#if FUXI_M3_SMCI_SETVER
+  BOOLEAN SetVersion=(Kind==7);
+#endif
 #endif
   CONST CHAR8 *Stage=Register ? "register" : "release";
   UINT32 Op=Register ? 5 : 0xffffU, Counts=Register ? 0x1100 : 0;
@@ -61,6 +64,9 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
 #endif
 #if FUXI_M3_SMCI_VERSION
   if (Version) { Op=0; Counts=0x424; Stage="get-version"; }
+#if FUXI_M3_SMCI_SETVER
+  if (SetVersion) { Op=0; Counts=0x424; Stage="set-version"; }
+#endif
 #endif
 #if FUXI_M3_SMCI_LOADER
   Open=(Kind==2);
@@ -142,6 +148,23 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
     SmciPut32(Page+0x60,0x200); SmciPut32(Page+0xa068,1);
   }
 #endif
+#if FUXI_M3_SMCI_SETVER
+  if (SetVersion) {
+    // Fixed candidate CBOR map {11:200}; equivalence to vendor encoder not executed.
+    InLen=0x15000; OutOff=InLen;
+    if (OutOff+4096U>Bytes) return EFI_BAD_BUFFER_SIZE;
+    ZeroMem(Page,InLen+4096U);
+    SmciPut32(Page,Object); SmciPut32(Page+4,Op); SmciPut32(Page+8,Counts);
+    SmciPut32(Page+12,0x60); SmciPut32(Page+16,8);
+    SmciPut32(Page+20,0x68); SmciPut32(Page+24,0x9ff8);
+    SmciPut32(Page+28,0xa060); SmciPut32(Page+32,0);
+    SmciPut32(Page+36,0xa060); SmciPut32(Page+40,4);
+    SmciPut32(Page+44,0xa068); SmciPut32(Page+48,8);
+    SmciPut32(Page+52,0xa070); SmciPut32(Page+56,0x9ff8);
+    SmciPut32(Page+0x60,0x3121); SmciPut32(Page+0x64,0xc8180ba1U);
+    SmciPut32(Page+0xa060,1);
+  }
+#endif
   // Two 4096-byte buffers in one registered 8192-byte contiguous range.
   // qcom-scm.ko: svc=6, cmd=0 or 2, owner=0x32, arginfo=0x224, call type=2.
   // __scm_smc_call: bit31=(type==1), bit30=SMC64, owner in [29:24].
@@ -149,7 +172,11 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
   Regs[0]=FUXI_M3_SMCI_OBJECT ? 0x72000602ULL : 0x72000600ULL; Regs[1]=0x224;
   Regs[2]=Raw; Regs[3]=(UINT64)InLen; Regs[4]=Raw+OutOff; Regs[5]=4096;
   #if FUXI_M3_SMCI_VERSION
+#if FUXI_M3_SMCI_SETVER
+  FnuCacheCiv(&mOps, Page, (Load || Version || SetVersion) ? Bytes : 8192);
+#else
   FnuCacheCiv(&mOps, Page, (Load || Version) ? Bytes : 8192);
+#endif
 #else
   FnuCacheCiv(&mOps, Page, Load ? Bytes : 8192);
 #endif
@@ -164,7 +191,11 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
   FnuSmc64(Regs, &Out);
 #endif
   #if FUXI_M3_SMCI_VERSION
+#if FUXI_M3_SMCI_SETVER
+  FnuCacheInv(&mOps, Page, (Load || Version || SetVersion) ? Bytes : 8192);
+#else
   FnuCacheInv(&mOps, Page, (Load || Version) ? Bytes : 8192);
+#endif
 #else
   FnuCacheInv(&mOps, Page, Load ? Bytes : 8192);
 #endif
@@ -188,6 +219,33 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
   // miss is the single interpreted case: it is reported as an object error in
   // a2 with a0/a1/a3 zero, and the raw value is logged before any fallback.
   if (Out.Arg0 || Out.Arg1 || Out.Arg3) return EFI_NOT_READY;
+#if FUXI_M3_SMCI_SETVER
+  if (SetVersion) {
+    UINT32 RequestBytes=SmciU32(Page+48), ResponseBytes=SmciU32(Page+56), Status, PayloadBytes;
+    if (Out.Arg2) return EFI_DEVICE_ERROR;
+    if (!((SmciU32(Page+OutOff)==0 && SmciU32(Page+OutOff+4)==0) ||
+          (SmciU32(Page+OutOff)==0x10002 &&
+           (SmciU32(Page+OutOff+4)==0xfffd || SmciU32(Page+OutOff+4)==0xffff))) ||
+        SmciU32(Page+OutOff+8)!=0 || !SmciZero(Page+OutOff+12,4084)) return EFI_COMPROMISED_DATA;
+    if (SmciU32(Page)!=Object || SmciU32(Page+4)!=0 || SmciU32(Page+8)!=0x424 ||
+        SmciU32(Page+12)!=0x60 || SmciU32(Page+16)!=8 ||
+        SmciU32(Page+20)!=0x68 || SmciU32(Page+24)!=0x9ff8 ||
+        SmciU32(Page+28)!=0xa060 || SmciU32(Page+32)!=0 ||
+        SmciU32(Page+36)!=0xa060 || SmciU32(Page+40)!=4 ||
+        SmciU32(Page+44)!=0xa068 || RequestBytes>8 ||
+        SmciU32(Page+52)!=0xa070 || ResponseBytes<8 || ResponseBytes>0x9ff8 ||
+        !SmciZero(Page+60,36) || SmciU32(Page+0x60)!=0x3121 ||
+        SmciU32(Page+0x64)!=0xc8180ba1U || !SmciZero(Page+0x68,0x9ff8) ||
+        SmciU32(Page+0xa060)!=1 || !SmciZero(Page+0xa064,4) ||
+        !SmciZero(Page+0xa068+RequestBytes,8-RequestBytes) ||
+        !SmciZero(Page+0xa070+ResponseBytes,InLen-(0xa070+ResponseBytes))) return EFI_COMPROMISED_DATA;
+    Status=SmciU32(Page+0xa070); PayloadBytes=SmciU32(Page+0xa074);
+    FnuLog(L"FUXIM3 SMCI set-version status=%x bytes=%x payload=%x",Status,ResponseBytes,PayloadBytes);
+    if (Status) return EFI_DEVICE_ERROR;
+    if (PayloadBytes>ResponseBytes-8) return EFI_COMPROMISED_DATA;
+    return EFI_SUCCESS;
+  }
+#endif
 #if FUXI_M3_SMCI_VERSION
   if (Version) {
     UINT32 RequestBytes=SmciU32(Page+48), ResponseBytes=SmciU32(Page+56);
@@ -421,6 +479,12 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,App,6,&Ignored);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   Passed|=0x80;
+#if FUXI_M3_SMCI_SETVER
+  Step="set-version";
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,App,7,&Ignored);
+  if (EFI_ERROR(mSmciStatus)) goto Done;
+  Passed|=0x100;
+#endif
 #else
   FnuLog(L"FUXIM3 BATCH loader-load=Success app=%x; continue app-release",App);
 #endif
