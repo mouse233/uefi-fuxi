@@ -14,7 +14,7 @@ def main():
   exe=Path(t)/'load'
   subprocess.run([shutil.which('clang') or 'clang','-std=c11','-Wall','-Wextra','-Werror','-fshort-wchar','-fsanitize=address,undefined','-fno-omit-frame-pointer','-I',str(a.edk2/'MdePkg/Include'),'-I',str(a.edk2/'MdePkg/Include'/arch),'-I',str(native),'-I',str(data),str(root/'tools/tests/m3_smci_load_host.c'),str(native/'UfsReport.c'),str(data/'DataReadOnly.c'),'-o',str(exe)],check=True)
   subprocess.run([str(exe)],check=True)
- report=dict(result='passed',vectors=23,production_load=True,report_cache_exercised=True,
+ report=dict(result='passed',vectors=25,production_load=True,report_cache_exercised=True,
              ta_bytes=0x63058,message_bytes=0x64000,elf_offset=48,out_page_offset=0x64000,
              sanitizers=['address','undefined'],
              sources={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},

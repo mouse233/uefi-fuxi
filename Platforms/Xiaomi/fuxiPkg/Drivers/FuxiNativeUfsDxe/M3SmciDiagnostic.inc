@@ -140,7 +140,7 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
     if (SmciU32(Page)!=Object || SmciU32(Page+4)!=Op || SmciU32(Page+8)!=Counts ||
         SmciU32(Page+12)!=ElfOff || SmciU32(Page+16)!=(UINT32)mTaImageBytes ||
         SmciU32(Page+20)!=NameOff || SmciU32(Page+24)!=11 ||
-        SmciU32(Page+28)!=BoOff || SmciU32(Page+32)!=64 ||
+        SmciU32(Page+28)!=BoOff || SmciU32(Page+32)>64 ||
         !SmciZero(Page+40,8))
       return EFI_COMPROMISED_DATA;
     if (SmciU32(Page+OutOff+8)!=0 || !SmciZero(Page+OutOff+12,4084))

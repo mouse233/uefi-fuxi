@@ -101,7 +101,7 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  if(Calls==2)a->Arg2=Bridge();
  if(Calls==3)Put(Page+20,0x44);
  if(Calls==4)Put(Page+20,Loader());
- if(Calls==5)Put(Page+36,App());
+ if(Calls==5){Put(Page+36,App());Put(Page+32,8);}
  // The device returned a non-empty out page: version/op only, counts zero.
  if(Calls>=3&&Calls<=5){UINT8 *o=(Calls==5)?OutPage():Page+4096;Put(o,0x00010002);Put(o+4,0x0000fffd);}
  if(Calls==9)a->Arg1=0x59;
@@ -117,6 +117,8 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  case 7:Page[0x64000+12]=1;break;                         // out page dirty
  case 8:Put(Page+12,49);break;                            // ELF offset tampered
  case 9:a->Arg3=1;break;                                  // extra out register
+ case 11:Put(Page+32,65);break;                            // output exceeds capacity
+ case 12:Put(Page+32,0xffffffffU);break;                   // oversized output
  case 10:Put(Page+0,0x99);break;                          // handle echoed wrong
  default:assert(0);
  }
@@ -173,9 +175,9 @@ int main(void){
  Run(1,1);Run(1,2);
  Run(2,1);Run(2,2);Run(2,3);
  Run(3,1);Run(4,1);
- for(int f=1;f<=10;++f)if(f!=3)Run(5,f);
+ for(int f=1;f<=12;++f)if(f!=3)Run(5,f);
  for(int p=6;p<=9;++p)Run(p,1);
- assert(Vectors==23);
+ assert(Vectors==25);
  printf("PASS %d load-stage vectors; max batch logs=%d; simulated monitor only\n",Vectors,MaxLogCalls);
  return 0;
 }
