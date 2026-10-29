@@ -44,3 +44,10 @@ response capacity 0x9ff8、is64=true 得到 counts=0x424、页对齐长度 0x150
 BI/BO 描述符依次为 `(0x60,8) (0x68,0x9ff8) (0xa060,0) (0xa060,4)
 (0xa068,8) (0xa070,0x9ff8)`，与交付 UEFI 源码一致。这是独立构造模型与源码
 的对照，不是设备接收字节的观测，也不验证该公开参考与设备固件完全一致。
+
+补充用户态传输核对：A16 镜像的 `libQSEEComAPI.so` SHA256
+`5c996c509fdab3e5925af52f59d554bf54a7c54743c668017a83ef0d1b4e65ed`；
+`QSEECom_send_cmd` 跳到 0xa1b4，0xa200..0xa254 的指令将请求、响应及长度各作为
+一组输入和输出，加入 ELF class 2 的 is64 值，调用 object op0/counts 0x424。
+这与内核 `__qseecom_send_command` 独立反汇编及模型的参数排列一致；实际设备 TA
+收到的请求仍未直接观测，且该库当前只固定 A16 样本，不据此证明全部路径一致。
