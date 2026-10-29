@@ -352,3 +352,20 @@ SCM/ICE、明文读取均未验证；没有生成启动镜像或操作设备。
 设备号和 sysfs 几何与 UEFI GPT 相符。源码及实测几何主机测试提交 c1fd1efe。
 这不证明 UEFI 能使用 TWRP 的密钥或读取明文，详见
 [TWRP 实机参考](fuxi-m3-twrp-reference-20261027.md)。
+
+## 2026-10-30：按一次 metadata 明文读取收紧 M3 依赖
+
+最新查询实机基线仍为 `m3-date-support-v1`；本轮仅做固定 TA/recovery/四模块的离线
+审计与合成输入执行。固定 recovery 将 `retrieveOrGenerateKey` 的输出向量交给
+wrapped-key 导出，现有 `keymaster_key_blob` 读取不能代替 storage key 恢复；恢复辅助
+流程含文件写分支，UEFI 仅可独立实现现存密钥的只读路径，拒绝生成、升级/持久化。
+
+固定 TA 的真实授权解码与版本检查证明：FBE 内部属性成立时局部版本检查提前返回，
+但没有真实密钥属性、认证或导出证据，不能据此认定整个恢复流程无需 configure。
+本轮未发送 `0x2116`。HWKM 初始化/自有槽与清理、六参 SCM 扩展区、UFS 提交层
+crypto context、同可比较状态的明文块摘要仍未接通；外围预填 UTRD 会被提交函数覆盖。
+
+独立报告 `out/m3-metadata-read-audit-20261030/`；6 个固定输入篡改拒绝、13 项反例/
+模拟执行边界及生产 DUN/UFS 核心检查通过。无新固件、SMC 或设备操作，M3 未通过。
+下一项具体工作与精确地址见
+[metadata 明文读取前置条件](fuxi-m3-metadata-read-prerequisites-20261030.md)。
