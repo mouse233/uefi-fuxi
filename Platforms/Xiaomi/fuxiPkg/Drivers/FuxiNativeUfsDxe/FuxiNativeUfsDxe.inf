@@ -23,6 +23,11 @@
   ../FuxiDataProbeDxe/DataReadOnly.c
   ../FuxiDataProbeDxe/F2fsReadOnly.c
   ../FuxiDataProbeDxe/F2fsFiles.c
+  ../FuxiDataProbeDxe/M3KeyRecovery.c
+  ../FuxiDataProbeDxe/M3KeyRecovery.h
+  ../FuxiDataProbeDxe/M3Secdiscardable.c
+  ../FuxiDataProbeDxe/M3KeyRecoveryF2fs.c
+  ../FuxiDataProbeDxe/M3KeyRecoveryF2fs.h
 
 [Packages]
   MdePkg/MdePkg.dec

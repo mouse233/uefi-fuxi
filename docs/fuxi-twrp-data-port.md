@@ -369,3 +369,15 @@ crypto context、同可比较状态的明文块摘要仍未接通；外围预填
 模拟执行边界及生产 DUN/UFS 核心检查通过。无新固件、SMC 或设备操作，M3 未通过。
 下一项具体工作与精确地址见
 [metadata 明文读取前置条件](fuxi-m3-metadata-read-prerequisites-20261030.md)。
+
+## 2026-10-30：现存 metadata 密钥恢复核心（主机阶段）
+
+新增独立只读恢复库：固定四文件 F2FS 读取、personalized SHA512/application ID、
+有界 begin/update/finish/abort 与未知完成隔离。绑定上下文必须显式独立核验；
+没有生产调用入口或真实 KeyMint/SMCI 后端，不生成、升级或持久化密钥。
+40项 ASan/UBSan（含 OpenSSL 合成 GCM 认证）、固定二进制静态审计、默认/query
+两套 AARCH64 模块构建及实际对象/SMC/源码绑定检查通过。未构建启动镜像或上机，
+没有 configure、装钥或解密成功，M3 未通过。
+
+下一门槛为真实后端的绑定、线格式与 operation/缓冲区关闭证据，再接 convert/ICE/DUN
+和单块明文对照，详见 [现存密钥恢复实现与边界](fuxi-m3-key-recovery-20261030.md)。
