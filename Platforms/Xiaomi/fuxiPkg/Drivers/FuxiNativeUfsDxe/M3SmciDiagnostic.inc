@@ -33,6 +33,9 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
   UINT64 Regs[8]; ARM_SMC_ARGS Out;
   UINTN I, OutOff=4096, InLen=4096;
   BOOLEAN Register=(Kind==1), Open=FALSE, Load=FALSE;
+#if FUXI_M3_SMCI_VERSION
+  BOOLEAN Version=(Kind==6);
+#endif
   CONST CHAR8 *Stage=Register ? "register" : "release";
   UINT32 Op=Register ? 5 : 0xffffU, Counts=Register ? 0x1100 : 0;
 #if FUXI_M3_SMCI_LOAD
@@ -40,6 +43,9 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
   Load=(Kind==5);
   // The TA message needs ~100 pages; its layout is fixed in the request block.
   if (Load) { Op=1; Counts=0x1012; Stage="loader-load"; }
+#endif
+#if FUXI_M3_SMCI_VERSION
+  if (Version) { Op=0; Counts=0x424; Stage="get-version"; }
 #endif
 #if FUXI_M3_SMCI_LOADER
   Open=(Kind==2);
@@ -102,17 +108,44 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
            ElfOff,NameOff,BoOff,(UINT32)InLen);
   }
 #endif
+#if FUXI_M3_SMCI_VERSION
+  if (Version) {
+    // Fixed getVersion: BI4/BO2/OI4; the response page follows 0x15000 input.
+    if (mTaImage==NULL || mTaImageBytes<6 || mTaImage[0]!=0x7f ||
+        mTaImage[1]!='E' || mTaImage[2]!='L' || mTaImage[3]!='F' ||
+        mTaImage[4]!=2 || mTaImage[5]!=1) return EFI_COMPROMISED_DATA;
+    InLen=0x15000; OutOff=InLen;
+    if (OutOff+4096U>Bytes) return EFI_BAD_BUFFER_SIZE;
+    ZeroMem(Page,InLen+4096U);
+    SmciPut32(Page,Object); SmciPut32(Page+4,Op); SmciPut32(Page+8,Counts);
+    SmciPut32(Page+12,0x60); SmciPut32(Page+16,4);
+    SmciPut32(Page+20,0x68); SmciPut32(Page+24,0x9ffc);
+    SmciPut32(Page+28,0xa068); SmciPut32(Page+32,0);
+    SmciPut32(Page+36,0xa068); SmciPut32(Page+40,4);
+    SmciPut32(Page+44,0xa070); SmciPut32(Page+48,4);
+    SmciPut32(Page+52,0xa078); SmciPut32(Page+56,0x9ffc);
+    SmciPut32(Page+0x60,0x200); SmciPut32(Page+0xa068,1);
+  }
+#endif
   // Two 4096-byte buffers in one registered 8192-byte contiguous range.
   // qcom-scm.ko: svc=6, cmd=0 or 2, owner=0x32, arginfo=0x224, call type=2.
   // __scm_smc_call: bit31=(type==1), bit30=SMC64, owner in [29:24].
   ZeroMem(Regs, sizeof(Regs));
   Regs[0]=FUXI_M3_SMCI_OBJECT ? 0x72000602ULL : 0x72000600ULL; Regs[1]=0x224;
   Regs[2]=Raw; Regs[3]=(UINT64)InLen; Regs[4]=Raw+OutOff; Regs[5]=4096;
+  #if FUXI_M3_SMCI_VERSION
+  FnuCacheCiv(&mOps, Page, (Load || Version) ? Bytes : 8192);
+#else
   FnuCacheCiv(&mOps, Page, Load ? Bytes : 8192);
+#endif
   FnuLog(L"FUXIM3 SMCI %a begin x0=%lx x1=%lx in=%lx out=%lx handle=%x op=%x counts=%x",
          Stage, Regs[0], Regs[1], Regs[2], Regs[4], Object, Op, Counts);
   FnuSmc64(Regs, &Out);
+  #if FUXI_M3_SMCI_VERSION
+  FnuCacheInv(&mOps, Page, (Load || Version) ? Bytes : 8192);
+#else
   FnuCacheInv(&mOps, Page, Load ? Bytes : 8192);
+#endif
   FnuLog(L"FUXIM3 SMCI %a return a0=%lx a1=%lx a2=%lx a3=%lx",
          Stage, (UINT64)Out.Arg0, (UINT64)Out.Arg1,
          (UINT64)Out.Arg2, (UINT64)Out.Arg3);
@@ -133,6 +166,37 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
   // miss is the single interpreted case: it is reported as an object error in
   // a2 with a0/a1/a3 zero, and the raw value is logged before any fallback.
   if (Out.Arg0 || Out.Arg1 || Out.Arg3) return EFI_NOT_READY;
+#if FUXI_M3_SMCI_VERSION
+  if (Version) {
+    UINT32 RequestBytes=SmciU32(Page+48), ResponseBytes=SmciU32(Page+56);
+    if (Out.Arg2) return EFI_DEVICE_ERROR;
+    // No callback dispatch: only the previously observed empty piggyback form
+    // is accepted. Any pending/unknown data retains the bridge and objects.
+    if (!((SmciU32(Page+OutOff)==0 && SmciU32(Page+OutOff+4)==0) ||
+          (SmciU32(Page+OutOff)==0x10002 &&
+           (SmciU32(Page+OutOff+4)==0xfffd || SmciU32(Page+OutOff+4)==0xffff))) ||
+        SmciU32(Page+OutOff+8)!=0 || !SmciZero(Page+OutOff+12,4084))
+      return EFI_COMPROMISED_DATA;
+    if (SmciU32(Page)!=Object || SmciU32(Page+4)!=0 || SmciU32(Page+8)!=0x424 ||
+        SmciU32(Page+12)!=0x60 || SmciU32(Page+16)!=4 ||
+        SmciU32(Page+20)!=0x68 || SmciU32(Page+24)!=0x9ffc ||
+        SmciU32(Page+28)!=0xa068 || SmciU32(Page+32)!=0 ||
+        SmciU32(Page+36)!=0xa068 || SmciU32(Page+40)!=4 ||
+        SmciU32(Page+44)!=0xa070 || RequestBytes>4 ||
+        SmciU32(Page+52)!=0xa078 || ResponseBytes<20 || ResponseBytes>0x9ffc ||
+        !SmciZero(Page+60,36) || SmciU32(Page+0x60)!=0x200 ||
+        !SmciZero(Page+0x64,0xa068-0x64) || SmciU32(Page+0xa068)!=1 ||
+        !SmciZero(Page+0xa06c,4) ||
+        !SmciZero(Page+0xa070+RequestBytes,8-RequestBytes) ||
+        !SmciZero(Page+0xa078+ResponseBytes,InLen-(0xa078+ResponseBytes)))
+      return EFI_COMPROMISED_DATA;
+    if (SmciU32(Page+0xa078)!=0) return EFI_DEVICE_ERROR;
+    FnuLog(L"FUXIM3 SMCI version bytes=%x fields=%08x/%08x/%08x/%08x",
+           ResponseBytes,SmciU32(Page+0xa07c),SmciU32(Page+0xa080),
+           SmciU32(Page+0xa084),SmciU32(Page+0xa088));
+    return EFI_SUCCESS;
+  }
+#endif
 #if FUXI_M3_SMCI_LOAD
   if (Load) {
     // The request page carries the image, so only the fixed words are compared;
@@ -329,7 +393,15 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Loader,5,&App);
   if (EFI_ERROR(mSmciStatus)) goto Done;
   Passed|=0x20;
+#if FUXI_M3_SMCI_VERSION
+  FnuLog(L"FUXIM3 BATCH loader-load=Success app=%x; continue get-version",App);
+  Step="get-version";
+  mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,App,6,&Ignored);
+  if (EFI_ERROR(mSmciStatus)) goto Done;
+  Passed|=0x80;
+#else
   FnuLog(L"FUXIM3 BATCH loader-load=Success app=%x; continue app-release",App);
+#endif
   Step="app-release";
   mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,App,0,&Ignored);
   if (EFI_ERROR(mSmciStatus)) goto Done;

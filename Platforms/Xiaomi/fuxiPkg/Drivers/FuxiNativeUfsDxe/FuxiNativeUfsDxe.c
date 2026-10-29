@@ -143,6 +143,12 @@
 #if FUXI_M3_SMCI_LOAD && (!FUXI_M3_BRIDGE_LARGE || !FUXI_UFS_LUN4_KEYS)
 #error Load stage requires the large bridge and the LUN4 keymaster input
 #endif
+#ifndef FUXI_M3_SMCI_VERSION
+#define FUXI_M3_SMCI_VERSION 0
+#endif
+#if FUXI_M3_SMCI_VERSION && !FUXI_M3_SMCI_LOAD
+#error Version diagnostic requires the bounded loader stage
+#endif
 // One load attempt per boot. The signed extent is read while the LUN4 queue is
 // still live; the M3 stage runs after ShutdownQueue and cannot read it again.
 #if FUXI_M3_SMCI_LOAD
