@@ -28,6 +28,8 @@
   ../FuxiDataProbeDxe/M3Secdiscardable.c
   ../FuxiDataProbeDxe/M3KeyRecoveryF2fs.c
   ../FuxiDataProbeDxe/M3KeyRecoveryF2fs.h
+  ../FuxiDataProbeDxe/M3KeyMintBackend.c
+  ../FuxiDataProbeDxe/M3KeyMintBackend.h
 
 [Packages]
   MdePkg/MdePkg.dec

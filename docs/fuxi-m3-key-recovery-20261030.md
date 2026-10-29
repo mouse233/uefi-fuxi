@@ -92,3 +92,7 @@ operation 的归属/关闭证据。拒绝生成、升级和持久化；有证据
 清理、六参 SCM、UFS 提交层 crypto context/DUN，最后做一次有界 userdata metadata
 块读取并与可比较状态的 TWRP 明文 SHA256 对照。40项主机通过不代替这项 M3 验收，
 也不代表 `/data` 文件明文、M4、M5 或免 USB 重传已实现。
+
+后续进展：[AIDL命令链与wire/SMCI后端](fuxi-m3-recovery-backend-20261030.md)。
+其中补齐本轮未跟到的AIDL `0x31xx` 路径；本页前述21/25组范围为当时的通用HAL
+分支审计，不是完整AIDL命令清单。

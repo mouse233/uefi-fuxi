@@ -12,6 +12,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--llvm", type=Path, default=Path("/opt/homebrew/opt/llvm/bin"))
+    parser.add_argument("--keymint-backend", action="store_true", help="also qualify the compiled wire backend")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     rows = []
@@ -41,6 +42,9 @@ def main():
                "M3KeyRecoveryF2fs": ["FkrReadF2fsFile"]}
     imports = {"M3KeyRecovery": {"FkrHashSecdiscardable"}, "M3Secdiscardable": set(),
                "M3KeyRecoveryF2fs": {"F2rLookup", "F2rReadFile"}}
+    if args.keymint_backend:
+        symbols["M3KeyMintBackend"] = ["FkmEncode", "FkmDecode", "FkmInitialize"]
+        imports["M3KeyMintBackend"] = set()
     object_rows = []
     for name, names in symbols.items():
         path = objbase / (name + ".obj")
@@ -55,7 +59,8 @@ def main():
                                 sha256=hashlib.sha256(path.read_bytes()).hexdigest(), definitions=names,
                                 undefined_symbols=sorted(undefined)))
     report = dict(result="passed", modules=rows, compiled_objects=object_rows,
-                  scope="AARCH64 library compilation and existing default/query modes only; no live recovery entrypoint, KeyMint backend or phone test.",
+                  keymint_backend_compiled=args.keymint_backend,
+                  scope="AARCH64 library compilation and existing default/query modes only; no live recovery entrypoint, SMC exchange implementation or phone test.",
                   checker_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     (args.output / "module-checks.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({"result": "passed", "modules": len(rows), "compiled_objects": len(object_rows)}, indent=2))

@@ -381,3 +381,13 @@ crypto context、同可比较状态的明文块摘要仍未接通；外围预填
 
 下一门槛为真实后端的绑定、线格式与 operation/缓冲区关闭证据，再接 convert/ICE/DUN
 和单块明文对照，详见 [现存密钥恢复实现与边界](fuxi-m3-key-recovery-20261030.md)。
+
+## 2026-10-30：恢复后端 wire 与 SMCI 封装（主机阶段）
+
+沿A17实际AIDL链确认begin/update/finish使用310f/3111/3112；固定TA与21xx共用
+handler。新增独立CBOR/SMCI封装后端接到恢复核心，53项ASan/UBSan、12组请求与
+3组响应厂商codec对照、3个独立SMCI报文对照通过；默认/query模块及实际对象检查通过。
+abort错误同步隔离并保留，未知状态不继续。没有live交换回调/固件入口、绑定上下文
+实证或设备操作；未发送configure、未构建启动镜像，M3未通过。下一步核实本机绑定
+与真实会话/共享区归属，再接无秘密日志的交换回调；见
+[恢复后端实现、调用链与边界](fuxi-m3-recovery-backend-20261030.md)。
