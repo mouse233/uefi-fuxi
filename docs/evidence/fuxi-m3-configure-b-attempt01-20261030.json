@@ -1,0 +1,95 @@
+{
+  "image_sha256": "81e1abd43ec63d27abd970be69943557d388b61e72ce6274f1684b9a977474f5",
+  "source_commit": "09bc89e1d3dd733a30f86fca1e953a06ee11a36b",
+  "patch": 20991231,
+  "profile": "usb-ram",
+  "serial": "fcde91e",
+  "started_utc": "2026-10-30T11:54:16.345835+00:00",
+  "finished_utc": "2026-10-30T11:54:19.823105+00:00",
+  "returncode": 0,
+  "fastboot_output": "Sending 'boot.img' (1844 KB)                       OKAY [  0.040s]\nBooting                                            OKAY [  3.296s]\nFinished. Total time: 3.337s\n",
+  "schema": 1,
+  "status": "screen confirmed: configure success, recovery -62, retained/PARK",
+  "scope": "One temporary fastboot boot plus user screen evidence. No successful recovery or hardware milestone conclusion.",
+  "device_checks": {
+    "product": "fuxi",
+    "unlocked": "yes",
+    "current_slot": "a",
+    "max_download_size": 805306368
+  },
+  "partition_write": false,
+  "boot_retries": 0,
+  "screen_observation": {
+    "schema": 1,
+    "candidate": "m3-configure-context-b-v1",
+    "image_sha256": "81e1abd43ec63d27abd970be69943557d388b61e72ce6274f1684b9a977474f5",
+    "source_commit": "09bc89e1d3dd733a30f86fca1e953a06ee11a36b",
+    "photo": {
+      "original": "screen-01.HEIC",
+      "original_sha256": "9bf467c6b99cb118a4cc30c691dcfdf448af00b243ac8c5547ae425497aa14b5",
+      "preview": "screen-01.png",
+      "preview_sha256": "1e32f3d8517610ad3da64cb2d9cee79f732ba8092287fa5de9570bb687e0fed1"
+    },
+    "ufs": {
+      "stop": 1,
+      "doorbell": "00000000",
+      "task_doorbell": "00000000",
+      "run": 0,
+      "hcs": "0000010F",
+      "interrupt_status": "00000000",
+      "gfsr": "00000000",
+      "sid60_fsr": "00000400"
+    },
+    "configure": {
+      "os_version": 170000,
+      "os_patch": 20991231,
+      "vendor_patch": 20991231,
+      "evidence_tag": "3CC89865",
+      "a0": 0,
+      "a1": 0,
+      "a2": 0,
+      "a3": 0,
+      "resumes": 0,
+      "status": "00000000",
+      "payload_bytes": 40912,
+      "wire_bytes": 40920,
+      "accepted": true
+    },
+    "recovery": {
+      "result": "Not Ready",
+      "state": 5,
+      "stage": 1,
+      "km": 0,
+      "bytes": 0,
+      "retained": 1,
+      "fault": 7,
+      "exchange": 1,
+      "commands": 1,
+      "resumes": 1,
+      "response_header": 1,
+      "status_hex": "FFFFFFC2",
+      "status_signed": -62,
+      "payload_bytes": 40616,
+      "wire_bytes": 40624,
+      "attempted": 1
+    },
+    "batch": {
+      "stop": "key-recovery",
+      "passed": "4A3",
+      "env": 2,
+      "loader": 3,
+      "retained": 1
+    },
+    "final": {
+      "stage": "m3-key-recovery",
+      "poisoned": 0,
+      "ready": 0,
+      "smmu_configured": 1,
+      "decrypt": "UNIMPLEMENTED",
+      "handoff": 0,
+      "park": "no USB receiver; no handoff"
+    },
+    "interpretation": "B configure 170000/20991231/20991231 accepted; first recovery begin still -62, zero recovered bytes, retained/PARK. Same observed recovery fields as A. Changing these public patch dates did not clear the error in this pair. No M3/M4/M5 success or unique cause attribution.",
+    "limits": "Screen transcription plus bound firmware. Photo does not independently prove physical shared-page retention, secure-world persistence behavior, or every absence of later calls. Two separate boot observations do not identify the exact -62 branch."
+  }
+}

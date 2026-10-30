@@ -103,3 +103,32 @@ UFS stop1/db0/tdb0/run0；历史SID60/FSR400仍在。原图、PNG及转录归档
 attempt-01，精确照片SHA与数值见同名可提交证据。
 关闭特性探针后A仍复现-62；未唯一定位根因，未取得明文。B等待重新进入fastboot
 后独立启动；不复用当前保留会话，M3/M4/M5未通过。
+
+## B attempt-01 与完整A/B实机结论（19:54）
+
+2026-10-30 19:54:16–19:54:19 Asia/Shanghai，用户重新进入fastboot后，互斥/
+身份/解锁/slot_a/容量及91文件源码绑定复核通过。一次临时启动B，Sending0.040s、
+Booting3.296s、总3.337s、exit0；无分区写、slot变更或自动重试。
+IMG_7285.HEIC原图、PNG、转录及device-test归档在B的attempt-01，
+精确SHA与数值见`evidence/fuxi-m3-configure-b-attempt01-20261030.json`。
+
+| 观察项 | A（20261005） | B（20991231） |
+| --- | --- | --- |
+| configure status / resumes | 0 / 0 | 0 / 0 |
+| configure payload / wire | 40912 / 40920 | 40912 / 40920 |
+| 首条恢复response status | FFFFFFC2（-62） | FFFFFFC2（-62） |
+| state / stage / bytes | 5 / 1 / 0 | 5 / 1 / 0 |
+| fault / exchange / commands / resumes | 7 / 1 / 1 / 1 | 7 / 1 / 1 / 1 |
+| 恢复payload / wire | 40616 / 40624 | 40616 / 40624 |
+| attempted / retained / 最终 | 1 / 1 / PARK | 1 / 1 / PARK |
+
+B同样UFS stop1/db0/tdb0/run0，SID60历史FSR400仍在，handoff0；没有恢复输出。
+本轮两个公开日期配置均被接受，但单改这两个日期没有解除真实-62。
+完整对照汇总`evidence/fuxi-m3-configure-pair-live-20261030.json`，各候选REVIEW
+和pair-live-observation.json已回填。两次独立启动均保留/PARK；照片不独立证明
+物理共享页保留或每次调用缺席，仍需绑定源码/主机快照支持。
+
+本轮A/B实机对照完成；不再用相同候选重复上机来猜根因，不由此唯一认定blob
+旧格式或某个版本字段。后续应补齐首条begin到实际版本校验的参数/上下文绑定，
+现有离线合成分支对照不能代替实际分支证据。没有接入generate/upgrade/写回；
+真实密钥恢复、ICE/DUN/userdata明文及M3/M4/M5仍未通过，无免USB重传声明。

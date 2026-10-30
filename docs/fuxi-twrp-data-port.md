@@ -482,3 +482,12 @@ TWRP recovery固定72字节绑定元数据两次为state2/空向量，与Android
 12组厂商编码匹配、26项TA公开解析、11项证据拒绝及每组27项配置入口模拟通过。
 仅完成主机候选，无本轮设备操作；真实-62、M3/M4/M5仍未通过。
 详见[候选、精确SHA与实机判据](fuxi-m3-configure-pair-20261030.md)。
+
+## 2026-10-30 19:54：configure A/B实机对照结束，日期变更未解除-62
+
+A（20261005）和B（20991231）各一次独立临时启动，照片确认两组public configure
+均status0；首条恢复均FFFFFFC2（-62）、bytes0、commands1/resumes1、retained1，
+最终PARK/handoff0。UFS stop1/db0/tdb0/run0，历史SID60/FSR400仍在。
+仅更改两个公开补丁日期未解除本轮错误，不唯一定位具体版本门或blob格式；
+没有升级/生成/写回，真实恢复及M3/M4/M5未通过。两候选REVIEW、原始照片/
+转录与[完整对照](fuxi-m3-configure-pair-20261030.md)已回填，后续先补实际分支绑定。
