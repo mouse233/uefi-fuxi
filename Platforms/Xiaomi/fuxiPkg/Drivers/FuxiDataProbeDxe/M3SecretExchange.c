@@ -43,8 +43,11 @@ EFI_STATUS FseExchange(VOID *Context,UINT8 *Shared,UINTN InBytes,UINTN OutBytes,
      U32(Shared+12)!=96 || U32(Shared+16)<4 || U32(Shared+16)>FKM_REQUEST_LIMIT)
     return Quarantine(C);
   Command=U32(Shared+96);
-  if(Command!=0x310f && Command!=0x3111 && Command!=0x3112 && Command!=0x2113)
-    return Quarantine(C);
+  if(Command!=0x310f && Command!=0x3111 && Command!=0x3112 && Command!=0x2113
+#if FUXI_M3_CHARACTERISTICS_PROBE
+     && Command!=0x2109
+#endif
+    ) return Quarantine(C);
   C->State=FseBusy;++C->Calls;
   // Submit exactly the two fixed extents, both wholly inside the registered
   // lease. No DMA window/physical address derived from a TA response.

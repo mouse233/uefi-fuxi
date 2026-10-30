@@ -36,6 +36,7 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
     UINT8 update[]={0xa3,0x16,0,0x18,0x24,0x58,0x20};memcpy(Page+bo+8,update,sizeof(update));
     memset(Page+bo+8+7,0x5a,32);Page[bo+8+39]=0x18;Page[bo+8+40]=0x25;Page[bo+8+41]=0x18;Page[bo+8+42]=48;n=43;
   }else if(cmd==0x3112){UINT8 finish[]={0xa2,0x16,0,0x18,0x24,0x40};memcpy(Page+bo+8,finish,sizeof(finish));n=sizeof(finish);}
+  else if(cmd==0x2109){Page[bo+8]=0xa0;n=1;}
   else assert(cmd==0x2113);
   Put(Page+bo+4,(UINT32)n);
   if((Mode==6&&cmd==0x310f)||((Mode==7||Mode==9||Mode==10)&&cmd==0x3111)||(Mode==8&&cmd==0x3112)||(Mode==10&&cmd==0x2113)){
@@ -102,9 +103,29 @@ static void Gates(void){
   assert(EFI_ERROR(FseExchange(&second,Page,FKM_MESSAGE_BYTES,4096,&r))&&!Calls&&!Clean&&second.State==FseQuarantined);Cases++;
   munmap(Page,0x82000);
 }
+#if FUXI_M3_CHARACTERISTICS_PROBE
+static void ProbeCommand(void){
+  FSE_CONTEXT c={0};FKM_RETURN r;
+  Setup();
+  assert(FseInitialize(&c,Page,(UINTN)Page,0x82000,0x5c,4,TRUE)==EFI_SUCCESS);
+  Put(Page,4);Put(Page+8,0x424);Put(Page+12,96);Put(Page+16,4);Put(Page+96,0x2109);
+  assert(FseExchange(&c,Page,FKM_MESSAGE_BYTES,4096,&r)==EFI_SUCCESS&&Calls==1&&c.State==FseBound);
+  Cases++;
+  munmap(Page,0x82000);
+}
+#endif
 int main(void){
 #if FUXI_M3_SECRET_EXCHANGE
   for(int mode=0;mode<=12;mode++)Run(mode);
+#if FUXI_M3_CHARACTERISTICS_PROBE
+  ProbeCommand();
+#else
+  {FSE_CONTEXT c={0};FKM_RETURN r;Setup();
+   assert(FseInitialize(&c,Page,(UINTN)Page,0x82000,0x5c,4,TRUE)==EFI_SUCCESS);
+   Put(Page,4);Put(Page+8,0x424);Put(Page+12,96);Put(Page+16,4);Put(Page+96,0x2109);
+   assert(EFI_ERROR(FseExchange(&c,Page,FKM_MESSAGE_BYTES,4096,&r))&&!Calls&&c.State==FseQuarantined);
+   Cases++;munmap(Page,0x82000);}
+#endif
   Gates();printf("PASS %u secret exchange/core vectors; monitor simulated, no live SMC/GCM\n",Cases);
 #else
   (void)Run;(void)Gates;FSE_CONTEXT c={0};FKM_CONTEXT b={0};FKM_RETURN r;

@@ -19,10 +19,11 @@ def main():
     a.report.parent.mkdir(parents=True,exist_ok=True);a.report.write_text('{"result":"running"}\n')
     outputs=[]
     with tempfile.TemporaryDirectory(prefix='m3-secret-') as tmp:
-        for enabled in (0,1):
-            exe=Path(tmp)/('test-'+str(enabled))
+        for enabled,probe in ((0,0),(1,0),(1,1)):
+            exe=Path(tmp)/('test-'+str(enabled)+'-'+str(probe))
             command=[shutil.which('clang') or 'clang','-std=c11','-Wall','-Wextra','-Werror','-Wno-macro-redefined','-fshort-wchar','-g','-O1',
                      '-fsanitize=address,undefined','-fno-omit-frame-pointer',f'-DFUXI_M3_SECRET_EXCHANGE={enabled}',
+                     f'-DFUXI_M3_CHARACTERISTICS_PROBE={probe}',
                      '-I'+str(a.edk2/'MdePkg/Include'),'-I'+str(a.edk2/'MdePkg/Include/AArch64'),'-I'+str(src),
                      str(test),*(str(f) for f in files),'-o',str(exe)]
             subprocess.run(command,check=True)
