@@ -123,3 +123,27 @@ configured 入口 27 项、普通入口 17 项、后端 55 项、交换 25 项�
 关闭检查通过。尚未启动 v3；实机成功只表示 -64 门被解除，不等于 TA 持久化、
 convert、ICE 装槽或 userdata 明文。M3/M4/M5 仍未通过。详见
 `out/m3-key-recovery-configured-v3/REVIEW.md`。
+
+## configured-v3 attempt-01：configure 被接受，begin 返回 -14
+
+照片（`out/m3-key-recovery-configured-v3/attempt-01/screen-01.jpeg`，SHA256
+`aa69b26a…e89c27c`）显示：
+
+- `CONFIGURE begin once os=170000 os-patch=20261005 vendor-patch=20261005`
+- `CONFIGURE return a0..a3=0 resumes=0`
+- `CONFIGURE header status=00000000 payload=40512 wire=40520`
+- `CONFIGURE Success；continue existing-key recovery`
+- `RECOVERY result=Not Ready state=5 stage=1 km=0 bytes=0 retained=1`
+- `RECOVERY fault=7 commands=1 resumes=1`
+- `RECOVERY response-header=1 status=FFFFFFF2 payload-bytes=40616 wire-bytes=40624`
+- `BATCH stop=key-recovery passed=A43 retained=1`，最终 PARK
+
+即：configure 的固定请求被 TA 接受，-64“未配置”门解除；但第一条密钥 `begin`
+仍被拒绝，状态为 `0xFFFFFFF2`（-14），未取得 operation handle，恢复未开始。
+`payload-bytes` 与 `wire-bytes` 仍等于容量与其减 8，属同一种“无输出错误”形状。
+
+-14 的语义**尚未确定**：固定 TA 中仅五处立即数产生 -14，分别位于
+generate/import 的 RPMB/熔丝助手与设备 ID 预置路径，均不在 `0x310f` 处理函数
+`0x8984` 的直接调用链内；而分发器 `0xb2a0` 派发前会经跳板调用外部回调。
+因此不应把 -14 直接解释为过期时间、RPMB 或任何单一校验。`resumes=1` 仅是
+观测事实。M3/M4/M5 仍未通过。
