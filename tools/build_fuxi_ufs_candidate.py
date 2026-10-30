@@ -371,6 +371,8 @@ def write_sources(uefi, out):
         uefi / "tools/tests/m3_recovery_entry_cases.inc",
         uefi / "tools/tests/m3_configure_monitor.inc",
         uefi / "tools/tests/m3_configured_recovery_cases.inc",
+        uefi / "tools/tests/m3_characteristics_monitor.inc",
+        uefi / "tools/tests/m3_characteristics_entry_cases.inc",
         uefi / "docs/evidence/fuxi-m3-android-binding-20261030.json",
         uefi / "docs/evidence/fuxi-m3-configure-gate-20261030.json",
     ]

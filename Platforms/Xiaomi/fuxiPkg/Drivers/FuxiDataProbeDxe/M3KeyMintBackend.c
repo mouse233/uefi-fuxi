@@ -249,8 +249,8 @@ EFI_STATUS FkmProbeCharacteristics(FKM_CONTEXT *C, CONST UINT8 *Blob,
   if (AppId==NULL || AppIdBytes<64 || AppIdBytes>64+FKR_SEED_LIMIT) return EFI_INVALID_PARAMETER;
   C->ResponseHeaderSeen=FALSE;
   C->ResponseStatus=C->ResponsePayloadBytes=C->ResponseWireBytes=0;
-  // Additional params carry the same application-id tag the begin map uses;
-  // the blob cannot be unwrapped without it. Serialized as a nested CBOR map.
+  // Additional params carry the same application-id tag the begin map uses.
+  // This does not establish the cause of any live TA rejection.
   IW.P=Inner; IW.N=0; IW.Cap=sizeof(Inner); IW.Bad=FALSE;
   Head(&IW,5,1); BytesPair(&IW,0x90000259,AppId,AppIdBytes);
   if (IW.Bad) return EFI_INVALID_PARAMETER;
@@ -263,7 +263,8 @@ EFI_STATUS FkmProbeCharacteristics(FKM_CONTEXT *C, CONST UINT8 *Blob,
   Bi1=Align8(96+SendBytes); Bi3=Align8(Bi1+ResponseCap);
   Bo0=Align8(Bi3+4); Bo1=Align8(Bo0+SendBytes);
   if (Bo1+ResponseCap>FKM_MESSAGE_BYTES) {
-    Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0; return EFI_BAD_BUFFER_SIZE;
+    Wipe(C->Request,sizeof(C->Request)); Wipe(Inner,sizeof(Inner));
+    C->RequestBytes=0; return EFI_BAD_BUFFER_SIZE;
   }
   P=C->Shared; Wipe(P,FKM_SHARED_BYTES); Wipe(&Ret,sizeof(Ret));
   Put32(P,C->App); Put32(P+4,0); Put32(P+8,0x424);
@@ -276,23 +277,17 @@ EFI_STATUS FkmProbeCharacteristics(FKM_CONTEXT *C, CONST UINT8 *Blob,
   Put32(P+Bi3,1); Copy(P+96,C->Request,SendBytes); Copy(Header,P,sizeof(Header));
   Status=C->Exchange(C->ExchangeContext,P,FKM_MESSAGE_BYTES,4096,&Ret);
   if (EFI_ERROR(Status) || Ret.A0 || Ret.A1 || Ret.A2 || Ret.A3) {
-    C->Fault=2; C->Quarantined=TRUE;
-    Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
-    return EFI_NOT_READY;
+    C->Fault=2; Status=EFI_NOT_READY; goto Retain;
   }
   if (!((Get32(P+FKM_MESSAGE_BYTES)==0 && Get32(P+FKM_MESSAGE_BYTES+4)==0) ||
         (Get32(P+FKM_MESSAGE_BYTES)==0x10002 &&
          (Get32(P+FKM_MESSAGE_BYTES+4)==0xfffd || Get32(P+FKM_MESSAGE_BYTES+4)==0xffff))) ||
       !Zero(P+FKM_MESSAGE_BYTES+8,4088)) {
-    C->Fault=3; C->Quarantined=TRUE;
-    Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
-    return EFI_NOT_READY;
+    C->Fault=3; Status=EFI_NOT_READY; goto Retain;
   }
   OutReq=Get32(P+48); OutResp=Get32(P+56);
   if (OutReq>SendBytes || OutResp<8 || OutResp>ResponseCap) {
-    C->Fault=4; C->Quarantined=TRUE;
-    Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
-    return EFI_NOT_READY;
+    C->Fault=4; Status=EFI_NOT_READY; goto Retain;
   }
   for (I=0;I<FKM_MESSAGE_BYTES;++I) {
     UINT8 Expected=0;
@@ -302,30 +297,32 @@ EFI_STATUS FkmProbeCharacteristics(FKM_CONTEXT *C, CONST UINT8 *Blob,
     else if (I>=96 && I<96+SendBytes) Expected=C->Request[I-96];
     else if (I==Bi3) Expected=1;
     if (P[I]!=Expected) {
-      C->Fault=5; C->Quarantined=TRUE;
-      Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
-      return EFI_NOT_READY;
+      C->Fault=5; Status=EFI_NOT_READY; goto Retain;
     }
   }
   TaStatus=Get32(P+Bo1); Payload=Get32(P+Bo1+4);
   if (Payload>OutResp-8 || !Zero(P+Bo1+8+Payload,OutResp-8-Payload)) {
-    C->Fault=6; C->Quarantined=TRUE;
-    Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
-    return EFI_NOT_READY;
+    C->Fault=6; Status=EFI_NOT_READY; goto Retain;
   }
   C->ResponseStatus=TaStatus; C->ResponsePayloadBytes=(UINT32)Payload;
   C->ResponseWireBytes=(UINT32)OutResp; C->ResponseHeaderSeen=TRUE;
   if (TaStatus) {
-    // A negative status is a legitimate answer for this probe; it is recorded
-    // and the session is kept usable. Positive status stays a hard rejection.
-    if (!(TaStatus&0x80000000U)) C->Quarantined=TRUE;
-    Status=EFI_DEVICE_ERROR;
-  } else {
-    R.P=P+Bo1+8; R.N=Payload; R.At=0;
-    Status=ScanTagged(&R,4096,Out) ? EFI_SUCCESS : EFI_COMPROMISED_DATA;
+    // Record the public status, but do not reuse a failed diagnostic session.
+    // A negative status alone does not prove the response/operation is closed.
+    C->Fault=7; Status=EFI_DEVICE_ERROR; goto Retain;
+  }
+  R.P=P+Bo1+8; R.N=Payload; R.At=0;
+  if (!ScanTagged(&R,4096,Out)) {
+    C->Fault=9; Status=EFI_COMPROMISED_DATA; goto Retain;
   }
   Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
   Wipe(Inner,sizeof(Inner));
+  return EFI_SUCCESS;
+Retain:
+  // The registered page and request snapshot remain owned by the session.
+  // In particular, an interrupted/failed exchange may still reference the page.
+  C->Quarantined=TRUE;
+  Wipe(Out,sizeof(*Out)); Wipe(Inner,sizeof(Inner));
   return Status;
 }
 EFI_STATUS FkmInitialize(FKM_CONTEXT *C, UINT32 App, UINT8 *Shared, UINTN SharedBytes,

@@ -52,6 +52,8 @@ EFI_STATUS FkmDecode(FKR_STAGE Stage, CONST UINT8 *Payload, UINTN Bytes,
 // Non-secret version fields of a stored key blob, read through one read-only
 // getKeyCharacteristics (0x2109). Only OS version/patch integers are reported;
 // no other authorization-set value is retained or logged.
+// Once submitted, any failure quarantines the context and retains the shared
+// page/request unchanged. The caller must stop without cleanup or another call.
 typedef struct {
   BOOLEAN HaveOsVersion, HaveOsPatchLevel;
   UINT32 OsVersion, OsPatchLevel, TagsScanned;

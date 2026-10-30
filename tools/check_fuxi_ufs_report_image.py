@@ -78,9 +78,12 @@ def main():
     if candidate.get('m3_characteristics_probe'):
         assert candidate.get('m3_configure_recovery') and 'characteristics-probe' in candidate.get('m3_smci_ops',[])
         assert candidate.get('m3_smci_ops',[])[5] == 'characteristics-probe'
-        extra += ('characteristics-tests.json',)
+        extra += ('characteristics-tests.json','characteristics-entry-tests.json')
         probe=json.loads((out/'characteristics-tests.json').read_text())
-        assert probe.get('result')=='passed' and 'PASS 13 probe cases' in probe.get('host_output','')
+        assert probe.get('result')=='passed' and 'PASS 18 probe cases' in probe.get('host_output','')
+        integrated=json.loads((out/'characteristics-entry-tests.json').read_text())
+        assert integrated.get('configured') is True and integrated.get('characteristics') is True
+        assert integrated.get('cases')==13
     if candidate.get("m3_smc_context"):
         extra += ("m3-context-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:

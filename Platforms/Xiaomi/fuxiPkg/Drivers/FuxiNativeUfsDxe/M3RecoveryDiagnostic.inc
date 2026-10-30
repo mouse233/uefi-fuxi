@@ -49,7 +49,16 @@ STATIC EFI_STATUS FnuRunRecovery(UINT64 Raw,UINT8 *Page,UINTN Bytes,UINT64 Bridg
                           FseExchange,&mRecoverySession->Exchange,TRUE,&Ops);
     if(!EFI_ERROR(Result)) {
 #if FUXI_M3_CHARACTERISTICS_PROBE
-      FnuProbeCharacteristics(&mRecoverySession->Backend,mRecoveryWork);
+      State=(UINT32)mRecoveryWork->State;Stage=(UINT32)mRecoveryWork->Stage;
+      KeyMintStatus=mRecoveryWork->KeyMintStatus;
+      Result=FnuProbeCharacteristics(&mRecoverySession->Backend,mRecoveryWork);
+      if(EFI_ERROR(Result)) {
+        // No begin, reset, wipe, release or bridge deletion after a failed probe.
+        mRecoverySession->Backend.Quarantined=TRUE;
+        mRecoveryRetained=TRUE;
+        FnuLog(L"FUXIM3 RECOVERY skipped: characteristics failed; session retained");
+        goto ReportRecovery;
+      }
 #endif
       FNU_STAGE("m3-key-recovery");
       FnuLog(L"FUXIM3 RECOVERY begin: decrypt existing key; no persistence");
@@ -69,6 +78,9 @@ STATIC EFI_STATUS FnuRunRecovery(UINT64 Raw,UINT8 *Page,UINTN Bytes,UINT64 Bridg
           mRecoveryRetained=TRUE;Result=EFI_NOT_READY;
         }
       }
+#if FUXI_M3_CHARACTERISTICS_PROBE
+ReportRecovery:
+#endif
       FnuLog(L"FUXIM3 RECOVERY result=%r state=%u stage=%u km=%d bytes=%u retained=%u",
              Result,State,Stage,KeyMintStatus,(UINT32)RecoveredBytes,(UINT32)mRecoveryRetained);
       FnuLog(L"FUXIM3 RECOVERY fault=%u exchange=%u commands=%u resumes=%u",

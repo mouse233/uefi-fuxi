@@ -9,8 +9,8 @@ STATIC EFI_STATUS FnuProbeCharacteristics(FKM_CONTEXT *Backend, CONST FKR_WORK *
   FNU_STAGE("m3-characteristics");
   FnuLog(L"FUXIM3 CHARACTERISTICS begin once: read-only blob version fields");
   ZeroMem(&Chars,sizeof(Chars));
-  // A negative TA status is recorded, not retried; the session is only kept if
-  // the backend did not quarantine on an unexpected shape.
+  // Any failed probe stops this session. The backend retains its registered
+  // page/request and withholds partial version fields on response rejection.
   Status=FkmProbeCharacteristics(Backend,Work->Blob,Work->BlobBytes,
                                  Work->ApplicationId,Work->ApplicationIdBytes,&Chars);
   FnuLog(L"FUXIM3 CHARACTERISTICS result=%r status=%08x payload=%u wire=%u scanned=%u",

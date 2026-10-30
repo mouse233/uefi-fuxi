@@ -164,3 +164,15 @@ convert、ICE 装槽或 userdata 明文。M3/M4/M5 仍未通过。详见
 不可观测（TA 日志不对外）。同一设备上 TWRP 能正常解密，说明键 blob 本身可用，
 嫌疑更偏向已配置槽内容或版本索引（`0x5a308`，可能与缺失的 `0x3121` setVersion
 有关）。M3/M4/M5 仍未通过。
+
+## 后续复核更正：特性探针隔离与 v7 提议撤回
+
+后续 v4–v6 的探针虽然归档了 -33/-62，但新增路径存在失败时擦除注册页、解析
+失败不隔离及入口忽略探针错误的缺陷。`m3-characteristics-isolation-v1` 修复这些
+行为，18项探针、13项实际特性入口和完整30项资格通过，尚未上机。
+
+此前把 `0x2108` 称为 upgradeKey 的建议错误：固定非 legacy TEE HAL 将其用于
+generate_key，upgrade_key 使用 `0x2114`。未将这些命令接入；交换层反例确认
+生成/升级/setVersion均在SMC前拒绝。-33的key-id表归因仅为静态候选解释，直接bl
+图不能穷尽间接返回；-62的四字段比较和OS patch规范化也使两字段判因无效。
+详见[修复与固定上下文证据](fuxi-m3-characteristics-isolation-20261030.md)。

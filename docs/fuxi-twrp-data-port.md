@@ -441,3 +441,16 @@ getVersion 后、首条密钥请求前；失败/未知即保留并 PARK。镜像
 convert/HWKM/ICE/DUN 与 userdata 明文对照仍是后续独立环节，M3/M4/M5 未通过。
 详见 [恢复入口与实机判据](fuxi-m3-key-recovery-live-20261030.md) 与
 候选 REVIEW。
+
+## 2026-10-30：特性探针隔离修复与恢复上下文复核
+
+`out/m3-characteristics-isolation-v1` 修复特性探针失败后擦除注册页、畸形 CBOR
+不隔离及入口忽略错误继续 begin 的缺陷。18项探针、13项真实特性入口组合与完整
+30项候选资格通过；完整固件及默认/query模块已构建，未上机，M3/M4/M5未通过。
+失败现在保留页/请求/恢复输入并 PARK，任何非零 TA status 都不继续 begin。
+
+固定二进制复核确认此前 v7 提议错误：非 legacy TEE HAL 的 `0x2108` 属于
+generate_key，upgrade_key 使用 `0x2114`；两者均不接入。-33 的 key-id 表归因
+仅保留为静态候选，-62 仍不能由两个版本字段唯一识别；OS patch 比较还存在
+YYYYMMDD到YYYYMM的规范化。详见
+[隔离修复、固定命令与版本证据](fuxi-m3-characteristics-isolation-20261030.md)。

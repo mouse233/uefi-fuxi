@@ -53,6 +53,9 @@ static int ResumeTarget,ResumeCalls,ResumeTerminal,ResumePending;
 #if TEST_CONFIGURE_RECOVERY
 static int ConfigureCalls,ConfigurePending;
 #endif
+#if FUXI_M3_CHARACTERISTICS_PROBE
+static int CharacteristicsScenario,CharacteristicsCalls;
+#endif
 static FNU_REPORT Report;
 static void *ZeroMem(void *p,UINTN n){return memset(p,0,n);}
 static void *CopyMem(void *d,const void *s,UINTN n){return memcpy(d,s,n);}
@@ -100,9 +103,15 @@ static UINT8 *OutPage(void){return Page+0x64000;}
 #if TEST_CONFIGURE_RECOVERY
 static int ConfigureMonitor(ARM_SMC_ARGS *a);
 #endif
+#if FUXI_M3_CHARACTERISTICS_PROBE
+#include "m3_characteristics_monitor.inc"
+#endif
 #endif
 VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
 #if TEST_RECOVERY_ENTRY
+#if FUXI_M3_CHARACTERISTICS_PROBE
+ if(Page && *(UINT32*)(Page+96)==0x2109 && CharacteristicsMonitor(a))return;
+#endif
 #if TEST_CONFIGURE_RECOVERY
  if(Page && *(UINT32*)(Page+96)==0x2116 && ConfigureMonitor(a))return;
 #endif
@@ -215,6 +224,7 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
 }
 #include "M3BridgeDiagnostic.inc"
 #if TEST_RECOVERY_ENTRY
+#include "M3CharacteristicsDiagnostic.inc"
 #include "M3RecoveryDiagnostic.inc"
 #if TEST_CONFIGURE_RECOVERY
 #include "m3_configure_monitor.inc"
@@ -293,7 +303,9 @@ int main(void){
 }
 
 #else
-#if TEST_CONFIGURE_RECOVERY
+#if FUXI_M3_CHARACTERISTICS_PROBE
+#include "m3_characteristics_entry_cases.inc"
+#elif TEST_CONFIGURE_RECOVERY
 #include "m3_configured_recovery_cases.inc"
 #else
 #include "m3_recovery_entry_cases.inc"

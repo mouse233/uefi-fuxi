@@ -7,12 +7,13 @@
 #include "M3KeyMintBackend.h"
 static unsigned Cases;
 static UINT8 Blob[FKR_BLOB_LIMIT], AppId[64];
+static UINT8 SharedSnapshot[FKM_SHARED_BYTES], RequestSnapshot[FKM_REQUEST_LIMIT];
 static unsigned get32(const UINT8 *p) { return p[0]|((unsigned)p[1]<<8)|((unsigned)p[2]<<16)|((unsigned)p[3]<<24); }
 static void put32(UINT8 *p,unsigned n) { for (unsigned i=0;i<4;i++) p[i]=(UINT8)(n>>(i*8)); }
 
 typedef struct { int mode; unsigned calls, status; UINTN sent; } MOCK;
 
-static EFI_STATUS exchange(void *ctx,UINT8 *p,UINTN in,UINTN out,FKM_RETURN *r) {
+static EFI_STATUS respond(void *ctx,UINT8 *p,UINTN in,UINTN out,FKM_RETURN *r) {
   MOCK *m=ctx; unsigned bo=get32(p+52), cap=get32(p+56), cmd=get32(p+96);
   UINTN n;
   assert(in==FKM_MESSAGE_BYTES&&out==4096&&cmd==0x2109);
@@ -42,6 +43,15 @@ static EFI_STATUS exchange(void *ctx,UINT8 *p,UINTN in,UINTN out,FKM_RETURN *r) 
     static const UINT8 body[]={0xa1,0x1a,0x30,0x00,0x02,0xc1};
     memcpy(p+bo+8,body,sizeof(body)); put32(p+bo+4,sizeof(body)); return EFI_SUCCESS;
   }
+  if(m->mode==14) { put32(p+bo,0xffffffdfU); put32(p+bo+4,0); return EFI_SUCCESS; }
+  if(m->mode==15) { // A valid field followed by a truncated value must not escape.
+    static const UINT8 body[]={0xa2,0x1a,0x30,0x00,0x02,0xc1,0x1a,0x00,0x02,0x98,0x10,
+                               0x1a,0x30,0x00,0x02,0xc2,0x58,0xff};
+    memcpy(p+bo+8,body,sizeof(body)); put32(p+bo+4,sizeof(body)); return EFI_SUCCESS;
+  }
+  if(m->mode==16) { put32(p+bo+4,cap); return EFI_SUCCESS; }
+  if(m->mode==17) return EFI_DEVICE_ERROR;
+  if(m->mode==18) { r->A3=1; return EFI_SUCCESS; }
   if(m->mode==20) { // flat map of tag:value
     static const UINT8 body[]={0xa2,0x1a,0x30,0x00,0x02,0xc1,0x1a,0x00,0x02,0x98,0x10,
                                0x1a,0x30,0x00,0x02,0xc2,0x1a,0x00,0x03,0x17,0x72};
@@ -58,13 +68,19 @@ static EFI_STATUS exchange(void *ctx,UINT8 *p,UINTN in,UINTN out,FKM_RETURN *r) 
   }
   n=0; put32(p+bo+4,(unsigned)n); return EFI_SUCCESS;
 }
+static EFI_STATUS exchange(void *ctx,UINT8 *p,UINTN in,UINTN out,FKM_RETURN *r) {
+  memset(RequestSnapshot,0,sizeof(RequestSnapshot));
+  memcpy(RequestSnapshot,p+96,get32(p+16));
+  EFI_STATUS s=respond(ctx,p,in,out,r);
+  memcpy(SharedSnapshot,p,sizeof(SharedSnapshot));
+  return s;
+}
 
 static void run(int mode,FKM_CONTEXT *c,MOCK *m) {
-  static UINT8 shared[FKM_SHARED_BYTES+4096];
-  FKM_CHARACTERISTICS ch; EFI_STATUS s;
+  static _Alignas(4096) UINT8 shared[FKM_SHARED_BYTES];
+  FKM_CHARACTERISTICS ch; EFI_STATUS s; FKR_OPS ops={0}; FKR_REPLY reply;
   memset(c,0,sizeof(*c)); memset(m,0,sizeof(*m)); m->mode=mode;
-  c->Shared=shared; c->SharedBytes=FKM_SHARED_BYTES; c->App=4; c->Ready=TRUE;
-  c->Exchange=exchange; c->ExchangeContext=m;
+  assert(FkmInitialize(c,4,shared,sizeof(shared),exchange,m,TRUE,&ops)==EFI_SUCCESS);
   memset(&ch,0xa5,sizeof(ch));
   s=FkmProbeCharacteristics(c,Blob,208,AppId,64,&ch);
   Cases++;
@@ -85,16 +101,16 @@ static void run(int mode,FKM_CONTEXT *c,MOCK *m) {
     assert(s==EFI_SUCCESS&&!ch.HaveOsVersion&&!ch.HaveOsPatchLevel);
     break;
   case 10:
-    assert(s==EFI_DEVICE_ERROR&&!c->Quarantined&&c->ResponseStatus==0xffffffc2U);
+    assert(s==EFI_DEVICE_ERROR&&c->Quarantined&&c->Fault==7&&c->ResponseStatus==0xffffffc2U);
     assert(!ch.HaveOsVersion&&!ch.HaveOsPatchLevel);
     break;
-  case 11:
-    assert(s==EFI_DEVICE_ERROR&&c->Quarantined);
+  case 11: case 14:
+    assert(s==EFI_DEVICE_ERROR&&c->Quarantined&&c->Fault==7);
     break;
-  case 12: case 13:
-    assert(s==EFI_COMPROMISED_DATA&&!c->Quarantined);
+  case 12: case 13: case 15:
+    assert(s==EFI_COMPROMISED_DATA&&c->Quarantined&&c->Fault==9);
     break;
-  case 1:
+  case 1: case 17: case 18:
     assert(s==EFI_NOT_READY&&c->Quarantined&&c->Fault==2);
     break;
   case 2:
@@ -109,12 +125,28 @@ static void run(int mode,FKM_CONTEXT *c,MOCK *m) {
   case 5:
     assert(s==EFI_NOT_READY&&c->Quarantined&&c->Fault==4);
     break;
+  case 16:
+    assert(s==EFI_NOT_READY&&c->Quarantined&&c->Fault==6);
+    break;
   default: assert(0);
   }
   assert(m->calls<=1);
-  // The request buffer and shared page are cleared after every outcome.
-  for(unsigned i=0;i<sizeof(c->Request);++i) assert(c->Request[i]==0);
-  for(unsigned i=0;i<FKM_SHARED_BYTES;++i) assert(shared[i]==0);
+  if(EFI_ERROR(s)) {
+    assert(!ch.HaveOsVersion&&!ch.HaveOsPatchLevel&&!ch.OsVersion&&!ch.OsPatchLevel&&!ch.TagsScanned);
+    assert(c->RequestBytes==m->sent);
+    assert(!memcmp(c->Request,RequestSnapshot,sizeof(RequestSnapshot)));
+    assert(!memcmp(shared,SharedSnapshot,sizeof(shared)));
+    // Both diagnostic reentry and recovery begin must stop before exchange.
+    unsigned calls=m->calls;
+    assert(FkmProbeCharacteristics(c,Blob,208,AppId,64,&ch)==EFI_NOT_READY);
+    assert(ops.Begin(ops.Context,NULL,&reply)==EFI_NOT_READY);
+    assert(m->calls==calls&&!memcmp(shared,SharedSnapshot,sizeof(shared)));
+    assert(!memcmp(c->Request,RequestSnapshot,sizeof(RequestSnapshot)));
+  } else {
+    assert(!c->RequestBytes);
+    for(unsigned i=0;i<sizeof(c->Request);++i) assert(c->Request[i]==0);
+    for(unsigned i=0;i<FKM_SHARED_BYTES;++i) assert(shared[i]==0);
+  }
 }
 
 int main(void) {
@@ -122,6 +154,7 @@ int main(void) {
   memset(Blob,0x5a,sizeof(Blob)); memset(AppId,0x3c,sizeof(AppId));
   for(int mode=0;mode<=5;++mode) run(mode,&c,&m);
   run(10,&c,&m); run(11,&c,&m); run(12,&c,&m); run(13,&c,&m);
+  for(int mode=14;mode<=18;++mode) run(mode,&c,&m);
   run(20,&c,&m); run(21,&c,&m); run(22,&c,&m);
   // Preconditions never reach the transport.
   static UINT8 shared[FKM_SHARED_BYTES];

@@ -1,0 +1,252 @@
+{
+  "result": "passed",
+  "inputs": {
+    "recovery": "9aa603b1b2851df9c773c153f7df4520b7c634be0c15bc55f43c2fb83b82e4b0",
+    "keymint": "657093d0991515f91e6ea35192b0cfe66bcbd52196a3b906fabe64086ab1ddcb",
+    "partition": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6"
+  },
+  "mutated_inputs_rejected": 3,
+  "evidence": {
+    "recovery-keystore-constructor": {
+      "input": "recovery",
+      "start": "0x2501b8",
+      "end": "0x250224",
+      "code_sha256": "af013d17bc0c06d7941d3950afde8142d8035f78b9a4cbafeeb1020a40516f57"
+    },
+    "aidl-begin": {
+      "input": "keymint",
+      "start": "0x1b100",
+      "end": "0x1b140",
+      "code_sha256": "17524a64ec2bbea4356910fc291ecfe6b36e84a5e385099ee396f9ac84a3cb5c"
+    },
+    "keymint-begin-command": {
+      "input": "keymint",
+      "start": "0x31dac",
+      "end": "0x31ee0",
+      "code_sha256": "d9efdd0a9e367eafafe5e5f78dc6723aaa12e2f380a4e47a986b495d627b45c4"
+    },
+    "configure-sequence": {
+      "input": "keymint",
+      "start": "0x2e3c0",
+      "end": "0x2e4e4",
+      "code_sha256": "ab5a4303d5dc87c82e116ca6eebe7755e1d208d87442529b50d61c8d3a2acdd4"
+    },
+    "set-version-command": {
+      "input": "keymint",
+      "start": "0x2e26c",
+      "end": "0x2e310",
+      "code_sha256": "5409ff3db93f1830b6c2613054888ea8ec504fe5d13e084ace74d6a2dd4be52b"
+    },
+    "date-properties": {
+      "input": "keymint",
+      "start": "0x18590",
+      "end": "0x187a4",
+      "code_sha256": "38c9f3e1017c35baf7d8c009007ab57b7305b496035141738095cf1e4384bfc8"
+    },
+    "generate-command": {
+      "input": "keymint",
+      "start": "0x2e588",
+      "end": "0x2e65c",
+      "code_sha256": "1ecf3277d7fb1c57a5a740c82a7f3022835f6652259a17afab0a3219d1721964"
+    },
+    "upgrade-command": {
+      "input": "keymint",
+      "start": "0x2f458",
+      "end": "0x2f574",
+      "code_sha256": "fec6f0af5074c0e60bbba8ed8d6bf5b13892f4dbe5dc954a69ffd2bbac72784a"
+    },
+    "version-gate": {
+      "input": "partition",
+      "start": "0x98c0",
+      "end": "0x9a38",
+      "code_sha256": "7c9738afeab316095b6088f061d036470410c40f8388ec0d7c4ca0089ed7049e"
+    },
+    "indirect-call-trampoline": {
+      "input": "partition",
+      "start": "0x2480",
+      "end": "0x248c",
+      "code_sha256": "dfef6194f144cc45cd7130a990be6d0d53c2ad1f55ae8f558949695108b93f07"
+    }
+  },
+  "command_semantics": {
+    "0x2108": "generate_key in pinned non-legacy TEE HAL",
+    "0x2114": "upgrade_key in pinned non-legacy TEE HAL"
+  },
+  "version_controls": [
+    {
+      "name": "matching",
+      "expected_status": 0,
+      "logs_suppressed": 0,
+      "export_reached": false,
+      "instructions": 198,
+      "gate_getters": [
+        "0xb82c",
+        "0xb850",
+        "0xb8ac",
+        "0xb940"
+      ],
+      "status": 0,
+      "fbe": false,
+      "runtime": [
+        170000,
+        20261005,
+        0,
+        20261005
+      ],
+      "stored": [
+        170000,
+        202610,
+        0,
+        20261005
+      ],
+      "blob_version": "0x400000005"
+    },
+    {
+      "name": "old-format",
+      "expected_status": -62,
+      "logs_suppressed": 0,
+      "export_reached": false,
+      "instructions": 30,
+      "gate_getters": [],
+      "status": -62,
+      "fbe": false,
+      "runtime": [
+        170000,
+        20261005,
+        0,
+        20261005
+      ],
+      "stored": [
+        170000,
+        202610,
+        0,
+        20261005
+      ],
+      "blob_version": "0x400000004"
+    },
+    {
+      "name": "os-mismatch",
+      "expected_status": -62,
+      "logs_suppressed": 5,
+      "export_reached": false,
+      "instructions": 221,
+      "gate_getters": [
+        "0xb82c",
+        "0xb850",
+        "0xb8ac",
+        "0xb940"
+      ],
+      "status": -62,
+      "fbe": false,
+      "runtime": [
+        170000,
+        20261005,
+        0,
+        20261005
+      ],
+      "stored": [
+        170001,
+        202610,
+        0,
+        20261005
+      ],
+      "blob_version": "0x400000005"
+    },
+    {
+      "name": "os-patch-mismatch",
+      "expected_status": -62,
+      "logs_suppressed": 5,
+      "export_reached": false,
+      "instructions": 219,
+      "gate_getters": [
+        "0xb82c",
+        "0xb850",
+        "0xb8ac",
+        "0xb940"
+      ],
+      "status": -62,
+      "fbe": false,
+      "runtime": [
+        170000,
+        20261005,
+        0,
+        20261005
+      ],
+      "stored": [
+        170000,
+        202609,
+        0,
+        20261005
+      ],
+      "blob_version": "0x400000005"
+    },
+    {
+      "name": "boot-patch-mismatch",
+      "expected_status": -62,
+      "logs_suppressed": 5,
+      "export_reached": false,
+      "instructions": 229,
+      "gate_getters": [
+        "0xb82c",
+        "0xb850",
+        "0xb8ac",
+        "0xb940"
+      ],
+      "status": -62,
+      "fbe": false,
+      "runtime": [
+        170000,
+        20261005,
+        0,
+        20261005
+      ],
+      "stored": [
+        170000,
+        202610,
+        20261005,
+        20261005
+      ],
+      "blob_version": "0x400000005"
+    },
+    {
+      "name": "vendor-patch-mismatch",
+      "expected_status": -62,
+      "logs_suppressed": 5,
+      "export_reached": false,
+      "instructions": 231,
+      "gate_getters": [
+        "0xb82c",
+        "0xb850",
+        "0xb8ac",
+        "0xb940"
+      ],
+      "status": -62,
+      "fbe": false,
+      "runtime": [
+        170000,
+        20261005,
+        0,
+        20261005
+      ],
+      "stored": [
+        170000,
+        202610,
+        0,
+        20261004
+      ],
+      "blob_version": "0x400000005"
+    }
+  ],
+  "limits": [
+    "Recovery reaches keystore2 through Binder; no live route trace was captured.",
+    "Direct call graphs omit br/blr, imported callbacks and propagated errors.",
+    "A -33 result does not establish a live key-id-table miss or old blob format.",
+    "-62 covers old format and four version mismatches; two version tags do not discriminate them.",
+    "No real key, generate/upgrade/setVersion command, secure service or phone was executed."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_recovery_context.py": "bd49af75cb87369d578ad9c0c6323b70acb209d69b4451b5bd812b4f56313d39",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb"
+  }
+}

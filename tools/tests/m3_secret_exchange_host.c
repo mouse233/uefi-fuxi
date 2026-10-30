@@ -114,6 +114,19 @@ static void ProbeCommand(void){
   munmap(Page,0x82000);
 }
 #endif
+static void RejectedMutationCommands(void){
+  static const UINT32 commands[]={0x2108,0x2508,0x3108,0x2114,0x2514,0x3114,0x3121};
+  for(UINTN i=0;i<sizeof(commands)/sizeof(commands[0]);i++){
+    FSE_CONTEXT c={0};FKM_RETURN r;Setup();
+    assert(FseInitialize(&c,Page,(UINTN)Page,0x82000,0x5c,4,TRUE)==EFI_SUCCESS);
+    Put(Page,4);Put(Page+8,0x424);Put(Page+12,96);Put(Page+16,4);Put(Page+96,commands[i]);
+    UINT8 snapshot[112];memcpy(snapshot,Page,sizeof(snapshot));
+    assert(EFI_ERROR(FseExchange(&c,Page,FKM_MESSAGE_BYTES,4096,&r)));
+    assert(!Calls&&!Clean&&!Inv&&c.State==FseQuarantined);
+    assert(!memcmp(snapshot,Page,sizeof(snapshot)));Cases++;
+    munmap(Page,0x82000);
+  }
+}
 int main(void){
 #if FUXI_M3_SECRET_EXCHANGE
   for(int mode=0;mode<=12;mode++)Run(mode);
@@ -126,9 +139,9 @@ int main(void){
    assert(EFI_ERROR(FseExchange(&c,Page,FKM_MESSAGE_BYTES,4096,&r))&&!Calls&&c.State==FseQuarantined);
    Cases++;munmap(Page,0x82000);}
 #endif
-  Gates();printf("PASS %u secret exchange/core vectors; monitor simulated, no live SMC/GCM\n",Cases);
+  Gates();RejectedMutationCommands();printf("PASS %u secret exchange/core vectors; monitor simulated, no live SMC/GCM\n",Cases);
 #else
-  (void)Run;(void)Gates;FSE_CONTEXT c={0};FKM_CONTEXT b={0};FKM_RETURN r;
+  (void)Run;(void)Gates;(void)RejectedMutationCommands;FSE_CONTEXT c={0};FKM_CONTEXT b={0};FKM_RETURN r;
   assert(FseInitialize(&c,NULL,0,0,0,0,TRUE)==EFI_UNSUPPORTED);
   assert(FseExchange(&c,NULL,0,0,&r)==EFI_UNSUPPORTED&&!Calls&&!Clean&&!Inv);
   assert(FsePermitCleanup(&c,&b)==EFI_UNSUPPORTED);puts("PASS default-off: no SMC/cache calls");

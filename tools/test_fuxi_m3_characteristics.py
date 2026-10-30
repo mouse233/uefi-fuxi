@@ -29,7 +29,8 @@ def main():
     bound=[src/'M3KeyMintBackend.c',src/'M3KeyMintBackend.h',test,Path(__file__)]
     report=dict(result='passed',host_output=result.strip(),sanitizers=['address','undefined'],
                 sources={str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in bound},
-                scope='Synthetic transport only. Command 0x2109 and map{23:blob} come from the pinned HAL; '
+                scope='Synthetic transport only. Tests retain failed shared pages/requests, reject reentry/begin, '
+                      'and withhold partial version fields. Request is map{23:blob,29:bstr(params)}; '
                       'no live SMC, TA, real key blob or vendor response.')
     a.report.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(dict(result='passed')))
