@@ -1,0 +1,75 @@
+{
+  "result": "passed",
+  "cases": [
+    {
+      "case": "stable-match",
+      "captured": true,
+      "matches": true
+    },
+    {
+      "case": "stable-firmware-differs",
+      "captured": true,
+      "matches": false
+    },
+    {
+      "case": "wrong-serial",
+      "rejected": true
+    },
+    {
+      "case": "wrong-slot",
+      "rejected": true
+    },
+    {
+      "case": "not-recovery",
+      "rejected": true
+    },
+    {
+      "case": "not-root",
+      "rejected": true
+    },
+    {
+      "case": "wrong-library",
+      "rejected": true
+    },
+    {
+      "case": "wrong-target",
+      "rejected": true
+    },
+    {
+      "case": "not-block",
+      "rejected": true
+    },
+    {
+      "case": "wrong-size",
+      "rejected": true
+    },
+    {
+      "case": "bad-hash",
+      "rejected": true
+    },
+    {
+      "case": "partition-race",
+      "rejected": true
+    },
+    {
+      "case": "boot-race",
+      "rejected": true
+    },
+    {
+      "case": "transport-error",
+      "rejected": true
+    },
+    {
+      "case": "library-race",
+      "rejected": true
+    },
+    {
+      "case": "geometry-race",
+      "rejected": true
+    }
+  ],
+  "sources": {
+    "tools/test_fuxi_m3_firmware_identity.py": "afa1fd3b2be80771aae6ccb63567549004eb56d6cccec79ee95a7a26949c0336",
+    "tools/collect_fuxi_m3_firmware_identity.py": "fb6e0f41307e70a6c4e74e55d32c8551fbee0b3dba2c09f502174bbcb3feff7f"
+  }
+}

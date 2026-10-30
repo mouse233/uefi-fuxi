@@ -132,3 +132,11 @@ python3 tools/audit_fuxi_m3_sdk_reference.py \
 下一门槛是绑定当前手机ABL/TZ身份，再核对SDK对象服务与TA实例加载/卸载链。
 同轮来源/实例证据补齐后才能决定新的公开字段诊断候选；不能直接设置boot槽、
 拼造启动状态、重发208/setVersion或放宽隔离代替证据。
+
+## 后续实机身份补充
+
+[当前固件身份核验](fuxi-m3-firmware-identity-20261030.md)取得TWRP两轮稳定摘要：
+当前slot_a的TZ与ROM补零后匹配；ABL A不同于历史ABL B，但同一ROM中找到了
+与ABL A全分区哈希匹配的版本。已独立提取新PE并用当前地址重核验，明确进入
+头回退片段后旧A/B仍局部得到boot202607。现已补齐当前slot A分区版本依据，
+但实际字段来源、SDK服务返回、TA实例延续和真实-62返回PC仍未证明。

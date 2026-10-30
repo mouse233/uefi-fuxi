@@ -1,0 +1,73 @@
+{
+  "result": "captured",
+  "serial": "fcde91e",
+  "properties": {
+    "ro.product.device": "fuxi",
+    "ro.boot.serialno": "fcde91e",
+    "ro.boot.slot_suffix": "_a",
+    "ro.twrp.version": "3.7.1_12-Xiaomi13_v9.0_A15",
+    "ro.build.version.release": "17"
+  },
+  "stable_snapshots": 2,
+  "boot_continuity_checked": true,
+  "reference_library_sha256": "657093d0991515f91e6ea35192b0cfe66bcbd52196a3b906fabe64086ab1ddcb",
+  "references": {
+    "abl": {
+      "bytes": 8388608,
+      "sha256": "78595f9a5fbaba528b894fa7f3991db37fe1bcd03be3036e5cb3c254405655f3",
+      "padded_sha256": "78595f9a5fbaba528b894fa7f3991db37fe1bcd03be3036e5cb3c254405655f3"
+    },
+    "tz": {
+      "bytes": 3973120,
+      "sha256": "d4b8afbe3a8b3468a0f4f740059ab9aed0a8ef803af4f1f58b164ce1c460d418",
+      "padded_sha256": "072574e20b5f00aad08a4da503b5ee1d64c1edda370b3b1bcb6b799cdbc79fd3"
+    }
+  },
+  "partitions": {
+    "abl_a": {
+      "path": "/dev/block/by-name/abl_a",
+      "target": "/dev/block/sde11",
+      "bytes": 8388608,
+      "sha256": "eddd52b961aea860ed7a04f27b4e6f7976e04ee30ca1113b0e3b867aa919431d",
+      "reference": "abl",
+      "matches_zero_padded_reference": false
+    },
+    "abl_b": {
+      "path": "/dev/block/by-name/abl_b",
+      "target": "/dev/block/sde41",
+      "bytes": 8388608,
+      "sha256": "78595f9a5fbaba528b894fa7f3991db37fe1bcd03be3036e5cb3c254405655f3",
+      "reference": "abl",
+      "matches_zero_padded_reference": true
+    },
+    "tz_a": {
+      "path": "/dev/block/by-name/tz_a",
+      "target": "/dev/block/sde5",
+      "bytes": 4194304,
+      "sha256": "072574e20b5f00aad08a4da503b5ee1d64c1edda370b3b1bcb6b799cdbc79fd3",
+      "reference": "tz",
+      "matches_zero_padded_reference": true
+    },
+    "tz_b": {
+      "path": "/dev/block/by-name/tz_b",
+      "target": "/dev/block/sde35",
+      "bytes": 4194304,
+      "sha256": "e4b39c030e17c7294adfcc2f7fe07218973851ea3e8c3ea900b876a5602b8207",
+      "reference": "tz",
+      "matches_zero_padded_reference": false
+    }
+  },
+  "all_references_match": false,
+  "firmware_bytes_hashed_on_device": 50331648,
+  "raw_firmware_bytes_transferred": 0,
+  "limits": [
+    "Device-side hashes only; no raw firmware, userdata/metadata or key material captured.",
+    "Current partition contents + slot property do not attest loaded secure-world RAM or TA instance state.",
+    "No KeyMint/security call, process-memory read, reboot, slot change, mount, remount or partition write.",
+    "SDK service results, boot patch runtime value, real -62 return PC and M3/M4/M5 remain unverified."
+  ],
+  "captured_at": "2026-10-30T22:31:38.525713+08:00",
+  "sources": {
+    "tools/collect_fuxi_m3_firmware_identity.py": "fb6e0f41307e70a6c4e74e55d32c8551fbee0b3dba2c09f502174bbcb3feff7f"
+  }
+}

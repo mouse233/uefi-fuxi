@@ -1,0 +1,219 @@
+{
+  "result": "passed",
+  "identity_evidence_sha256": "bcc7f0a6590ca47d24e65aeed69717da4e8c3fb30b53f4bba888e1503c28dfd0",
+  "identity_captured_at": "2026-10-30T22:31:38.525713+08:00",
+  "current_slot": "_a",
+  "active_abl_sha256": "eddd52b961aea860ed7a04f27b4e6f7976e04ee30ca1113b0e3b867aa919431d",
+  "active_linuxloader_sha256": "48de0c341840c30e99d483ebbbdc0df4de67bc971d76bd05477587ace87aab3b",
+  "rom_tz_sha256": "d4b8afbe3a8b3468a0f4f740059ab9aed0a8ef803af4f1f58b164ce1c460d418",
+  "active_tz_padded_sha256": "072574e20b5f00aad08a4da503b5ee1d64c1edda370b3b1bcb6b799cdbc79fd3",
+  "active_partition_matches": {
+    "abl": true,
+    "tz": true
+  },
+  "evidence": {
+    "active-abl-header": {
+      "start": "0x2cd24",
+      "end": "0x2ce74",
+      "sha256": "d11eae22d4c74e4b35e303384ebad0609e1e2879c2d61204a78d7837bfe984d2"
+    },
+    "active-abl-builder": {
+      "start": "0x41f0c",
+      "end": "0x41fc4",
+      "sha256": "ec1c42317aab0680e4ea7b78db1199705b23d8d1f2c6e4688cbe72ebd6a6e149"
+    },
+    "active-abl-callsite": {
+      "start": "0x2d0cc",
+      "end": "0x2d0d8",
+      "sha256": "d19febbb5e24c56f61e50bc147d0c5148fe6a05cf8fb03b29d4358df52a5f553"
+    }
+  },
+  "candidate_chains": [
+    {
+      "candidate_sha256": "169e7401d2fa3fcce8347f50232b253c11bf884773b474fb2365b3b52185e44b",
+      "header_fallback": {
+        "instructions": 33,
+        "debug_checks_suppressed": 1,
+        "bounded_copies": 0,
+        "stop": "0x2ce68",
+        "header_version": 3,
+        "os_version_raw": "0x220001a7",
+        "packed_os": 278528,
+        "packed_patch": 423
+      },
+      "builder": {
+        "instructions": 22,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 1,
+        "stop": "0x41fb0",
+        "command": "0x208",
+        "request_bytes": 64,
+        "record_bytes": 48,
+        "packed_os": 278528,
+        "packed_patch": 423
+      },
+      "ta_fragment": {
+        "instructions": 115,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0xbdf8",
+        "status": null,
+        "platform_query_executed": false,
+        "completion_executed": false,
+        "copied_bytes": [
+          48
+        ],
+        "boot_after": 202607,
+        "flag_after": 1,
+        "normalized_os": 170000
+      }
+    },
+    {
+      "candidate_sha256": "81e1abd43ec63d27abd970be69943557d388b61e72ce6274f1684b9a977474f5",
+      "header_fallback": {
+        "instructions": 33,
+        "debug_checks_suppressed": 1,
+        "bounded_copies": 0,
+        "stop": "0x2ce68",
+        "header_version": 3,
+        "os_version_raw": "0x220001a7",
+        "packed_os": 278528,
+        "packed_patch": 423
+      },
+      "builder": {
+        "instructions": 22,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 1,
+        "stop": "0x41fb0",
+        "command": "0x208",
+        "request_bytes": 64,
+        "record_bytes": 48,
+        "packed_os": 278528,
+        "packed_patch": 423
+      },
+      "ta_fragment": {
+        "instructions": 115,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0xbdf8",
+        "status": null,
+        "platform_query_executed": false,
+        "completion_executed": false,
+        "copied_bytes": [
+          48
+        ],
+        "boot_after": 202607,
+        "flag_after": 1,
+        "normalized_os": 170000
+      }
+    }
+  ],
+  "header_controls": [
+    {
+      "instructions": 26,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2d07c",
+      "header_version": 3,
+      "os_version_raw": "0x0"
+    },
+    {
+      "instructions": 30,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2d07c",
+      "header_version": 3,
+      "os_version_raw": "0x1"
+    },
+    {
+      "instructions": 32,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2d11c",
+      "header_version": 3,
+      "os_version_raw": "0x22000000"
+    },
+    {
+      "instructions": 33,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2ce68",
+      "header_version": 2,
+      "os_version_raw": "0x220001a7",
+      "packed_os": 278528,
+      "packed_patch": 423
+    },
+    {
+      "instructions": 33,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2ce68",
+      "header_version": 4,
+      "os_version_raw": "0x220001a7",
+      "packed_os": 278528,
+      "packed_patch": 423
+    }
+  ],
+  "synthetic_date_chain": {
+    "builder": {
+      "instructions": 22,
+      "debug_checks_suppressed": 0,
+      "bounded_copies": 1,
+      "stop": "0x41fb0",
+      "command": "0x208",
+      "request_bytes": 64,
+      "record_bytes": 48,
+      "packed_os": 278528,
+      "packed_patch": 10666
+    },
+    "ta_fragment": {
+      "instructions": 118,
+      "logs_suppressed": 0,
+      "branches": [],
+      "getters": {},
+      "first_mismatch": null,
+      "stopped_before": "0xbdf8",
+      "status": null,
+      "platform_query_executed": false,
+      "completion_executed": false,
+      "copied_bytes": [
+        48
+      ],
+      "boot_after": 20261005,
+      "flag_after": 1,
+      "normalized_os": 170000
+    }
+  },
+  "boundary_controls": [
+    {
+      "entry": "0x423e0",
+      "rejected": true
+    },
+    {
+      "entry": "0x41a7c",
+      "rejected": true
+    }
+  ],
+  "limits": [
+    "Partition identity matched via two stable TWRP hash rounds, not secure-world RAM attestation.",
+    "Current ABL code is separately pinned/re-audited; historical slot B addresses are not used.",
+    "Header fallback entered after path decision, builder after unexecuted ROT success; synthetic public fields only.",
+    "No QSEECom/SDK/platform service or boot-state command executed; TA stops before completion.",
+    "Actual field source, runtime boot value, TA lifetime/-62 return PC and M3/M4/M5 remain unverified."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_active_firmware.py": "70a649d1a6e31c895294b2b39618e13d34a86b0538ce003c7b0931f865782486",
+    "tools/audit_fuxi_m3_sdk_reference.py": "488668712365c5e31ddd6220f42b94665726af080d9ac41eda98a158c9133338",
+    "tools/audit_fuxi_m3_boot_provenance.py": "c363e9b3ecce95eb11e7f1e06f95b5aa803aa3fc02f54adac385d1a0f5de706e",
+    "tools/audit_fuxi_m3_boot_client.py": "d65b43b1945cf9d61e139f9e2ad0908ef353e83e9fc74062dfef3f6ea5574a71",
+    "tools/audit_fuxi_m3_begin_version.py": "09a4181f38a9200974073d2696d26e1bf1dd85e87019eb0b5b66165686281e34",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3",
+    "tools/audit_fuxi_m3_configure_gate.py": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e",
+    "tools/collect_fuxi_m3_firmware_identity.py": "fb6e0f41307e70a6c4e74e55d32c8551fbee0b3dba2c09f502174bbcb3feff7f"
+  }
+}
