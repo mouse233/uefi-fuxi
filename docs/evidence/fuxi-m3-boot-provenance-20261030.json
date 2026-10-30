@@ -1,0 +1,521 @@
+{
+  "result": "passed",
+  "abl_sha256": "78595f9a5fbaba528b894fa7f3991db37fe1bcd03be3036e5cb3c254405655f3",
+  "linuxloader_sha256": "b5ccae26a30febeb6c303dde9c141eee2241f0046c27e5918667f1d7d316e954",
+  "ta_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+  "bounds_helper_direct_call_targets": [
+    "0x20",
+    "0x20",
+    "0x20"
+  ],
+  "pe_extraction": {
+    "lzma_section": "0x1060",
+    "expanded_bytes": 1142984,
+    "pe_offset": 184,
+    "matched": true
+  },
+  "evidence": {
+    "abl-record-builder": {
+      "start": "0x719cc",
+      "end": "0x71a84",
+      "sha256": "2d8e42c98116217cc8c37362e88a5e5aaefa327c05c43f5adc192132268b68af"
+    },
+    "abl-header-fallback": {
+      "start": "0x2da38",
+      "end": "0x2db88",
+      "sha256": "607b8dcf9c2b7092b1460f49bad8b12c7850413fdca71d0b97a7e5a6841de366"
+    },
+    "abl-property-parser": {
+      "start": "0x2d7ac",
+      "end": "0x2d914",
+      "sha256": "588cf594a5726533ed86bc5b7819c98058b885e32187c288858dbbf64cf760c2"
+    },
+    "abl-keymaster-start": {
+      "start": "0x7153c",
+      "end": "0x717e8",
+      "sha256": "91379f23df8e25d019e1b4be504c758815604a4c75c4a601159eaff2be99ea76"
+    },
+    "ta-bounds-helper": {
+      "start": "0x31f10",
+      "end": "0x31fbc",
+      "sha256": "d3030fb5481a37c9b3764670dbfd86a045ef6168228408e4a895879dfe6acfab"
+    },
+    "ta-boot-handler": {
+      "start": "0xbb7c",
+      "end": "0xbedc",
+      "sha256": "14aeaeb57385a41a4d59a3c7a86d951ec36b2d7ee33cac9dae93a68946651335"
+    },
+    "ta-boot-completion": {
+      "start": "0x404b4",
+      "end": "0x40558",
+      "sha256": "b6619438e92ef59361c62bf14ddd6ac3fe21d422dcc0519e57f3c68f533ae4a8"
+    }
+  },
+  "candidate_fallback_controls": [
+    {
+      "image_sha256": "169e7401d2fa3fcce8347f50232b253c11bf884773b474fb2365b3b52185e44b",
+      "header_version": 3,
+      "header_os_version_raw": "0x220001a7",
+      "header_date": "2026-07",
+      "fallback": {
+        "instructions": 33,
+        "debug_checks_suppressed": 1,
+        "bounded_copies": 0,
+        "stop": "0x2db7c",
+        "header_version": 3,
+        "raw_os_version": "0x220001a7",
+        "packed_os": 278528,
+        "packed_patch": 423
+      },
+      "builder": {
+        "instructions": 22,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 1,
+        "stop": "0x71a70",
+        "command": "0x208",
+        "request_bytes": 64,
+        "response_capacity": 4,
+        "record_offset": 16,
+        "record_bytes": 48,
+        "packed_os": 278528,
+        "packed_patch": 423,
+        "scope": "Synthetic public record; previous ROT result not executed; stopped before QSEECom."
+      },
+      "ta_fragment": {
+        "instructions": 115,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0xbdf8",
+        "status": null,
+        "platform_query_executed": false,
+        "completion_executed": false,
+        "copied_bytes": [
+          48
+        ],
+        "boot_after": 202607,
+        "flag_after": 1,
+        "normalized_os": 170000
+      }
+    },
+    {
+      "image_sha256": "81e1abd43ec63d27abd970be69943557d388b61e72ce6274f1684b9a977474f5",
+      "header_version": 3,
+      "header_os_version_raw": "0x220001a7",
+      "header_date": "2026-07",
+      "fallback": {
+        "instructions": 33,
+        "debug_checks_suppressed": 1,
+        "bounded_copies": 0,
+        "stop": "0x2db7c",
+        "header_version": 3,
+        "raw_os_version": "0x220001a7",
+        "packed_os": 278528,
+        "packed_patch": 423
+      },
+      "builder": {
+        "instructions": 22,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 1,
+        "stop": "0x71a70",
+        "command": "0x208",
+        "request_bytes": 64,
+        "response_capacity": 4,
+        "record_offset": 16,
+        "record_bytes": 48,
+        "packed_os": 278528,
+        "packed_patch": 423,
+        "scope": "Synthetic public record; previous ROT result not executed; stopped before QSEECom."
+      },
+      "ta_fragment": {
+        "instructions": 115,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0xbdf8",
+        "status": null,
+        "platform_query_executed": false,
+        "completion_executed": false,
+        "copied_bytes": [
+          48
+        ],
+        "boot_after": 202607,
+        "flag_after": 1,
+        "normalized_os": 170000
+      }
+    }
+  ],
+  "date_property_controls": [
+    {
+      "date_parser": {
+        "instructions": 137,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 0,
+        "stop": "0x2d914",
+        "synthetic_public_date": "2026-10-05",
+        "packed_patch": 10666
+      },
+      "builder": {
+        "instructions": 22,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 1,
+        "stop": "0x71a70",
+        "command": "0x208",
+        "request_bytes": 64,
+        "response_capacity": 4,
+        "record_offset": 16,
+        "record_bytes": 48,
+        "packed_os": 278528,
+        "packed_patch": 10666,
+        "scope": "Synthetic public record; previous ROT result not executed; stopped before QSEECom."
+      },
+      "ta_fragment": {
+        "instructions": 118,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0xbdf8",
+        "status": null,
+        "platform_query_executed": false,
+        "completion_executed": false,
+        "copied_bytes": [
+          48
+        ],
+        "boot_after": 20261005,
+        "flag_after": 1,
+        "normalized_os": 170000
+      }
+    },
+    {
+      "date_parser": {
+        "instructions": 137,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 0,
+        "stop": "0x2d914",
+        "synthetic_public_date": "2026-10-31",
+        "packed_patch": 63914
+      },
+      "builder": {
+        "instructions": 22,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 1,
+        "stop": "0x71a70",
+        "command": "0x208",
+        "request_bytes": 64,
+        "response_capacity": 4,
+        "record_offset": 16,
+        "record_bytes": 48,
+        "packed_os": 278528,
+        "packed_patch": 63914,
+        "scope": "Synthetic public record; previous ROT result not executed; stopped before QSEECom."
+      },
+      "ta_fragment": {
+        "instructions": 118,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0xbdf8",
+        "status": null,
+        "platform_query_executed": false,
+        "completion_executed": false,
+        "copied_bytes": [
+          48
+        ],
+        "boot_after": 20261031,
+        "flag_after": 1,
+        "normalized_os": 170000
+      }
+    },
+    {
+      "date_parser": {
+        "instructions": 137,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 0,
+        "stop": "0x2d914",
+        "synthetic_public_date": "2000-01-01",
+        "packed_patch": 2049
+      },
+      "builder": {
+        "instructions": 22,
+        "debug_checks_suppressed": 0,
+        "bounded_copies": 1,
+        "stop": "0x71a70",
+        "command": "0x208",
+        "request_bytes": 64,
+        "response_capacity": 4,
+        "record_offset": 16,
+        "record_bytes": 48,
+        "packed_os": 278528,
+        "packed_patch": 2049,
+        "scope": "Synthetic public record; previous ROT result not executed; stopped before QSEECom."
+      },
+      "ta_fragment": {
+        "instructions": 118,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0xbdf8",
+        "status": null,
+        "platform_query_executed": false,
+        "completion_executed": false,
+        "copied_bytes": [
+          48
+        ],
+        "boot_after": 20000101,
+        "flag_after": 1,
+        "normalized_os": 170000
+      }
+    }
+  ],
+  "invalid_date_controls": [
+    {
+      "instructions": 127,
+      "debug_checks_suppressed": 0,
+      "bounded_copies": 0,
+      "stop": "0x2dba0",
+      "synthetic_public_date": "2026-00-05"
+    },
+    {
+      "instructions": 129,
+      "debug_checks_suppressed": 0,
+      "bounded_copies": 0,
+      "stop": "0x2dba0",
+      "synthetic_public_date": "2026-13-05"
+    },
+    {
+      "instructions": 130,
+      "debug_checks_suppressed": 0,
+      "bounded_copies": 0,
+      "stop": "0x2dba0",
+      "synthetic_public_date": "2026-10-00"
+    },
+    {
+      "instructions": 132,
+      "debug_checks_suppressed": 0,
+      "bounded_copies": 0,
+      "stop": "0x2dba0",
+      "synthetic_public_date": "2026-10-32"
+    },
+    {
+      "instructions": 126,
+      "debug_checks_suppressed": 0,
+      "bounded_copies": 0,
+      "stop": "0x2dba0",
+      "synthetic_public_date": "1999-10-05"
+    }
+  ],
+  "header_controls": [
+    {
+      "instructions": 26,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2dc30",
+      "header_version": 3,
+      "raw_os_version": "0x0"
+    },
+    {
+      "instructions": 30,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2dc30",
+      "header_version": 3,
+      "raw_os_version": "0x1"
+    },
+    {
+      "instructions": 32,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2dcd8",
+      "header_version": 3,
+      "raw_os_version": "0x22000000"
+    },
+    {
+      "instructions": 33,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2db7c",
+      "header_version": 2,
+      "raw_os_version": "0x220001a7",
+      "packed_os": 278528,
+      "packed_patch": 423
+    },
+    {
+      "instructions": 33,
+      "debug_checks_suppressed": 1,
+      "bounded_copies": 0,
+      "stop": "0x2db7c",
+      "header_version": 4,
+      "raw_os_version": "0x220001a7",
+      "packed_os": 278528,
+      "packed_patch": 423
+    }
+  ],
+  "ta_bounds_controls": [
+    {
+      "case": "valid",
+      "instructions": 55,
+      "logs_suppressed": 0,
+      "branches": [],
+      "getters": {},
+      "first_mismatch": null,
+      "stopped_before": "0xbcf8",
+      "status": null,
+      "platform_query_executed": false,
+      "completion_executed": false,
+      "copied_bytes": [],
+      "boot_after": 0,
+      "flag_after": 0,
+      "record_relative_offset": 16,
+      "record_bytes": 48
+    },
+    {
+      "case": "short-header",
+      "instructions": 26,
+      "logs_suppressed": 1,
+      "branches": [],
+      "getters": {},
+      "first_mismatch": null,
+      "status": -29,
+      "platform_query_executed": false,
+      "completion_executed": false,
+      "copied_bytes": [],
+      "boot_after": 0,
+      "flag_after": 0
+    },
+    {
+      "case": "truncated-record",
+      "instructions": 97,
+      "logs_suppressed": 5,
+      "branches": [],
+      "getters": {},
+      "first_mismatch": null,
+      "status": -21,
+      "platform_query_executed": false,
+      "completion_executed": false,
+      "copied_bytes": [],
+      "boot_after": 0,
+      "flag_after": 0
+    },
+    {
+      "case": "different-address",
+      "instructions": 55,
+      "logs_suppressed": 0,
+      "branches": [],
+      "getters": {},
+      "first_mismatch": null,
+      "stopped_before": "0xbcf8",
+      "status": null,
+      "platform_query_executed": false,
+      "completion_executed": false,
+      "copied_bytes": [],
+      "boot_after": 0,
+      "flag_after": 0,
+      "record_relative_offset": 16,
+      "record_bytes": 48
+    },
+    {
+      "case": "offset-before-header",
+      "instructions": 92,
+      "logs_suppressed": 5,
+      "branches": [],
+      "getters": {},
+      "first_mismatch": null,
+      "status": -21,
+      "platform_query_executed": false,
+      "completion_executed": false,
+      "copied_bytes": [],
+      "boot_after": 0,
+      "flag_after": 0
+    },
+    {
+      "case": "offset-beyond-input",
+      "instructions": 89,
+      "logs_suppressed": 5,
+      "branches": [],
+      "getters": {},
+      "first_mismatch": null,
+      "status": -21,
+      "platform_query_executed": false,
+      "completion_executed": false,
+      "copied_bytes": [],
+      "boot_after": 0,
+      "flag_after": 0
+    },
+    {
+      "case": "length-overflow",
+      "instructions": 97,
+      "logs_suppressed": 5,
+      "branches": [],
+      "getters": {},
+      "first_mismatch": null,
+      "status": -21,
+      "platform_query_executed": false,
+      "completion_executed": false,
+      "copied_bytes": [],
+      "boot_after": 0,
+      "flag_after": 0
+    },
+    {
+      "case": "short-record",
+      "instructions": 76,
+      "logs_suppressed": 1,
+      "branches": [],
+      "getters": {},
+      "first_mismatch": null,
+      "status": -21,
+      "platform_query_executed": false,
+      "completion_executed": false,
+      "copied_bytes": [],
+      "boot_after": 0,
+      "flag_after": 0
+    }
+  ],
+  "boundary_controls": [
+    {
+      "entry": "0x194fc",
+      "stopped_before": true
+    },
+    {
+      "entry": "0x404b4",
+      "stopped_before": true
+    },
+    {
+      "entry": "0x71ea0",
+      "rejected": true
+    },
+    {
+      "entry": "0x7153c",
+      "rejected": true
+    },
+    {
+      "control": "modified-fixed-input",
+      "rejected": true
+    },
+    {
+      "control": "modified-fixed-input",
+      "rejected": true
+    }
+  ],
+  "limits": [
+    "Captured ABL is from slot_b on 2026-10-22; current slot_a ABL identity/active path not proven.",
+    "Header fallback/property parser entered after route/AVB lookup decisions; selection not executed.",
+    "Synthetic public request only; ABL QSEECom/ROT/service calls not executed or stubbed successful.",
+    "31f10 is bounds-only in this fixed TA; platform gate/dispatcher authorization remain unexecuted.",
+    "TA stops before 404b4 completion; flag/boot writes do not establish complete operation.",
+    "External SDK and real boot initialization/lifetime/TA error PC remain unknown.",
+    "No candidate change, new image, phone access, secure command, key generation/upgrade or persistence."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_boot_provenance.py": "c363e9b3ecce95eb11e7f1e06f95b5aa803aa3fc02f54adac385d1a0f5de706e",
+    "tools/audit_fuxi_m3_boot_client.py": "d65b43b1945cf9d61e139f9e2ad0908ef353e83e9fc74062dfef3f6ea5574a71",
+    "tools/audit_fuxi_m3_begin_version.py": "09a4181f38a9200974073d2696d26e1bf1dd85e87019eb0b5b66165686281e34",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3",
+    "tools/audit_fuxi_m3_configure_gate.py": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e"
+  }
+}

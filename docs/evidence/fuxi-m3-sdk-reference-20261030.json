@@ -1,0 +1,96 @@
+{
+  "result": "passed",
+  "archive_name": "PixelOS_fuxi-17.0-20261024-0342.zip",
+  "archive_bytes": 3531209767,
+  "reference": {
+    "keymaster": {
+      "bytes": 409600,
+      "sha256": "61b45016eba26d3e9c4e1dcca5238420847a49618cd8030591f04971f91da480"
+    },
+    "tz": {
+      "bytes": 3973120,
+      "sha256": "d4b8afbe3a8b3468a0f4f740059ab9aed0a8ef803af4f1f58b164ce1c460d418"
+    },
+    "manifest_sha256": "cc48764e4df5e8941f09b7a90623c95aff3b52481df6bdac705b94518795b146",
+    "partition_names": [
+      "abl",
+      "aop",
+      "aop_config",
+      "bluetooth",
+      "boot",
+      "cpucp",
+      "devcfg",
+      "dsp",
+      "dtbo",
+      "featenabler",
+      "hyp",
+      "imagefv",
+      "init_boot",
+      "keymaster",
+      "modem",
+      "odm",
+      "product",
+      "qupfw",
+      "shrm",
+      "system",
+      "system_dlkm",
+      "system_ext",
+      "tz",
+      "uefi",
+      "uefisecapp",
+      "vbmeta",
+      "vbmeta_system",
+      "vendor",
+      "vendor_boot",
+      "vendor_dlkm",
+      "xbl",
+      "xbl_config",
+      "xbl_ramdump"
+    ],
+    "keymaster_matches_capture_prefix": true,
+    "capture_zero_padding_bytes": 114688,
+    "standalone_cmnlib_partition_present": false
+  },
+  "sdk_module_base_in_tz": "0xd860f000",
+  "dynamic_va": "0xd8698000",
+  "exports": {
+    "GPAppLib_init": {
+      "symbol_index": 384,
+      "relative_value": "0x1071c",
+      "tz_va": "0xd861f71c",
+      "bytes": 512,
+      "sha256": "d27b0d3b8782f572a292c92aaa9179f1fe2ab3c8038df3436731e4c8ff1953aa"
+    },
+    "cmnlib_init": {
+      "symbol_index": 403,
+      "relative_value": "0x3178",
+      "tz_va": "0xd8612178",
+      "bytes": 676,
+      "sha256": "a6a007f24c899de4a83b49030cfb1e1bc30a530bb60d193c62854c06aa099511"
+    },
+    "GPAppLib_appInit": {
+      "symbol_index": 451,
+      "relative_value": "0x1091c",
+      "tz_va": "0xd861f91c",
+      "bytes": 132,
+      "sha256": "d80d221cc0c8abea069108364d74814d7cc39badab2a79bea935b3337f3a18b3"
+    }
+  },
+  "app_init_service_boundary": {
+    "call_pc": "0xd861f958",
+    "target": "0xd86109f0",
+    "indirect_branch_register": "x10",
+    "executed": false
+  },
+  "limits": [
+    "Archive hashes prove local integrity, not signature authenticity or running TZ identity.",
+    "Keymaster exact prefix equality does not prove SDK/runtime version equality.",
+    "Three exports resolved to defined function bytes; SDK code/callees/service not executed.",
+    "No phone, secure-world command, native vendor code execution, generation, upgrade or persistence.",
+    "Actual boot context/lifetime/return PC and M3/M4/M5 remain unverified."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_sdk_reference.py": "488668712365c5e31ddd6220f42b94665726af080d9ac41eda98a158c9133338",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3"
+  }
+}
