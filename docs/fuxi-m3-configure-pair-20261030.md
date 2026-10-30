@@ -93,3 +93,13 @@ Booting1.889s、总1.930s、exit0；无分区写、slot变更或重试。
 原始记录在A目录attempt-01/device-test.json，可提交摘要见
 `evidence/fuxi-m3-configure-a-attempt01-20261030.json`。没有照片，尚无UFS停机/
 configure/恢复/PARK结论；B未启动，M3/M4/M5未通过。
+
+## A attempt-01 照片结论
+
+IMG_7279.HEIC确认20261005配置被接受：status0/payload40912/wire40920、
+resumes0。首条既有恢复仍为FFFFFFC2（-62），Not Ready/state5/stage1/bytes0/
+fault7/exchange1/commands1/resumes1，attempted1/retained1，最终PARK/handoff0。
+UFS stop1/db0/tdb0/run0；历史SID60/FSR400仍在。原图、PNG及转录归档到A的
+attempt-01，精确照片SHA与数值见同名可提交证据。
+关闭特性探针后A仍复现-62；未唯一定位根因，未取得明文。B等待重新进入fastboot
+后独立启动；不复用当前保留会话，M3/M4/M5未通过。

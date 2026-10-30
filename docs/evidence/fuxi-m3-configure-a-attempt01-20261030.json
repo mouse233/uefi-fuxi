@@ -8,7 +8,7 @@
   "finished_utc": "2026-10-30T09:00:13.541601+00:00",
   "returncode": 0,
   "fastboot_output": "Sending 'boot.img' (1844 KB)                       OKAY [  0.040s]\nBooting                                            OKAY [  1.889s]\nFinished. Total time: 1.930s\n",
-  "status": "awaiting screen evidence",
+  "status": "screen confirmed: configure success, recovery -62, retained/PARK",
   "schema": 1,
   "scope": "One temporary fastboot boot; transport success only. No screen evidence yet, no hardware milestone conclusion.",
   "device_checks": {
@@ -19,5 +19,78 @@
   },
   "partition_write": false,
   "boot_retries": 0,
-  "other_candidate_started": false
+  "other_candidate_started": false,
+  "screen_observation": {
+    "schema": 1,
+    "candidate": "m3-configure-context-a-v1",
+    "image_sha256": "169e7401d2fa3fcce8347f50232b253c11bf884773b474fb2365b3b52185e44b",
+    "source_commit": "09bc89e1d3dd733a30f86fca1e953a06ee11a36b",
+    "photo": {
+      "original": "screen-01.HEIC",
+      "original_sha256": "441249db29cc2ce4997a7fa692c87e7a08ab1848a0506c1d957f48b28c1962f3",
+      "preview": "screen-01.png",
+      "preview_sha256": "15b227e5f9fb6ba15f79056c599e1829421502720b8651193537af515c6c168f"
+    },
+    "ufs": {
+      "stop": 1,
+      "doorbell": "00000000",
+      "task_doorbell": "00000000",
+      "run": 0,
+      "hcs": "0000010F",
+      "interrupt_status": "00000000",
+      "gfsr": "00000000",
+      "sid60_fsr": "00000400"
+    },
+    "configure": {
+      "os_version": 170000,
+      "os_patch": 20261005,
+      "vendor_patch": 20261005,
+      "evidence_tag": "3CC89865",
+      "a0": 0,
+      "a1": 0,
+      "a2": 0,
+      "a3": 0,
+      "resumes": 0,
+      "status": "00000000",
+      "payload_bytes": 40912,
+      "wire_bytes": 40920,
+      "accepted": true
+    },
+    "recovery": {
+      "result": "Not Ready",
+      "state": 5,
+      "stage": 1,
+      "km": 0,
+      "bytes": 0,
+      "retained": 1,
+      "fault": 7,
+      "exchange": 1,
+      "commands": 1,
+      "resumes": 1,
+      "response_header": 1,
+      "status_hex": "FFFFFFC2",
+      "status_signed": -62,
+      "payload_bytes": 40616,
+      "wire_bytes": 40624,
+      "attempted": 1
+    },
+    "batch": {
+      "stop": "key-recovery",
+      "passed": "4A3",
+      "env": 2,
+      "loader": 3,
+      "retained": 1
+    },
+    "final": {
+      "stage": "m3-key-recovery",
+      "poisoned": 0,
+      "ready": 0,
+      "smmu_configured": 1,
+      "decrypt": "UNIMPLEMENTED",
+      "handoff": 0,
+      "park": "no USB receiver; no handoff"
+    },
+    "interpretation": "Configure accepted; first recovery begin still returns -62 with characteristics probe disabled. Zero recovered bytes and retained/PARK. Historical FSR400 remains. No M3/M4/M5 success or unique cause attribution.",
+    "limits": "Screen transcription plus bound firmware. Photo does not independently prove physical shared-page retention, secure-world persistence behavior, or every absence of later calls. No B observation yet."
+  }
 }
