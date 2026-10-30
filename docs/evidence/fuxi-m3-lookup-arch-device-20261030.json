@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "candidate": "m3-lookup-arch-v1",
+  "attempt": "attempt-01",
+  "source_commit": "530596c2ebf83dba03c04882b61ffc69609a5414",
+  "image_sha256": "2c140f174ed784b398bbcd9cb3b73b09ea4cb484c87de53917c183366b75b542",
+  "result": "lookup-only-device-proof-passed",
+  "boot_record": {
+    "image_sha256": "2c140f174ed784b398bbcd9cb3b73b09ea4cb484c87de53917c183366b75b542",
+    "source_commit": "530596c2ebf83dba03c04882b61ffc69609a5414",
+    "lookup_counts": "1011",
+    "profile": "usb-ram",
+    "serial": "fcde91e",
+    "status": "awaiting screen evidence",
+    "queries": [
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "devices"
+        ],
+        "returncode": 0,
+        "output": "fcde91e\t fastboot\n"
+      },
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "-s",
+          "fcde91e",
+          "getvar",
+          "product"
+        ],
+        "returncode": 0,
+        "output": "product: fuxi\nFinished. Total time: 0.004s\n"
+      },
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "-s",
+          "fcde91e",
+          "getvar",
+          "unlocked"
+        ],
+        "returncode": 0,
+        "output": "unlocked: yes\nFinished. Total time: 0.003s\n"
+      },
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "-s",
+          "fcde91e",
+          "getvar",
+          "current-slot"
+        ],
+        "returncode": 0,
+        "output": "current-slot: a\nFinished. Total time: 0.005s\n"
+      },
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "-s",
+          "fcde91e",
+          "getvar",
+          "max-download-size"
+        ],
+        "returncode": 0,
+        "output": "max-download-size: 805306368\nFinished. Total time: 0.005s\n"
+      }
+    ],
+    "started_utc": "2026-10-30T15:35:27.282501+00:00",
+    "command": [
+      "/opt/homebrew/bin/fastboot",
+      "-s",
+      "fcde91e",
+      "boot",
+      "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-lookup-arch-v1/Mu-fuxi-ufs-m1.img"
+    ],
+    "returncode": 0,
+    "fastboot_output": "Sending 'boot.img' (1836 KB)                       OKAY [  0.040s]\nBooting                                            OKAY [  1.741s]\nFinished. Total time: 1.784s\n",
+    "finished_utc": "2026-10-30T15:35:29.445518+00:00"
+  },
+  "evidence": {
+    "original_photo": "IMG_7296.HEIC",
+    "original_sha256": "e8af1bce1d4b7e6604eb10a5d1611ce7f674873153914b64988d6849b7e602af",
+    "view_jpeg_sha256": "63f8e762c42baca1bcb75c296c5a6f147c9ceaa03b7b8de27d8a853253267468",
+    "transcript_sha256": "b0ec8c93e6c3c0da495fc8dfb31b4eb3187504ac70837d28876df8fb7b4e4249",
+    "method": "User-provided screen photo, visually reviewed and manually transcribed; wrapped screen, no serial capture."
+  },
+  "visible": {
+    "lookup_smc": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "lookup_counts": "1011",
+    "reply_bi": [
+      "28",
+      "B"
+    ],
+    "reply_bo": [
+      "38",
+      "4"
+    ],
+    "reply_oo": [
+      "4",
+      "0"
+    ],
+    "architecture": 2,
+    "ta_handle": 4,
+    "loader_handle": 3,
+    "environment_handle": 2,
+    "callback_header": [
+      "10002",
+      "FFFF"
+    ],
+    "callback_nonzero_bytes": 4,
+    "ta_release": "Success",
+    "loader_release": "Success",
+    "environment_release": "Success",
+    "bridge_delete_smc": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "batch_stop": "complete",
+    "passed": "31F",
+    "retained": false,
+    "freed_bytes": 8192,
+    "ufs_stop": true,
+    "ufs_doorbell": 0,
+    "ufs_task_doorbell": 0,
+    "ufs_run": 0,
+    "ufs_is": 0,
+    "smmu_fsr": "400",
+    "smmu_sctlr": 0,
+    "smmu_configured": true,
+    "poisoned": false,
+    "final_park": true,
+    "receiver": false,
+    "handoff": false,
+    "metadata_file_bytes": 10527,
+    "metadata_file_sha256": "14f3d8675423917e383a71c936f4d9a81a29480f34ae3c550e0f4c34e53a0991"
+  },
+  "interpretation": [
+    "This candidate obtained an existing keymaster64 lookup object without loadFromBuffer and completed the finite release/delete sequence.",
+    "Visible raw response and production validator accept the new 1011/BO4 layout for this boot.",
+    "The text \"no TA\" is a shared diagnostic footer meaning no TA load/method call in this candidate, not that lookup returned no object.",
+    "Successful release/delete and empty UFS queues are bounded observations, not proof of complete SMMU fault resolution or M5 storage ownership."
+  ],
+  "limits": [
+    "No KeyMint method/getVersion/configure/208/setVersion/recovery/generate/upgrade was invoked.",
+    "TA/ABL underlying instance identity, boot value, complete SDK initialization and the actual -62 return branch remain unverified.",
+    "Existing SMMU FSR400 remains visible; no route-restoration or complete DMA ownership claim.",
+    "No userdata decryption, M3/M4/M5 pass or RAM handoff."
+  ]
+}

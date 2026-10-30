@@ -71,3 +71,29 @@ SDK 初始化服务、真正触发 -62 的返回分支和元数据明文哈希�
 `7e237de0aa81a8f38221134c752af2d71236cddc`的预先dirty上下文，未清理其他会话改动。
 [规范候选证据](evidence/fuxi-m3-lookup-arch-candidate-20261030.json)记录来源和报告
 摘要，真实退出码与REVIEW在忽略out下。此处为主机交付，实机结果仍pending。
+
+## 23:35：attempt-01 实机查询与有限清理通过
+
+用户进入FASTBOOT后，设备互斥、fcde91e/product fuxi/unlocked yes/slot_a/容量与
+固定镜像、96源、提交 `530596c2ebf83dba03c04882b61ffc69609a5414` 均通过校验。
+仅一次临时 `fastboot boot`，15:35:29 UTC返回0；没有flash或分区写入。
+原始工具报告仍保留当时等待照片的状态，最终结论另记hardware-result.json。
+
+用户照片IMG_7296.HEIC确认新count1011查询a0..a3全0，reply BI=28/B、BO=38/4
+（该行打印十六进制，即40/11与56/4）、OO=4/0、arch=2。得到keymaster64对象4，
+随后TA4、loader3、env2释放Success，bridge-delete全0，batch complete/passed31F/
+retained0、released bytes2000，最终PARK。屏幕回绕，照片下半段是查询开始/返回，
+上半段是reply/清理；人工转录按绑定源码顺序整理，不冒充串口原日志。
+
+这证明本轮新格式能取得已有对象引用并完成有限清理，没有执行loadFromBuffer。
+末尾共用日志“no TA”指本候选无TA加载/方法请求，不表示没有查询所得对象。
+不能据对象4推断与ABL是同一底层实例、实际boot值或SDK已完整初始化。
+
+M2文件10527字节哈希匹配；UFS stop1/db0/tdb0/run0/is0可见。历史SMMU FSR400
+仍在，不宣称故障已消除、路由恢复或完整DMA归属验收。未调用GetVersion、
+configure或恢复，-62实际分支未定位，M3/M4/M5仍未通过。
+[实机规范证据](evidence/fuxi-m3-lookup-arch-device-20261030.json)含启动记录、照片
+摘要与可见字段；原始照片/查看JPEG/转录归档在候选attempt-01，二进制不入库。
+
+下一候选先沿lookup所得对象单独验证只读版本方法，并保留严格响应/隔离/清理
+门控；版本响应也不等于boot上下文或完整初始化证明，不直接接恢复/208/升级。

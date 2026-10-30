@@ -570,3 +570,13 @@ RPC/新TA加载均未执行；历史lookup时的TZ/PC未绑定，不倒填历史
 [新格式查询候选](fuxi-m3-lookup-arch-20261030.md)。不接入加载/版本/密钥命令，
 没有以本次源码变更重新绑定旧A/B镜像，历史来源继续以其原提交/报告为准。
 真实初始化、boot、-62分支与M3/M4/M5仍未通过。
+
+## 2026-10-30 23:35：新格式lookup-only实机通过
+
+`m3-lookup-arch-v1/attempt-01`仅一次临时启动，IMG_7296照片确认1011/BO4查询
+返回全0、对象4/架构2；TA4/loader3/env2释放成功，bridge-delete全0，complete/
+passed31F/retained0、释放2000字节并PARK。没有加载TA或调用其方法，证明本轮
+新格式能取得已有对象并完成有限清理，不证明ABL同实例/boot或完整SDK初始化。
+M2文件哈希匹配，UFS stop1/db0/tdb0/run0/is0；历史SMMU FSR400仍在，不作路由
+恢复/完整DMA归属声明。下一候选先验证该对象的只读版本方法；-62未重试或
+定位，M3/M4/M5仍未通过。见[候选与实机证据](fuxi-m3-lookup-arch-20261030.md)。
