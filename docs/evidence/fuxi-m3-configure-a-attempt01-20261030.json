@@ -1,0 +1,23 @@
+{
+  "image_sha256": "169e7401d2fa3fcce8347f50232b253c11bf884773b474fb2365b3b52185e44b",
+  "source_commit": "09bc89e1d3dd733a30f86fca1e953a06ee11a36b",
+  "patch": 20261005,
+  "profile": "usb-ram",
+  "serial": "fcde91e",
+  "started_utc": "2026-10-30T09:00:11.466741+00:00",
+  "finished_utc": "2026-10-30T09:00:13.541601+00:00",
+  "returncode": 0,
+  "fastboot_output": "Sending 'boot.img' (1844 KB)                       OKAY [  0.040s]\nBooting                                            OKAY [  1.889s]\nFinished. Total time: 1.930s\n",
+  "status": "awaiting screen evidence",
+  "schema": 1,
+  "scope": "One temporary fastboot boot; transport success only. No screen evidence yet, no hardware milestone conclusion.",
+  "device_checks": {
+    "product": "fuxi",
+    "unlocked": "yes",
+    "current_slot": "a",
+    "max_download_size": 805306368
+  },
+  "partition_write": false,
+  "boot_retries": 0,
+  "other_candidate_started": false
+}

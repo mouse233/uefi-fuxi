@@ -84,3 +84,12 @@ bytes/retained/commands/resumes/response-header和最终PARK；只记录长度/�
 当前属性不是构造时采样证据，两种日期均被离线解析接受也不证明会解除实机-62。
 历史FSR400、-33和-62的具体根因未解决；不得由A/B差异唯一归因旧格式或某个
 版本字段。M3、M4、M5均未通过，无免USB重传声明。
+
+## A attempt-01 临时启动（17:00，等待照片）
+
+用户进入fastboot后，互斥、fcde91e/product fuxi/unlocked yes/slot_a及下载容量
+核验通过，91文件/源码/镜像/29项资格复核通过。仅临时启动A一次：Sending0.040s、
+Booting1.889s、总1.930s、exit0；无分区写、slot变更或重试。
+原始记录在A目录attempt-01/device-test.json，可提交摘要见
+`evidence/fuxi-m3-configure-a-attempt01-20261030.json`。没有照片，尚无UFS停机/
+configure/恢复/PARK结论；B未启动，M3/M4/M5未通过。
