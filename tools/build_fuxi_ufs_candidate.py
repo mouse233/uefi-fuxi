@@ -335,6 +335,7 @@ def write_sources(uefi, out):
         uefi / "tools/m3_recovery_binding.py",
         uefi / "tools/qualify_fuxi_ufs_candidate.py",
         uefi / "tools/check_fuxi_ufs_report_image.py",
+        uefi / "tools/check_fuxi_m3_live_objects.py",
         uefi / "tools/test_m3_recovery_binding.py",
         uefi / "tools/test_fuxi_m3_recovery_entry.py",
         uefi / "tools/tests/m3_smci_resume_host.c",

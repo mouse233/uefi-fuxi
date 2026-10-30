@@ -412,3 +412,8 @@ abort错误同步隔离并保留，未知状态不继续。没有live交换回�
 本轮不包含convert/HWKM/ICE/DUN或userdata明文对照，M3仍未通过；实机结论以
 候选REVIEW和usb-bulk最新条目为准。详见
 [恢复入口与实机判据](fuxi-m3-key-recovery-live-20261030.md)。
+
+live-v1 attempt-01照片确认四文件prepared、LUN4、队列停止、getVersion成功；
+首条恢复begin响应因fault7隔离，Not Ready/bytes0/retained1，最终PARK，M3未通过。
+没有后续调用/清理或configure；FSR仍400。status-v2只补经过边界验证的非秘密
+status/length日志，保持原隔离规则，新候选实机状态以其REVIEW为准。

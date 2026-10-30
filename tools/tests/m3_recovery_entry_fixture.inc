@@ -40,9 +40,11 @@ static int SecretMonitor(ARM_SMC_ARGS *a){
    UINT8 tail[]={0x18,0x25,0x19,1,8};memcpy(Page+bo+15+248,tail,sizeof(tail));Put(Page+bo+4,7+248+sizeof(tail));
  }else if(cmd==0x3112){UINT8 b[]={0xa2,0x16,0,0x18,0x24,0x40};memcpy(Page+bo+8,b,sizeof(b));Put(Page+bo+4,sizeof(b));}
  else Put(Page+bo+4,0);
+ if(Scenario==15&&cmd==0x310f)Put(Page+bo,0xffffffc2U); // negative error + CBOR remains: still quarantine
+ if(Scenario==16&&cmd==0x310f){memset(Page+bo+8,0,6);Put(Page+bo,1);Put(Page+bo+4,0);}
  if(Scenario==6&&cmd==0x3112)Put(Page+bo+4,0xffffffffU);
  if(Scenario==9)Page[FKM_MESSAGE_BYTES+8]=1;
- if(a->Arg0 || (Scenario==6&&cmd==0x3112) || Scenario==9 || (Scenario==7&&cmd==0x2113)){
+ if(a->Arg0 || (Scenario==6&&cmd==0x3112) || Scenario==9 || Scenario==15 || Scenario==16 || (Scenario==7&&cmd==0x2113)){
    SecretUnknown=1;SecretSnapshot=malloc(TEST_BYTES);assert(SecretSnapshot);memcpy(SecretSnapshot,Page,TEST_BYTES);
  }
  return 1;

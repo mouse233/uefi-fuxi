@@ -58,3 +58,31 @@ retained=0；这些是待验证条件，不能预填为实机结果。
 下一阶段仍需保持恢复结果在明确归属下接convert/HWKM初始化、自有槽与清理、六参
 SCM和UFS实际提交层DUN，再做一次已知userdata metadata块明文摘要对照。本候选
 主动擦除恢复结果，后续不可跨重启复用。历史SMMU FSR400未解释，M4/M5均未通过。
+
+## attempt-01 实测与 status-v2
+
+`live-v1` 固定镜像SHA256
+`eb181da061317d1d04eaa4cf6d2812bcd0bd0197c3bb751670bc68585748c2e0`，
+26项资格检查/75源码绑定通过。fcde91e/fuxi/unlocked yes/slot_a核对后一次fastboot
+boot退出0。照片已归档该候选attempt-01，显示M2文件/四文件prepare和LUN4两槽摘要
+成功，UFS stop1/db0/run0/tdb0；getVersion 4/1/4/1012、续接1次。
+
+首条恢复begin返回后：Not Ready/state5/stage1/km0/bytes0/retained1，
+fault7/exchange1/commands1/resumes0；BATCH stop=key-recovery/passed=A3，env2/loader3
+仍保留，SMCI Not Ready/retained1，最终PARK、poisoned0/ready0。FSR仍400。
+未接受operation handle或明文，不执行update/finish/abort/清理/重试。km0是尚未
+解析状态的默认值，不能解释为TA成功；M3未通过。
+
+fault7只区分到“非零TaStatus且非负或Payload非零”，本照片没有具体status/length。
+固定libkeymasterdeviceutils SHA `1c2172c4…3d7d2` 的sendCmd在0x6810读取status，
+非零走0x6830原样返回；只有零status才在0x683c/0x6840取payload长度和指针。
+所以不能从当前诊断断定错误响应畸形，更不能猜测缺configure；错误的payload长度
+与operation归属仍需独立证据。离线反汇编和审计在status-v2目录。
+
+`m3-key-recovery-status-v2` 仅补充经过原有响应边界/envelope检查后的公开头元数据：
+header-seen、32位status、payload长度、wire响应长度；不读取/打印响应内容、密钥、
+摘要或operation handle。ResponseHeaderSeen每命令清零，已验证头才置真。
+旧fault7/隔离/调用预算/清理规则不变；不把未知响应改判成功或已关闭。
+新增负status带payload、正status两组反例，入口17项、后端55项；两组都保持首条
+命令后隔离，注册页快照不变，不再调用且没有明文。默认仍关闭，等待新的独立启动。
+实际对象/链接map检查已纳入统一资格工具，避免只检查未使用库的EFI哈希。

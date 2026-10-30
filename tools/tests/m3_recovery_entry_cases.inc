@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause-Patent
 int main(void){
- for(Scenario=0;Scenario<=14;Scenario++){
+ for(Scenario=0;Scenario<=16;Scenario++){
    Calls=Frees=TaFrees=LogCalls=SecretCalls=SecretUnknown=PoolCalls=0;
    Phase=Scenario==14?99:0;Fault=Special=ResumeTarget=ResumePending=0;
    mPoisoned=FALSE;mReady=TRUE;mRecoveryStatus=EFI_NOT_READY;mRecoveryRetained=mRecoveryVersionOk=mRecoveryAttempted=FALSE;
@@ -15,9 +15,16 @@ int main(void){
    if(Scenario==1||Scenario==2||Scenario==3||Scenario==11||Scenario==13){
      assert(EFI_ERROR(mSmciStatus)&&Calls==10&&Frees==1&&!mRecoveryWork&&!mRecoverySession&&!mRecoveryRetained);
    }
-   if(Scenario>=4&&Scenario<=9){
+   if((Scenario>=4&&Scenario<=9)||Scenario==15||Scenario==16){
      assert(EFI_ERROR(mSmciStatus)&&Calls==6&&!Frees&&Page&&mRecoveryRetained&&mRecoveryWork&&mRecoverySession);
      assert(SecretSnapshot&&!memcmp(SecretSnapshot,Page,TEST_BYTES));
+     if(Scenario==15||Scenario==16){
+       FKM_CONTEXT *c=&mRecoverySession->Backend;
+       assert(c->Fault==7&&c->ResponseHeaderSeen&&SecretCalls==1);
+       assert(c->ResponseStatus==(Scenario==15?0xffffffc2U:1));
+       assert(c->ResponsePayloadBytes==(Scenario==15?6:0));
+       assert(c->ResponseWireBytes<=0xa000&&!c->Handle);
+     }
    }
    if(Scenario==10){assert(Calls==6&&!Frees&&Page&&!mRecoveryWork&&!mRecoverySession&&!mRecoveryRetained&&!SecretCalls);}
    if(Scenario==14){assert(!Calls&&!Frees&&!Page&&!mRecoveryWork&&!PoolLive);}
@@ -28,5 +35,5 @@ int main(void){
    while(PoolLive){free(Pools[--PoolLive].p);}
    mRecoveryWork=NULL;mRecoverySession=NULL;
  }
- puts("PASS 15 recovery entry/session cases; production flow, monitor/filesystem simulated");return 0;
+ puts("PASS 17 recovery entry/session cases; production flow, monitor/filesystem simulated");return 0;
 }

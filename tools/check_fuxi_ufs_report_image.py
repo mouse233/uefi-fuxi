@@ -60,7 +60,7 @@ def main():
     if candidate.get("m3_smci_setver"):
         extra += ("m3-setversion-tests.json",)
     if candidate.get("m3_recover_key"):
-        extra += ("recovery-binding-tests.json", "recovery-entry-tests.json", "secret-exchange-tests.json", "keymint-backend-tests.json")
+        extra += ("recovery-binding-tests.json", "recovery-entry-tests.json", "secret-exchange-tests.json", "keymint-backend-tests.json", "live-object-checks.json")
         from m3_recovery_binding import load_binding
         assert load_binding(out/"recovery-binding.json") == candidate["m3_recovery_binding"]
         assert candidate["m3_recovery_output_discarded"] and not candidate["m3_smci_no_keys"]
@@ -249,6 +249,7 @@ def main():
                            "FUXIM3 RECOVERY begin: decrypt existing key; no configure or persistence",
                            "FUXIM3 RECOVERY result=%r state=%u stage=%u km=%d bytes=%u retained=%u",
                            "FUXIM3 RECOVERY fault=%u exchange=%u commands=%u resumes=%u",
+                           "FUXIM3 RECOVERY response-header=%u status=%08x payload-bytes=%u wire-bytes=%u",
                            "FUXIM3 RECOVERY END: result=%r attempted=%u retained=%u; userdata decrypt not tested"):
                 assert marker.encode("utf-16-le") in ufs, marker
     if candidate.get("m3_smc_context"):

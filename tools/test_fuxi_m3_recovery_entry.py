@@ -15,6 +15,6 @@ def main():
   cmd=[shutil.which('clang'),'-std=c11','-Wall','-Wextra','-Werror','-Wno-macro-redefined','-fshort-wchar','-g','-O1','-fsanitize=address,undefined','-fno-omit-frame-pointer','-DTEST_RECOVERY_ENTRY=1','-DFUXI_M3_SECRET_EXCHANGE=1','-I'+str(a.edk2/'MdePkg/Include'),'-I'+str(a.edk2/'MdePkg/Include/AArch64'),'-I'+str(native),'-I'+str(data),str(test),*(str(x) for x in sources),'-o',str(exe)]
   subprocess.run(cmd,check=True);text=subprocess.check_output([str(exe)],text=True);print(text.strip())
  files=[*sources,test,root/'tools/tests/m3_recovery_entry_fixture.inc',root/'tools/tests/m3_recovery_entry_cases.inc',native/'M3RecoveryDiagnostic.inc',native/'M3SmciDiagnostic.inc',native/'M3BridgeDiagnostic.inc',data/'M3KeyRecoveryF2fs.h',data/'M3KeyRecovery.h',data/'M3KeyMintBackend.h',data/'M3SecretExchange.h',Path(__file__)]
- report=dict(result='passed',cases=15,sanitizers=['address','undefined'],output=text.strip(),scope='Actual production recovery/session integration, synthetic filesystem/monitor only. No phone or GCM/KeyMint proof.',sources={str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in files})
+ report=dict(result='passed',cases=17,sanitizers=['address','undefined'],output=text.strip(),scope='Actual production recovery/session integration, synthetic filesystem/monitor only. No phone or GCM/KeyMint proof.',sources={str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in files})
  a.report.write_text(json.dumps(report,indent=2)+'\n')
 if __name__=='__main__':main()

@@ -71,6 +71,11 @@ STATIC EFI_STATUS FnuRunRecovery(UINT64 Raw,UINT8 *Page,UINTN Bytes,UINT64 Bridg
       FnuLog(L"FUXIM3 RECOVERY fault=%u exchange=%u commands=%u resumes=%u",
              mRecoverySession->Backend.Fault,(UINT32)mRecoverySession->Exchange.State,
              (UINT32)mRecoverySession->Exchange.Calls,(UINT32)mRecoverySession->Exchange.Resumes);
+      FnuLog(L"FUXIM3 RECOVERY response-header=%u status=%08x payload-bytes=%u wire-bytes=%u",
+             (UINT32)mRecoverySession->Backend.ResponseHeaderSeen,
+             mRecoverySession->Backend.ResponseStatus,
+             mRecoverySession->Backend.ResponsePayloadBytes,
+             mRecoverySession->Backend.ResponseWireBytes);
     }
   }
   if(!mRecoveryRetained) {

@@ -119,6 +119,8 @@ STATIC EFI_STATUS Call(FKM_CONTEXT *C, FKR_STAGE Stage, CONST FKR_BEGIN_REQUEST 
   if (C==NULL || !C->Ready || C->Quarantined) return EFI_NOT_READY;
   if ((Stage==FkrBegin && C->Handle) || (Stage!=FkrBegin && (!Handle || C->Handle!=Handle)))
     return Quarantine(C,Reply,1);
+  C->ResponseHeaderSeen=FALSE;
+  C->ResponseStatus=C->ResponsePayloadBytes=C->ResponseWireBytes=0;
   if (Capacity && Output==NULL) return EFI_INVALID_PARAMETER;
   // Stage-specific callbacks cannot emit configure/generate/upgrade commands.
   Command=Stage==FkrBegin ? 0x310f : Stage==FkrUpdate ? 0x3111 : Stage==FkrFinish ? 0x3112 : 0x2113;
@@ -157,6 +159,8 @@ STATIC EFI_STATUS Call(FKM_CONTEXT *C, FKR_STAGE Stage, CONST FKR_BEGIN_REQUEST 
   }
   TaStatus=Get32(P+Bo1); Payload=Get32(P+Bo1+4);
   if (Payload>OutResp-8 || !Zero(P+Bo1+8+Payload,OutResp-8-Payload)) return Quarantine(C,Reply,6);
+  C->ResponseStatus=TaStatus; C->ResponsePayloadBytes=(UINT32)Payload;
+  C->ResponseWireBytes=(UINT32)OutResp; C->ResponseHeaderSeen=TRUE;
   if (TaStatus) {
     if (!(TaStatus&0x80000000U) || Payload) return Quarantine(C,Reply,7);
     if (Stage==FkrAbort) return Quarantine(C,Reply,8); // no verified closure

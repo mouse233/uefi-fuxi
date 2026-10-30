@@ -60,6 +60,8 @@ static EFI_STATUS exchange(void *ctx,UINT8 *p,UINTN in,UINTN out,FKM_RETURN *r) 
   if(m->mode==22)put32(p+56,7); // truncated envelope
   if(m->mode==23)p[bo+8+n]=1; // nonzero envelope tail
   if(m->mode==24)p[get32(p+20)]=1; // modified BI response template
+  if(m->mode==25)put32(p+bo,0xffffffc2U); // negative status with nonempty payload
+  if(m->mode==26){memset(p+bo,0,cap);put32(p+bo,1);} // positive status
   return EFI_SUCCESS;
 }
 static EFI_STATUS read_file(void *unused,FKR_FILE f,void *out,UINTN cap,UINTN *n) {
@@ -71,7 +73,7 @@ static EFI_STATUS read_file(void *unused,FKR_FILE f,void *out,UINTN cap,UINTN *n
   return EFI_SUCCESS;
 }
 static void backend_cases(void) {
-  for(int mode=0;mode<=24;mode++) {
+  for(int mode=0;mode<=26;mode++) {
     FKM_CONTEXT *c=calloc(1,sizeof(*c));FKR_WORK *w=calloc(1,sizeof(*w));FKR_OPS ops;
     UINT8 *shared=aligned_alloc(4096,FKM_SHARED_BYTES);MOCK m={mode,0,0,NULL};
     const UINT8 *plain=(void*)1;UINTN bytes=1;EFI_STATUS s;
@@ -100,6 +102,11 @@ static void backend_cases(void) {
       assert(EFI_ERROR(ops.Begin(ops.Context,&b,&r))&&!r.Terminal&&m.calls==calls);
       assert(!memcmp(m.snapshot,shared,FKM_SHARED_BYTES));free(m.snapshot);
       assert(!zero(c->Request,sizeof(c->Request)));
+      if(mode==25||mode==26){
+        assert(c->Fault==7&&c->ResponseHeaderSeen&&m.calls==1&&!c->Handle);
+        assert(c->ResponseStatus==(mode==25?0xffffffc2U:1));
+        assert(c->ResponsePayloadBytes==(mode==25?14:0));
+      }
     }
     // Host mock teardown only. Never a production way to free quarantine.
     free(shared);free(c);free(w);Cases++;
