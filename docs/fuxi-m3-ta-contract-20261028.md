@@ -87,3 +87,10 @@ C2通过后，可独立准备小缓冲的loader open(UID122)→release验收；
 lookup不满足时需恢复同版本TA分片并验证metadata/签名及尺寸，
 然后才能把已建模的loadFromBuffer/callback/资源生命周期设计成受限候选。
 send/getVersion、协议200/configure参数与KeyMint密钥转换均是再后面的不同验收点。
+
+## 2026-10-30：部署 loader 与参考头的差异
+
+旧参考lookupTA的BI1/OO1在当前TZ并不完整：[实际UID122审计](fuxi-m3-deployed-loader-20261030.md)
+确认额外架构BO4/count1011，旧count1001会在名字读取前返回2。loadFromBuffer的
+1012门保持一致，但存在查缓存/复用包装分支，因此成功不证明新实例或boot0。
+此补充限定旧参考的可推广范围，不改写上表的历史静态输入事实。

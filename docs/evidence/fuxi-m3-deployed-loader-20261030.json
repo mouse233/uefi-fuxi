@@ -1,0 +1,480 @@
+{
+  "result": "passed",
+  "tz_sha256": "d4b8afbe3a8b3468a0f4f740059ab9aed0a8ef803af4f1f58b164ce1c460d418",
+  "identity_sha256": "bcc7f0a6590ca47d24e65aeed69717da4e8c3fb30b53f4bba888e1503c28dfd0",
+  "factory_controls": [
+    {
+      "uid": 122,
+      "selected_handler": "0x1569d918",
+      "execution": {
+        "instructions": 10,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "stopped_before": "0x1569d4f8",
+        "status": null
+      }
+    },
+    {
+      "uid": 3,
+      "selected_handler": "0x1569d518",
+      "execution": {
+        "instructions": 7,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "stopped_before": "0x1569d4f8",
+        "status": null
+      }
+    },
+    {
+      "uid": 121,
+      "selected_handler": "0x0",
+      "execution": {
+        "instructions": 6,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "stopped_before": "0x1569d500",
+        "status": null
+      }
+    }
+  ],
+  "lookup_format_controls": [
+    {
+      "name": "keymaster64",
+      "counts": "0x1001",
+      "arch_output_capacity": 4,
+      "execution": {
+        "instructions": 37,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "status": 2
+      }
+    },
+    {
+      "name": "keymaster64",
+      "counts": "0x1011",
+      "arch_output_capacity": 3,
+      "execution": {
+        "instructions": 40,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "status": 2
+      }
+    },
+    {
+      "name": "keymaster64",
+      "counts": "0x1011",
+      "arch_output_capacity": 8,
+      "execution": {
+        "instructions": 40,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "status": 2
+      }
+    },
+    {
+      "name": "keymaster64",
+      "counts": "0x1011",
+      "arch_output_capacity": 4,
+      "execution": {
+        "instructions": 157,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-zero",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-copy",
+            "bytes": 11
+          }
+        ],
+        "name_reads": 1,
+        "elf_reads": 0,
+        "stopped_before": "0x15732c18",
+        "status": null
+      }
+    },
+    {
+      "name": "keymaster",
+      "counts": "0x1001",
+      "arch_output_capacity": 4,
+      "execution": {
+        "instructions": 37,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "status": 2
+      }
+    },
+    {
+      "name": "keymaster",
+      "counts": "0x1011",
+      "arch_output_capacity": 3,
+      "execution": {
+        "instructions": 40,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "status": 2
+      }
+    },
+    {
+      "name": "keymaster",
+      "counts": "0x1011",
+      "arch_output_capacity": 8,
+      "execution": {
+        "instructions": 40,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "status": 2
+      }
+    },
+    {
+      "name": "keymaster",
+      "counts": "0x1011",
+      "arch_output_capacity": 4,
+      "execution": {
+        "instructions": 153,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 10
+          },
+          {
+            "kind": "bounded-zero",
+            "bytes": 10
+          },
+          {
+            "kind": "bounded-copy",
+            "bytes": 9
+          }
+        ],
+        "name_reads": 1,
+        "elf_reads": 0,
+        "stopped_before": "0x15732c18",
+        "status": null
+      }
+    }
+  ],
+  "synthetic_cache_controls": [
+    {
+      "cache": "first",
+      "synthetic_arch_byte": 0,
+      "returned_elf_class": 1,
+      "first_list_result_injected": null,
+      "private_cached_node_reused": true,
+      "node_reference_after": 2,
+      "execution": {
+        "instructions": 369,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-zero",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-copy",
+            "bytes": 11
+          },
+          {
+            "kind": "private-heap",
+            "bytes": 32
+          },
+          {
+            "kind": "private-free",
+            "bytes": 12
+          }
+        ],
+        "name_reads": 1,
+        "elf_reads": 0,
+        "status": 0
+      }
+    },
+    {
+      "cache": "first",
+      "synthetic_arch_byte": 1,
+      "returned_elf_class": 2,
+      "first_list_result_injected": null,
+      "private_cached_node_reused": true,
+      "node_reference_after": 2,
+      "execution": {
+        "instructions": 369,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-zero",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-copy",
+            "bytes": 11
+          },
+          {
+            "kind": "private-heap",
+            "bytes": 32
+          },
+          {
+            "kind": "private-free",
+            "bytes": 12
+          }
+        ],
+        "name_reads": 1,
+        "elf_reads": 0,
+        "status": 0
+      }
+    },
+    {
+      "cache": "second",
+      "synthetic_arch_byte": 0,
+      "returned_elf_class": 1,
+      "first_list_result_injected": 11,
+      "private_cached_node_reused": true,
+      "node_reference_after": 2,
+      "execution": {
+        "instructions": 243,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 32
+          },
+          {
+            "kind": "private-free",
+            "bytes": 12
+          }
+        ],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "status": 0
+      }
+    },
+    {
+      "cache": "second",
+      "synthetic_arch_byte": 1,
+      "returned_elf_class": 2,
+      "first_list_result_injected": 11,
+      "private_cached_node_reused": true,
+      "node_reference_after": 2,
+      "execution": {
+        "instructions": 243,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 32
+          },
+          {
+            "kind": "private-free",
+            "bytes": 12
+          }
+        ],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "status": 0
+      }
+    }
+  ],
+  "load_controls": [
+    {
+      "cache": "first",
+      "execution": {
+        "instructions": 324,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-zero",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-copy",
+            "bytes": 11
+          },
+          {
+            "kind": "private-heap",
+            "bytes": 32
+          }
+        ],
+        "name_reads": 1,
+        "elf_reads": 0,
+        "stopped_before": "0x15733820",
+        "status": null
+      }
+    },
+    {
+      "cache": "second",
+      "execution": {
+        "instructions": 158,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-zero",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-copy",
+            "bytes": 11
+          }
+        ],
+        "name_reads": 1,
+        "elf_reads": 0,
+        "stopped_before": "0x15732c18",
+        "status": null
+      }
+    },
+    {
+      "cache": "none",
+      "execution": {
+        "instructions": 158,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-zero",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-copy",
+            "bytes": 11
+          }
+        ],
+        "name_reads": 1,
+        "elf_reads": 0,
+        "stopped_before": "0x15732c18",
+        "status": null
+      }
+    },
+    {
+      "cache": "wrong-name",
+      "execution": {
+        "instructions": 175,
+        "models": [
+          {
+            "kind": "private-heap",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-zero",
+            "bytes": 12
+          },
+          {
+            "kind": "bounded-copy",
+            "bytes": 11
+          }
+        ],
+        "name_reads": 1,
+        "elf_reads": 0,
+        "stopped_before": "0x15732c18",
+        "status": null
+      }
+    }
+  ],
+  "negative_return_controls": [
+    {
+      "injected_local_result": 11,
+      "counterfactual_execution": {
+        "instructions": 12,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "stopped_before": "0x15686d04",
+        "status": null
+      }
+    },
+    {
+      "injected_local_result": 5,
+      "counterfactual_execution": {
+        "instructions": 9,
+        "models": [],
+        "name_reads": 0,
+        "elf_reads": 0,
+        "stopped_before": "0x157350f0",
+        "status": null
+      }
+    }
+  ],
+  "boundary_controls": [
+    "SMC",
+    "SVC",
+    "loop",
+    "modified-TZ"
+  ],
+  "evidence": {
+    "uid122-route": {
+      "start": "0x156a000c",
+      "end": "0x156a0190",
+      "sha256": "f82648d787b473c0e13835f07cab49997842dbc03d1bff6b0581fee741423a1a"
+    },
+    "uid122-factory": {
+      "start": "0x1569d464",
+      "end": "0x1569d514",
+      "sha256": "fd867553cd643dc16ee403ae9c9b19df94b0281750a59cc32e266aa9c0a83157"
+    },
+    "loader-dispatch": {
+      "start": "0x1569d918",
+      "end": "0x1569dd88",
+      "sha256": "367b853ed37b0bba513efac07f537ab9536113eb1db1ef44ebf76d2b51f244ac"
+    },
+    "cache-resolver": {
+      "start": "0x157335a8",
+      "end": "0x157337b8",
+      "sha256": "faf534c5c45f51d7ad13cb441698cf885f5304ffd9be8dd2ec015b272404de88"
+    },
+    "compat-wrapper": {
+      "start": "0x15733490",
+      "end": "0x15733520",
+      "sha256": "3704e0ac0f88d797c5a6fa6cf3535090213a0e51c58ba435a6bfda56d30cfb13"
+    },
+    "arch-output": {
+      "start": "0x157337b8",
+      "end": "0x15733820",
+      "sha256": "87882c92fe4213be5652c76635f4fe3997e7093f44d20d402f6f014e7a441b34"
+    }
+  },
+  "deployed_lookup": {
+    "op": 2,
+    "counts": "0x1011",
+    "arch_output_bytes": 4
+  },
+  "old_lookup": {
+    "counts": "0x1001",
+    "rejected_status": 2,
+    "rejected_before_name_read": true
+  },
+  "prior_reference_header_sha256": "597124e1769ab805fef0e947a4636dc043250ba368cc218557a339fd55122a06",
+  "limits": [
+    "Private cache/list/architecture state is synthetic; not actual firmware runtime state.",
+    "Only bounded ordinary allocation/zero/copy/free modeled; no registry, auth, RPC or new TA load executed.",
+    "Correct lookup layout is necessary but does not prove real lookup success or permission.",
+    "Historical lookup attempt was not bound to this exact running TZ/return PC; this is a current-code explanation, not a retrospective runtime trace.",
+    "loadFromBuffer has a cache reuse path; actual ABL/UEFI instance or boot context continuity still unproven.",
+    "No phone, firmware change, security command, generation, upgrade or persistence; -62/M3/M4/M5 unverified."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_deployed_loader.py": "ba81c5ee77eb6668940c0b89dda2eec04502a4dec28d0e34053dff915f9308cf",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3",
+    "tools/audit_fuxi_m3_sdk_reference.py": "488668712365c5e31ddd6220f42b94665726af080d9ac41eda98a158c9133338",
+    "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmciDiagnostic.inc": "f25235eb0a313df3f3c14e2663c30ba7138322b9f680872ba96f7e1a2e0ed709"
+  }
+}

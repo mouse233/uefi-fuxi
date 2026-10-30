@@ -115,3 +115,7 @@ docker exec -w /work/ramdisk-test/uefi-twrp-data unixnu-fuxi-build-arm64 \
 已排除当前源码/模拟中的configure→恢复换句柄或隔离后卸载问题。剩余关键门槛
 是安全世界加载器的实例关联和真实初始化服务状态，或等价的同轮公开字段证据。
 在这些边界未清楚前，不直接设置boot、重发208/setVersion、升级原键或放宽隔离。
+
+后续[当前loader核验](fuxi-m3-deployed-loader-20261030.md)定位到UID122实际invoke：
+lookup需要额外架构BO4/count1011；loadFromBuffer确有缓存复用路径。已取得静态/
+私有缓存控制依据，真实设备缓存与ABL实例关联仍未证明，不再仅停留于接口名推断。
