@@ -59,7 +59,8 @@ def main():
         assert candidate.get('m3_configure_recovery') and candidate['m3_smci_ops'][5]=='characteristics-probe'
         backend=(root/'Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyMintBackend.c').read_text()
         assert 'Put32(C->Request,0x2109)' in backend
-        assert 'Head(&W,5,1); BytesPair(&W,23,Blob,BlobBytes);' in backend
+        assert 'Head(&W,5,2); BytesPair(&W,23,Blob,BlobBytes); BytesPair(&W,29,Inner,IW.N);' in backend
+        assert 'BytesPair(&IW,0x90000259,AppId,AppIdBytes);' in backend
         probe=dict(command='0x2109',request='map{23:blob}',sources={str(Path(__file__).relative_to(root)):h(Path(__file__))})
     image=out/'Mu-fuxi-ufs-m1.img';assert h(image)==json.loads((out/'candidate.json').read_text())['sha256']
     report=dict(result='passed',image_sha256=h(image),modules=rows,objects=objects,native_object_sha256=h(nt),linked_map_sha256=h(mf),board_sha256=h(board),configure_binding=configure,characteristics_probe=probe,sources={str(Path(__file__).relative_to(root)):h(Path(__file__))},scope='AARCH64 objects and linked map only. No live authentication proof.')

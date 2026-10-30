@@ -237,20 +237,27 @@ STATIC BOOLEAN ScanTagged(READER *R, UINTN Limit, FKM_CHARACTERISTICS *Out) {
   return TRUE;
 }
 EFI_STATUS FkmProbeCharacteristics(FKM_CONTEXT *C, CONST UINT8 *Blob,
-                                   UINTN BlobBytes, FKM_CHARACTERISTICS *Out) {
-  EFI_STATUS Status; FKM_RETURN Ret; UINT8 Header[96]; WRITER W; READER R;
+                                   UINTN BlobBytes, CONST UINT8 *AppId,
+                                   UINTN AppIdBytes, FKM_CHARACTERISTICS *Out) {
+  EFI_STATUS Status; FKM_RETURN Ret; UINT8 Header[96], Inner[256]; WRITER W, IW; READER R;
   UINTN SendBytes, ResponseCap, Bi1, Bi3, Bo0, Bo1, OutReq, OutResp, Payload, I;
   UINT8 *P; UINT32 TaStatus;
   if (C==NULL || Out==NULL) return EFI_INVALID_PARAMETER;
   Wipe(Out,sizeof(*Out));
   if (!C->Ready || C->Quarantined || C->Handle) return EFI_NOT_READY;
   if (Blob==NULL || BlobBytes==0 || BlobBytes>FKR_BLOB_LIMIT) return EFI_INVALID_PARAMETER;
+  if (AppId==NULL || AppIdBytes<64 || AppIdBytes>64+FKR_SEED_LIMIT) return EFI_INVALID_PARAMETER;
   C->ResponseHeaderSeen=FALSE;
   C->ResponseStatus=C->ResponsePayloadBytes=C->ResponseWireBytes=0;
+  // Additional params carry the same application-id tag the begin map uses;
+  // the blob cannot be unwrapped without it. Serialized as a nested CBOR map.
+  IW.P=Inner; IW.N=0; IW.Cap=sizeof(Inner); IW.Bad=FALSE;
+  Head(&IW,5,1); BytesPair(&IW,0x90000259,AppId,AppIdBytes);
+  if (IW.Bad) return EFI_INVALID_PARAMETER;
   W.P=C->Request+4; W.N=0; W.Cap=sizeof(C->Request)-4; W.Bad=FALSE;
-  // Same map{23: blob} shape the pinned HAL serializes for 0x2109.
-  Head(&W,5,1); BytesPair(&W,23,Blob,BlobBytes);
-  if (W.Bad) { Wipe(C->Request,sizeof(C->Request)); return EFI_BUFFER_TOO_SMALL; }
+  // map{23: blob, 29: bstr(inner params)}, as the pinned HAL serializes 0x2109.
+  Head(&W,5,2); BytesPair(&W,23,Blob,BlobBytes); BytesPair(&W,29,Inner,IW.N);
+  if (W.Bad) { Wipe(C->Request,sizeof(C->Request)); Wipe(Inner,sizeof(Inner)); return EFI_BUFFER_TOO_SMALL; }
   Put32(C->Request,0x2109); C->RequestBytes=SendBytes=W.N+4;
   ResponseCap=0xa000-((SendBytes+3)&~(UINTN)3);
   Bi1=Align8(96+SendBytes); Bi3=Align8(Bi1+ResponseCap);
@@ -318,6 +325,7 @@ EFI_STATUS FkmProbeCharacteristics(FKM_CONTEXT *C, CONST UINT8 *Blob,
     Status=ScanTagged(&R,4096,Out) ? EFI_SUCCESS : EFI_COMPROMISED_DATA;
   }
   Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
+  Wipe(Inner,sizeof(Inner));
   return Status;
 }
 EFI_STATUS FkmInitialize(FKM_CONTEXT *C, UINT32 App, UINT8 *Shared, UINTN SharedBytes,

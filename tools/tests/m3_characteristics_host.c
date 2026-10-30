@@ -6,7 +6,7 @@
 #include <string.h>
 #include "M3KeyMintBackend.h"
 static unsigned Cases;
-static UINT8 Blob[FKR_BLOB_LIMIT];
+static UINT8 Blob[FKR_BLOB_LIMIT], AppId[64];
 static unsigned get32(const UINT8 *p) { return p[0]|((unsigned)p[1]<<8)|((unsigned)p[2]<<16)|((unsigned)p[3]<<24); }
 static void put32(UINT8 *p,unsigned n) { for (unsigned i=0;i<4;i++) p[i]=(UINT8)(n>>(i*8)); }
 
@@ -18,9 +18,14 @@ static EFI_STATUS exchange(void *ctx,UINT8 *p,UINTN in,UINTN out,FKM_RETURN *r) 
   assert(in==FKM_MESSAGE_BYTES&&out==4096&&cmd==0x2109);
   assert(get32(p)==4&&get32(p+8)==0x424&&get32(p+12)==96);
   m->calls++; m->sent=get32(p+16);
-  // 4-byte command then map(1){ 23: bstr(blob) }, as the pinned HAL serializes 0x2109.
-  assert(p[100]==0xa1&&p[101]==0x17);
-  assert(p[102]==0x58&&p[103]==0xd0&&get32(p+16)==216&&memcmp(p+104,Blob,208)==0);
+  // 4-byte command then map(2){23: blob, 29: bstr(map(1){app-id: bytes})}, as
+  // the pinned HAL serializes 0x2109 with additional params.
+  assert(p[100]==0xa2&&p[101]==0x17);
+  assert(p[102]==0x58&&p[103]==0xd0&&memcmp(p+104,Blob,208)==0);
+  assert(p[312]==0x18&&p[313]==0x1d&&p[314]==0x58&&p[315]==0x48&&get32(p+16)==292);
+  // Inner param map uses the same sign-extended app-id label as begin.
+  assert(p[316]==0xa1&&p[317]==0x3a&&p[318]==0x6f&&p[319]==0xff&&p[320]==0xfd&&p[321]==0xa6);
+  assert(p[322]==0x58&&p[323]==0x40&&memcmp(p+324,AppId,64)==0);
   if(m->mode==1) { r->A0=1; return EFI_SUCCESS; }
   if(m->mode==2) { p[12]++; return EFI_SUCCESS; }
   if(m->mode==3) { p[in+8]=1; return EFI_SUCCESS; }
@@ -61,7 +66,7 @@ static void run(int mode,FKM_CONTEXT *c,MOCK *m) {
   c->Shared=shared; c->SharedBytes=FKM_SHARED_BYTES; c->App=4; c->Ready=TRUE;
   c->Exchange=exchange; c->ExchangeContext=m;
   memset(&ch,0xa5,sizeof(ch));
-  s=FkmProbeCharacteristics(c,Blob,208,&ch);
+  s=FkmProbeCharacteristics(c,Blob,208,AppId,64,&ch);
   Cases++;
   switch(mode) {
   case 20:
@@ -114,7 +119,7 @@ static void run(int mode,FKM_CONTEXT *c,MOCK *m) {
 
 int main(void) {
   FKM_CONTEXT c; MOCK m;
-  memset(Blob,0x5a,sizeof(Blob));
+  memset(Blob,0x5a,sizeof(Blob)); memset(AppId,0x3c,sizeof(AppId));
   for(int mode=0;mode<=5;++mode) run(mode,&c,&m);
   run(10,&c,&m); run(11,&c,&m); run(12,&c,&m); run(13,&c,&m);
   run(20,&c,&m); run(21,&c,&m); run(22,&c,&m);
@@ -122,18 +127,20 @@ int main(void) {
   static UINT8 shared[FKM_SHARED_BYTES];
   FKM_CHARACTERISTICS ch;
   memset(&c,0,sizeof(c)); memset(&m,0,sizeof(m));
-  assert(FkmProbeCharacteristics(NULL,Blob,208,&ch)==EFI_INVALID_PARAMETER);
+  assert(FkmProbeCharacteristics(NULL,Blob,208,AppId,64,&ch)==EFI_INVALID_PARAMETER);
   c.Shared=shared; c.SharedBytes=FKM_SHARED_BYTES; c.App=4; c.Ready=TRUE;
   c.Exchange=exchange; c.ExchangeContext=&m;
-  assert(FkmProbeCharacteristics(&c,NULL,208,&ch)==EFI_INVALID_PARAMETER);
-  assert(FkmProbeCharacteristics(&c,Blob,0,&ch)==EFI_INVALID_PARAMETER);
-  assert(FkmProbeCharacteristics(&c,Blob,FKR_BLOB_LIMIT+1,&ch)==EFI_INVALID_PARAMETER);
+  assert(FkmProbeCharacteristics(&c,NULL,208,AppId,64,&ch)==EFI_INVALID_PARAMETER);
+  assert(FkmProbeCharacteristics(&c,Blob,0,AppId,64,&ch)==EFI_INVALID_PARAMETER);
+  assert(FkmProbeCharacteristics(&c,Blob,FKR_BLOB_LIMIT+1,AppId,64,&ch)==EFI_INVALID_PARAMETER);
+  assert(FkmProbeCharacteristics(&c,Blob,208,NULL,64,&ch)==EFI_INVALID_PARAMETER);
+  assert(FkmProbeCharacteristics(&c,Blob,208,AppId,63,&ch)==EFI_INVALID_PARAMETER);
   c.Handle=1;
-  assert(FkmProbeCharacteristics(&c,Blob,208,&ch)==EFI_NOT_READY);
+  assert(FkmProbeCharacteristics(&c,Blob,208,AppId,64,&ch)==EFI_NOT_READY);
   c.Handle=0; c.Quarantined=TRUE;
-  assert(FkmProbeCharacteristics(&c,Blob,208,&ch)==EFI_NOT_READY);
+  assert(FkmProbeCharacteristics(&c,Blob,208,AppId,64,&ch)==EFI_NOT_READY);
   c.Quarantined=FALSE; c.Ready=FALSE;
-  assert(FkmProbeCharacteristics(&c,Blob,208,&ch)==EFI_NOT_READY);
+  assert(FkmProbeCharacteristics(&c,Blob,208,AppId,64,&ch)==EFI_NOT_READY);
   assert(m.calls==0);
   printf("PASS %u probe cases; synthetic transport only\n",Cases);
   return 0;

@@ -11,7 +11,8 @@ STATIC EFI_STATUS FnuProbeCharacteristics(FKM_CONTEXT *Backend, CONST FKR_WORK *
   ZeroMem(&Chars,sizeof(Chars));
   // A negative TA status is recorded, not retried; the session is only kept if
   // the backend did not quarantine on an unexpected shape.
-  Status=FkmProbeCharacteristics(Backend,Work->Blob,Work->BlobBytes,&Chars);
+  Status=FkmProbeCharacteristics(Backend,Work->Blob,Work->BlobBytes,
+                                 Work->ApplicationId,Work->ApplicationIdBytes,&Chars);
   FnuLog(L"FUXIM3 CHARACTERISTICS result=%r status=%08x payload=%u wire=%u scanned=%u",
          Status,Backend->ResponseStatus,Backend->ResponsePayloadBytes,
          Backend->ResponseWireBytes,Chars.TagsScanned);

@@ -57,5 +57,6 @@ typedef struct {
   UINT32 OsVersion, OsPatchLevel, TagsScanned;
 } FKM_CHARACTERISTICS;
 EFI_STATUS FkmProbeCharacteristics(FKM_CONTEXT *Context, CONST UINT8 *Blob,
-                                   UINTN BlobBytes, FKM_CHARACTERISTICS *Out);
+                                   UINTN BlobBytes, CONST UINT8 *ApplicationId,
+                                   UINTN ApplicationIdBytes, FKM_CHARACTERISTICS *Out);
 #endif
