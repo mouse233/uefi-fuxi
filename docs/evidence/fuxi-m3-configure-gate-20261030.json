@@ -1,0 +1,580 @@
+{
+  "result": "passed",
+  "partition_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+  "cases": 13,
+  "vendor_request_matches": 6,
+  "vendor_vectors": [
+    "a416031a300002c11a000298101a300002c21a0135288d1a300002ce1a0135288d",
+    "a416031a300002c11a000298101a300002ce1a0135288d1a300002c21a0135288d",
+    "a416031a300002c21a0135288d1a300002c11a000298101a300002ce1a0135288d",
+    "a416031a300002c21a0135288d1a300002ce1a0135288d1a300002c11a00029810",
+    "a416031a300002ce1a0135288d1a300002c11a000298101a300002c21a0135288d",
+    "a416031a300002ce1a0135288d1a300002c21a0135288d1a300002c11a00029810"
+  ],
+  "constructor_date_support": 1,
+  "public_parameter_values": [
+    [
+      805307073,
+      170000
+    ],
+    [
+      805307074,
+      20261005
+    ],
+    [
+      805307086,
+      20261005
+    ]
+  ],
+  "runtime_library_sha256": "368b34db8efee95d1713cee10d823e8572f6668ef559867c67e292dc3b9e8c52",
+  "context_sha256": "1ff54524819e8cdd12d55d689a06400e3e576f56d097ad220ea0864863546bd4",
+  "runtime_code_equivalence": {
+    "0x18590": {
+      "end": "0x187a4",
+      "sha256": "38c9f3e1017c35baf7d8c009007ab57b7305b496035141738095cf1e4384bfc8",
+      "same_in_runtime": true
+    },
+    "0x189a0": {
+      "end": "0x18c88",
+      "sha256": "718011479b20132ae8c8132bf711a3068172b7537243623109204e8f4bbf9186",
+      "same_in_runtime": true
+    },
+    "0x35178": {
+      "end": "0x352f4",
+      "sha256": "3b8e188e81c1e8717b88bd1041b7c36fcf60d5b53c96c830eda7ab076ee27c31",
+      "same_in_runtime": true
+    }
+  },
+  "unconfigured_begin_gate": {
+    "passed": false,
+    "stop_pc": "0xb454",
+    "status": -64
+  },
+  "entries": {
+    "0x200": {
+      "entry": "0x5a700",
+      "flags": "0x100",
+      "handler": "0xddf4"
+    },
+    "0x2116": {
+      "entry": "0x5a6d0",
+      "flags": "0x0",
+      "handler": "0xb7b4"
+    },
+    "0x310f": {
+      "entry": "0x5a640",
+      "flags": "0x1",
+      "handler": "0x8984"
+    }
+  },
+  "configure_cbor_hex": "a416031a300002c11a000298101a300002c21a0135288d1a300002ce1a0135288d",
+  "tests": [
+    {
+      "logs_suppressed": 4,
+      "export_reached": false,
+      "instructions": 2179,
+      "gate_getters": [],
+      "status": 0,
+      "configured": 1,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ed",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        20261005
+      ],
+      "begin_gate": {
+        "passed": true,
+        "stop_pc": "0xb3d0",
+        "status": 0
+      }
+    },
+    {
+      "logs_suppressed": 4,
+      "export_reached": false,
+      "instructions": 2179,
+      "gate_getters": [],
+      "status": 0,
+      "configured": 1,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ed",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        20261005
+      ],
+      "begin_gate": {
+        "passed": true,
+        "stop_pc": "0xb3d0",
+        "status": 0
+      }
+    },
+    {
+      "logs_suppressed": 4,
+      "export_reached": false,
+      "instructions": 2179,
+      "gate_getters": [],
+      "status": 0,
+      "configured": 1,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ed",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        20261005
+      ],
+      "begin_gate": {
+        "passed": true,
+        "stop_pc": "0xb3d0",
+        "status": 0
+      }
+    },
+    {
+      "logs_suppressed": 4,
+      "export_reached": false,
+      "instructions": 2179,
+      "gate_getters": [],
+      "status": 0,
+      "configured": 1,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ed",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        20261005
+      ],
+      "begin_gate": {
+        "passed": true,
+        "stop_pc": "0xb3d0",
+        "status": 0
+      }
+    },
+    {
+      "logs_suppressed": 4,
+      "export_reached": false,
+      "instructions": 2179,
+      "gate_getters": [],
+      "status": 0,
+      "configured": 1,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ed",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        20261005
+      ],
+      "begin_gate": {
+        "passed": true,
+        "stop_pc": "0xb3d0",
+        "status": 0
+      }
+    },
+    {
+      "logs_suppressed": 4,
+      "export_reached": false,
+      "instructions": 2179,
+      "gate_getters": [],
+      "status": 0,
+      "configured": 1,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ed",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        20261005
+      ],
+      "begin_gate": {
+        "passed": true,
+        "stop_pc": "0xb3d0",
+        "status": 0
+      }
+    },
+    {
+      "logs_suppressed": 9,
+      "export_reached": false,
+      "instructions": 1893,
+      "gate_getters": [
+        "0xb82c",
+        "0xb8ac",
+        "0xb940",
+        "0xb850"
+      ],
+      "status": -38,
+      "configured": 0,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ec",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        0,
+        0,
+        20261005,
+        20261005
+      ]
+    },
+    {
+      "logs_suppressed": 9,
+      "export_reached": false,
+      "instructions": 1812,
+      "gate_getters": [
+        "0xb82c",
+        "0xb8ac",
+        "0xb940",
+        "0xb850"
+      ],
+      "status": -38,
+      "configured": 0,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ec",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        0,
+        20261005
+      ]
+    },
+    {
+      "logs_suppressed": 9,
+      "export_reached": false,
+      "instructions": 1898,
+      "gate_getters": [
+        "0xb82c",
+        "0xb8ac",
+        "0xb940",
+        "0xb850"
+      ],
+      "status": -38,
+      "configured": 0,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ec",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        0
+      ]
+    },
+    {
+      "logs_suppressed": 6,
+      "export_reached": false,
+      "instructions": 2514,
+      "gate_getters": [],
+      "status": -40,
+      "configured": 0,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        20261005
+      ]
+    },
+    {
+      "logs_suppressed": 5,
+      "export_reached": false,
+      "instructions": 2162,
+      "gate_getters": [],
+      "status": -40,
+      "configured": 0,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        20261005
+      ]
+    },
+    {
+      "logs_suppressed": 10,
+      "export_reached": false,
+      "instructions": 2330,
+      "gate_getters": [
+        "0xb82c",
+        "0xb8ac",
+        "0xb940",
+        "0xb850"
+      ],
+      "status": -38,
+      "configured": 0,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ec",
+          "bytes": 1
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        0
+      ]
+    },
+    {
+      "logs_suppressed": 4,
+      "export_reached": false,
+      "instructions": 1959,
+      "gate_getters": [],
+      "status": -40,
+      "configured": 0,
+      "ta_ram_writes": [
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        }
+      ],
+      "values": [
+        170000,
+        0,
+        20261005,
+        0
+      ]
+    }
+  ],
+  "interpretation": "Live -64 and fixed dispatcher prove configuration gate blocks begin before key handler. Public-input parser sets that flag using TA RAM stores; successful gate is not key recovery. Runtime/reference date-support constructor and serializer bytes match, both patches use YYYYMMDD. No device or secure service executed. Does not prove universal absence of persistence outside this parser/call path.",
+  "sources": {
+    "tools/audit_fuxi_m3_configure_gate.py": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb",
+    "tools/audit_fuxi_m3_recovery_wire.py": "d3279366735a41971546a8230ec2439e9840601db393b72e3d243c1a88619c0d",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3"
+  },
+  "scope": "Offline public-input TA parser/gate and vendor serializer only. No new firmware boot or device/configure command.",
+  "reference_library_sha256": "657093d0991515f91e6ea35192b0cfe66bcbd52196a3b906fabe64086ab1ddcb",
+  "qcbor_sha256": "bda86553e45dce1da186830619909b3bae95ff9a91ce3a5df94fa0801c8b2500",
+  "live_gate_evidence": {
+    "source": "user HEIC photo, locally decoded without editing; manual transcription",
+    "original_photo_sha256": "20c70de851fbe2658a28c2955ddb114ac993c83eb53de7039d9dc1ae4a2d1413",
+    "preview_sha256": "718f05f17e4fb451459aed9dd34daf5ca6a7b145430a4effe9e679789ce06caf",
+    "image_sha256": "c32884767117277ff89beb68b2fe2c4eedb6b7e675805ad0eafaf908320fc83e",
+    "result": "failed first begin, response status -64, retained and parked",
+    "m3_passed": false,
+    "prepared": "Success",
+    "binding_tag": "F2E5A8B4",
+    "metadata_file_bytes": 10527,
+    "metadata_file_sha256": "14f3d8675423917e383a71c936f4d9a81a29480f34ae3c550e0f4c34e53a0991",
+    "lun4_a": "Success",
+    "lun4_b": "Success",
+    "ufs_stop": 1,
+    "ufs_db": 0,
+    "ufs_run": 0,
+    "ufs_tdb": 0,
+    "version_fields": [
+      4,
+      1,
+      4,
+      1012
+    ],
+    "version_resumes": 0,
+    "recovery": {
+      "result": "Not Ready",
+      "state": 5,
+      "stage": 1,
+      "km": 0,
+      "bytes": 0,
+      "retained": 1,
+      "fault": 7,
+      "exchange": 1,
+      "commands": 1,
+      "resumes": 0,
+      "response_header_seen": 1,
+      "status_hex": "FFFFFFC0",
+      "status_signed": -64,
+      "payload_bytes": 40616,
+      "wire_bytes": 40624
+    },
+    "batch": {
+      "stop": "key-recovery",
+      "passed": "A3",
+      "env": 2,
+      "loader": 3,
+      "retained": 1
+    },
+    "final": {
+      "stage": "m3-key-recovery",
+      "poisoned": 0,
+      "ready": 0,
+      "smmu_configured": 1,
+      "smmu_fsr": "00000400",
+      "park": true
+    },
+    "interpretation": "AOSP -64 is KEYMINT_NOT_CONFIGURED. Payload length equals input response capacity minus 8; it is not accepted decrypted output. No operation handle, update/finish, cleanup or retry accepted after quarantine.",
+    "error_definition_source": "https://android.googlesource.com/platform/hardware/interfaces/+/61eadb7ce45a3f0236dfe108dfab0a1ca3cc66b2/security/keymint/aidl/android/hardware/security/keymint/ErrorCode.aidl"
+  }
+}

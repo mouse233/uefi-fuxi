@@ -417,3 +417,24 @@ live-v1 attempt-01照片确认四文件prepared、LUN4、队列停止、getVersi
 首条恢复begin响应因fault7隔离，Not Ready/bytes0/retained1，最终PARK，M3未通过。
 没有后续调用/清理或configure；FSR仍400。status-v2只补经过边界验证的非秘密
 status/length日志，保持原隔离规则，新候选实机状态以其REVIEW为准。
+
+## 2026-10-30：-64 门与一次固定 configure 候选
+
+status-v2 实机照片首次取得首条恢复 `begin` 的具体公开状态：`FFFFFFC0`（-64，
+`KEYMINT_NOT_CONFIGURED`），payload 40616/wire 40624，commands1、retained1，
+未取得 operation handle 或明文，最终 PARK。该结果只锁定“未配置”门，不证明
+configure 成功后恢复必定成功。
+
+固定 TA 离线执行确认：`begin` 在密钥处理前检查 configured 标志；public configure
+要求 OS version/OS patch/vendor patch 三字段，缺字段 -38、未知 tag -40；成功只写
+TA RAM 状态槽。固定 QTI 编码器在 date-support 模式下两个补丁字段均为 `YYYYMMDD`，
+本机值为 `170000/20261005/20261005`，六种顺序逐字节一致。证据为
+`docs/evidence/fuxi-m3-configure-gate-20261030.json`（SHA256 `817bc13d…6c2c32`）。
+
+`m3-key-recovery-configured-v3` 只增加一次固定 public configure：同次启动、
+getVersion 后、首条密钥请求前；失败/未知即保留并 PARK。镜像 SHA256
+`5620674f194370b0ac480296c0df4986d28af1ba6c0d2fdee0894608e5f01888`，
+28 项资格/81 源码绑定通过，尚未上机。即使 configure 成功也只解除本机 -64 门；
+convert/HWKM/ICE/DUN 与 userdata 明文对照仍是后续独立环节，M3/M4/M5 未通过。
+详见 [恢复入口与实机判据](fuxi-m3-key-recovery-live-20261030.md) 与
+候选 REVIEW。

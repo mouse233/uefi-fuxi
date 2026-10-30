@@ -66,6 +66,15 @@ def main():
         assert candidate["m3_recovery_output_discarded"] and not candidate["m3_smci_no_keys"]
         assert candidate["m3_smci_version"] and candidate["m3_smci_resume"]
         assert not candidate["m3_smci_setver"] and not candidate["m3_smci_date"] and not candidate["m3_metadata_key"]
+    if candidate.get("m3_recover_key"):
+        entry=json.loads((out/'recovery-entry-tests.json').read_text())
+        assert entry.get('configured') is False and entry.get('cases')==17
+    if candidate.get("m3_configure_recovery"):
+        from m3_configure_binding import load_configure_evidence
+        assert candidate['m3_recover_key'] and load_configure_evidence(out/'configure-evidence.json')==candidate['m3_configure_binding']
+        extra += ('configured-recovery-tests.json',)
+        configured=json.loads((out/'configured-recovery-tests.json').read_text())
+        assert configured.get('configured') is True and configured.get('cases')==27
     if candidate.get("m3_smc_context"):
         extra += ("m3-context-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
@@ -155,6 +164,7 @@ def main():
         expected_ops = ["root-register-null", "open-loader-uid122", "lookup-keymaster64", "lookup-keymaster", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_lookup") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "set-version-200", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_setver") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "date-support", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_date") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_version") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_load") else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if candidate.get("m3_smci_loader") else ["root-register-null", "remote-release"]
         if candidate.get("m3_recover_key"):
             expected_ops=["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "recover-existing-key", "wipe-recovered-key", "ta-release", "loader-release", "environment-release"]
+            if candidate.get('m3_configure_recovery'):expected_ops.insert(4,'configure-public-once')
         assert candidate["m3_smci_ops"] == expected_ops
         if candidate.get("m3_smci_loader"):
             assert candidate["m3_bridge_hlos"] and candidate["m3_smci_mode"] == "object"
@@ -174,6 +184,7 @@ def main():
             assert candidate.get("m3_smci_loader") and candidate["m3_bridge_hlos"] and candidate["m3_bridge_large"]
             assert candidate["m3_smci_ta_bytes"] == 0x63058
             plan=("FUXIM3 BATCH plan=root/open122/load64/version/recover/wipe/release/delete; no persistence" if candidate.get("m3_recover_key") else "FUXIM3 BATCH plan=root/open122/load64/ta-release/release-loader/release-env/delete; gated, no retry")
+            if candidate.get('m3_configure_recovery'):plan='FUXIM3 BATCH plan=root/open122/load64/version/configure/recover/wipe/release/delete; one configure'
             for marker in (plan,
                            "FUXIM3 SMCI loader-load elf=%x name=%x bo=%x msg=%x; no key, no decrypt",
                            "FUXIM3 SMCI loader-app=%x; no command, no key",
@@ -246,12 +257,15 @@ def main():
         assert "FUXIM3 BLOB prefix32=%s".encode("utf-16-le") not in ufs
         if candidate.get("m3_recover_key"):
             for marker in ("FUXIM3 RECOVERY prepared=%r binding=%08x; no material output",
-                           "FUXIM3 RECOVERY begin: decrypt existing key; no configure or persistence",
+                           "FUXIM3 RECOVERY begin: decrypt existing key; no persistence",
                            "FUXIM3 RECOVERY result=%r state=%u stage=%u km=%d bytes=%u retained=%u",
                            "FUXIM3 RECOVERY fault=%u exchange=%u commands=%u resumes=%u",
                            "FUXIM3 RECOVERY response-header=%u status=%08x payload-bytes=%u wire-bytes=%u",
                            "FUXIM3 RECOVERY END: result=%r attempted=%u retained=%u; userdata decrypt not tested"):
                 assert marker.encode("utf-16-le") in ufs, marker
+            if candidate.get('m3_configure_recovery'):
+                for marker in ('FUXIM3 CONFIGURE begin once: os=170000 os-patch=20261005 vendor-patch=20261005 evidence=%08x','FUXIM3 CONFIGURE Success; continue existing-key recovery','FUXIM3 CONFIGURE header status=%08x payload=%u wire=%u; public fields only'):
+                    assert marker.encode('utf-16-le') in ufs,marker
     if candidate.get("m3_smc_context"):
         assert candidate["m3_smci_root"] and park and candidate["m3_scm_info"]
         assert candidate["m3_smci_ops"] == ["standard-info-control"] and candidate["m3_bridge_ops"] == []

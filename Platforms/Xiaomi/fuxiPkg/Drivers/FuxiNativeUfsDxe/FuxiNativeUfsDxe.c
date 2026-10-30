@@ -170,6 +170,12 @@
 #ifndef FUXI_M3_KEY_RECOVERY
 #define FUXI_M3_KEY_RECOVERY 0
 #endif
+#ifndef FUXI_M3_CONFIGURE_RECOVERY
+#define FUXI_M3_CONFIGURE_RECOVERY 0
+#endif
+#if FUXI_M3_CONFIGURE_RECOVERY && (!FUXI_M3_KEY_RECOVERY || FUXI_M3_SMCI_DATE)
+#error Configure is only allowed in the explicit audited recovery candidate
+#endif
 #if FUXI_M3_KEY_RECOVERY && (!FUXI_M3_SECRET_EXCHANGE || !FUXI_M3_BINDING_NONE || !FUXI_M3_SMCI_VERSION || !FUXI_M3_SMCI_RESUME || !FUXI_M3_SMCI_OBJECT || !FUXI_M3_BRIDGE_HLOS || !FUXI_UFS_M2_FILES || FUXI_M3_METADATA_KEY || FUXI_M3_SMCI_SETVER)
 #error Existing-key recovery requires the pinned unbound capture, stopped UFS and gated object session
 #endif

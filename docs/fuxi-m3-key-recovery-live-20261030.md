@@ -91,3 +91,35 @@ status-v2 attempt-01已于2026-10-30 12:00 Asia/Shanghai临时启动，固定镜
 `c32884767117277ff89beb68b2fe2c4eedb6b7e675805ad0eafaf908320fc83e`，27资格/76源码
 绑定及fcde91e/fuxi/unlocked/slot_a核对通过。fastboot发送/Booting exit0，总1.735s；
 等待屏幕照片，尚无v2恢复/状态码或会话收尾结论，没有重试，M3仍未通过。
+
+## status-v2 实测：首条 begin 返回 -64
+
+status-v2 attempt-01 的照片/转录归档于
+`out/m3-key-recovery-status-v2/attempt-01/`（HEIC SHA `20c70de8…2d1413`）。
+四文件 prepare、LUN4、UFS 停机与 getVersion 成功；首条恢复 `begin` 的公开头为
+`status=FFFFFFC0 payload-bytes=40616 wire-bytes=40624`，-64 即 AOSP
+`KEYMINT_NOT_CONFIGURED`。恢复保持 Not Ready/state5/stage1/retained1，
+commands1，未取得 operation handle 或明文，不执行 update/finish/abort，
+BATCH 停在 `key-recovery`，最终 PARK。payload 40616 是响应容量减 8 的
+wrapper 长度字段，不是解密输出。
+
+该证据把“缺少初始化”从推测变成实机前提；仍不能仅凭 -64 证明 configure
+成功后恢复必定成功。审计与下一步依据见
+[configure 只读记录](fuxi-m3-configure-readonly-20261029.md)。
+
+## configured-v3：一次固定 public configure 后恢复（主机通过，未上机）
+
+`m3-key-recovery-configured-v3` 在 getVersion 之后、首条密钥请求之前发送一次
+固定 `0x2116`，输入为 `170000/20261005/20261005` 与已验证 CBOR；证据 pin
+`docs/evidence/fuxi-m3-configure-gate-20261030.json`
+（SHA256 `817bc13d…6c2c32`）。configure 成功只接受固定 wrapper 的精确成功形状；
+失败或完成不明时保留 bridge/object 与注册页并 PARK，不发送恢复请求。
+成功后清零发布注册页，再进入既有恢复，恢复结果仍立即擦除。
+
+镜像 SHA256
+`5620674f194370b0ac480296c0df4986d28af1ba6c0d2fdee0894608e5f01888`
+（1,888,256 字节）；28 项资格全部 exit0，81 个源码文件与提交/镜像绑定；
+configured 入口 27 项、普通入口 17 项、后端 55 项、交换 25 项及默认/query
+关闭检查通过。尚未启动 v3；实机成功只表示 -64 门被解除，不等于 TA 持久化、
+convert、ICE 装槽或 userdata 明文。M3/M4/M5 仍未通过。详见
+`out/m3-key-recovery-configured-v3/REVIEW.md`。

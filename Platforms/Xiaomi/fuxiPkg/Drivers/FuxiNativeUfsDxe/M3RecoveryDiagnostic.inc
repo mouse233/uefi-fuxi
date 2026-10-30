@@ -49,7 +49,7 @@ STATIC EFI_STATUS FnuRunRecovery(UINT64 Raw,UINT8 *Page,UINTN Bytes,UINT64 Bridg
                           FseExchange,&mRecoverySession->Exchange,TRUE,&Ops);
     if(!EFI_ERROR(Result)) {
       FNU_STAGE("m3-key-recovery");
-      FnuLog(L"FUXIM3 RECOVERY begin: decrypt existing key; no configure or persistence");
+      FnuLog(L"FUXIM3 RECOVERY begin: decrypt existing key; no persistence");
       mRecoveryAttempted=TRUE;
       Result=FkrRecoverExisting(mRecoveryWork,&Ops);
       State=(UINT32)mRecoveryWork->State;Stage=(UINT32)mRecoveryWork->Stage;

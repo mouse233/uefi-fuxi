@@ -414,6 +414,7 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
   return EFI_SUCCESS;
 }
 
+#include "M3ConfigureDiagnostic.inc"
 STATIC VOID FnuSmciRootProbe(VOID) {
   EFI_PHYSICAL_ADDRESS Raw=SIZE_4GB-1;
   UINT8 *Page;
@@ -444,7 +445,11 @@ STATIC VOID FnuSmciRootProbe(VOID) {
 #elif FUXI_M3_SMCI_LOAD
   FNU_STAGE("m3-smci-load");
 #if FUXI_M3_KEY_RECOVERY
+#if FUXI_M3_CONFIGURE_RECOVERY
+  FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/version/configure/recover/wipe/release/delete; one configure");
+#else
   FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/version/recover/wipe/release/delete; no persistence");
+#endif
 #else
   FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/ta-release/release-loader/release-env/delete; gated, no retry");
 #endif
@@ -565,6 +570,12 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   FnuLog(L"FUXIM3 BATCH loader-load=Success app=%x; continue app-release",App);
 #endif
 #if FUXI_M3_KEY_RECOVERY
+#if FUXI_M3_CONFIGURE_RECOVERY
+  Step="configure-recovery";
+  mSmciStatus=SmciConfigureRecovery((UINT64)Raw,Page,Bytes,App);
+  if(EFI_ERROR(mSmciStatus))goto Done;
+  Passed|=0x400;
+#endif
   Step="key-recovery";
   RecoveryResult=FnuRunRecovery((UINT64)Raw,Page,Bytes,Bridge,App,(BOOLEAN)(!mReady && !mPoisoned));
   if(mRecoveryRetained) { mSmciStatus=RecoveryResult;goto Done; }

@@ -5,6 +5,11 @@
 #ifndef TEST_RECOVERY_ENTRY
 #define TEST_RECOVERY_ENTRY 0
 #endif
+#ifndef TEST_CONFIGURE_RECOVERY
+#define TEST_CONFIGURE_RECOVERY 0
+#endif
+#define FUXI_M3_CONFIGURE_RECOVERY TEST_CONFIGURE_RECOVERY
+#define FUXI_M3_CONFIGURE_TAG 0x12345678U
 #if TEST_RECOVERY_ENTRY
 #define FUXI_M3_KEY_RECOVERY 1
 #define FUXI_M3_BINDING_NONE 1
@@ -45,6 +50,9 @@ static UINTN mTaImageBytes, mTaImagePages;
 static UINT8 *mTaImage;
 static int Calls,Frees,TaFrees,Phase,Fault,Special,mOps,LogCalls;
 static int ResumeTarget,ResumeCalls,ResumeTerminal,ResumePending;
+#if TEST_CONFIGURE_RECOVERY
+static int ConfigureCalls,ConfigurePending;
+#endif
 static FNU_REPORT Report;
 static void *ZeroMem(void *p,UINTN n){return memset(p,0,n);}
 static void *CopyMem(void *d,const void *s,UINTN n){return memcpy(d,s,n);}
@@ -89,9 +97,15 @@ static UINT64 Bridge(void){return Special==1?0x123456780000005cULL:0x5c;}
 static UINT8 *OutPage(void){return Page+0x64000;}
 #if TEST_RECOVERY_ENTRY
 #include "m3_recovery_entry_fixture.inc"
+#if TEST_CONFIGURE_RECOVERY
+static int ConfigureMonitor(ARM_SMC_ARGS *a);
+#endif
 #endif
 VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
 #if TEST_RECOVERY_ENTRY
+#if TEST_CONFIGURE_RECOVERY
+ if(Page && *(UINT32*)(Page+96)==0x2116 && ConfigureMonitor(a))return;
+#endif
  if(Page && *(UINT32*)(Page+4)==0 && *(UINT32*)(Page+8)==0x424 && SecretMonitor(a))return;
 #endif
  if(ResumePending){
@@ -202,6 +216,9 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
 #include "M3BridgeDiagnostic.inc"
 #if TEST_RECOVERY_ENTRY
 #include "M3RecoveryDiagnostic.inc"
+#if TEST_CONFIGURE_RECOVERY
+#include "m3_configure_monitor.inc"
+#endif
 #endif
 #include "M3SmciDiagnostic.inc"
 static void SetupTa(void){
@@ -276,5 +293,9 @@ int main(void){
 }
 
 #else
+#if TEST_CONFIGURE_RECOVERY
+#include "m3_configured_recovery_cases.inc"
+#else
 #include "m3_recovery_entry_cases.inc"
+#endif
 #endif
