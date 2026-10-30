@@ -1,0 +1,1039 @@
+{
+  "result": "passed",
+  "partition_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+  "evidence": {
+    "begin": {
+      "start": "0x8984",
+      "end": "0x8bc8",
+      "code_sha256": "99ead43e520b74a1c743fd22aa4c8188a9352a9cab01969f2b86cb8a260ad019"
+    },
+    "begin-decode": {
+      "start": "0x35154",
+      "end": "0x3533c",
+      "code_sha256": "8f73b68c0a241e0a3ae7decc28c17a2696085087c3ec09f23c277adc8fbab97e"
+    },
+    "unpack-tail": {
+      "start": "0x310a8",
+      "end": "0x310b8",
+      "code_sha256": "5ea5a3c8843b271a0c538256bab61f4a0da9710d85c2379eb0b5ff45ae865fbb"
+    },
+    "unpack-wrapper": {
+      "start": "0x31040",
+      "end": "0x310a8",
+      "code_sha256": "954a09e9dbe95402e3f31fd44cf64a4e7670ff32e4cadbe7d9aaa80a824fcb43"
+    },
+    "public-envelope": {
+      "start": "0x30d9c",
+      "end": "0x31040",
+      "code_sha256": "03d9ef0c942925eda2e14be0868b8c0f222f4a79db5188f6acaf69b31dac34c0"
+    },
+    "public-auth": {
+      "start": "0x304dc",
+      "end": "0x30d9c",
+      "code_sha256": "0ba0380f065ffebe9e94e79055abef3965f625d7a330b5056ea3d751bd76d2d8"
+    },
+    "version-gate": {
+      "start": "0x98c0",
+      "end": "0x9a5c",
+      "code_sha256": "bc5651f92e182abdbaca8f8bf840f908cef9282343ce634692941569c9cabeea"
+    },
+    "required-format": {
+      "start": "0xdde0",
+      "end": "0xddf4",
+      "code_sha256": "dec95301a962b3e2c3993a8d3180f14d17b3aad73136e7bb616b5cd1024a927d"
+    },
+    "version-accessors": {
+      "start": "0xb808",
+      "end": "0xb960",
+      "code_sha256": "128d460596a34d7e38b5533be6cc1d93e213f9db6cceec12befcf9e9b8cb2fdf"
+    },
+    "boot-context-handler": {
+      "start": "0xbb7c",
+      "end": "0xbedc",
+      "code_sha256": "14aeaeb57385a41a4d59a3c7a86d951ec36b2d7ee33cac9dae93a68946651335"
+    },
+    "public-configure": {
+      "start": "0x37f28",
+      "end": "0x38288",
+      "code_sha256": "661991072d774c8fb5af4b86127ebcc3e30eb21528e0e62e30aea3a6234791bd"
+    }
+  },
+  "direct_edges": [
+    {
+      "callsite": "0x89e0",
+      "target": "0x35154",
+      "tail": false
+    },
+    {
+      "callsite": "0x352d8",
+      "target": "0x310a8",
+      "tail": false
+    },
+    {
+      "callsite": "0x310b4",
+      "target": "0x31040",
+      "tail": true
+    },
+    {
+      "callsite": "0x31068",
+      "target": "0x30d9c",
+      "tail": false
+    },
+    {
+      "callsite": "0x30e74",
+      "target": "0x304dc",
+      "tail": false
+    },
+    {
+      "callsite": "0x31010",
+      "target": "0x98c0",
+      "tail": false
+    }
+  ],
+  "public_evidence_sha256": "5533c6ffc3d67dc21da641934f5efce4e93cce437f73ea824eec581092b2002a",
+  "captured_public_replay": {
+    "collected_utc": "2026-10-30T12:22:25.523139+00:00",
+    "public": {
+      "authenticated": false,
+      "format_version": "0x400000005",
+      "required_format_version": "0x400000005",
+      "format_below_required": false,
+      "public_prefix_bytes": 142,
+      "unread_tail_bytes": 66,
+      "hardware": {
+        "algorithm": 32,
+        "os_version": 170000,
+        "os_patch": 202610,
+        "vendor_patch": 20260801,
+        "boot_patch": 202610
+      },
+      "software": {},
+      "scope": "Unauthenticated public outer fields only; not a live version-gate trace."
+    },
+    "rows": [
+      {
+        "name": "A-fresh-global-boot-zero",
+        "raw_configure_patch": 20261005,
+        "assumed_global_boot": 0,
+        "assumed_client_vendor": 20261005,
+        "instructions": 229,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 202610,
+          "vendor_patch": 20261005
+        },
+        "first_mismatch": {
+          "field": "boot_patch",
+          "comparison_branch": "0x9968"
+        },
+        "status": -62
+      },
+      {
+        "name": "B-fresh-global-boot-zero",
+        "raw_configure_patch": 20991231,
+        "assumed_global_boot": 0,
+        "assumed_client_vendor": 20991231,
+        "instructions": 219,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 209912,
+          "vendor_patch": 20991231
+        },
+        "first_mismatch": {
+          "field": "os_patch",
+          "comparison_branch": "0x9944"
+        },
+        "status": -62
+      },
+      {
+        "name": "A-assume-boot-aligned",
+        "raw_configure_patch": 20261005,
+        "assumed_global_boot": 202610,
+        "assumed_client_vendor": 20261005,
+        "instructions": 231,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 202610,
+          "os_patch": 202610,
+          "vendor_patch": 20261005
+        },
+        "first_mismatch": {
+          "field": "vendor_patch",
+          "comparison_branch": "0x9970"
+        },
+        "status": -62
+      },
+      {
+        "name": "A-assume-vendor-aligned",
+        "raw_configure_patch": 20261005,
+        "assumed_global_boot": 0,
+        "assumed_client_vendor": 20260801,
+        "instructions": 229,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 202610,
+          "vendor_patch": 20260801
+        },
+        "first_mismatch": {
+          "field": "boot_patch",
+          "comparison_branch": "0x9968"
+        },
+        "status": -62
+      },
+      {
+        "name": "A-assume-both-aligned",
+        "raw_configure_patch": 20261005,
+        "assumed_global_boot": 202610,
+        "assumed_client_vendor": 20260801,
+        "instructions": 198,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 202610,
+          "os_patch": 202610,
+          "vendor_patch": 20260801
+        },
+        "first_mismatch": null,
+        "status": 0
+      }
+    ],
+    "limits": "Public fields copied into a synthetic envelope/context. Boot/client slots are explicit assumptions, not captured TA runtime. No real blob/authentication. No equality proof with previous UEFI attempts."
+  },
+  "boot_context_command_static_only": "0x208 -> 0xbb7c; not sent",
+  "controls": [
+    {
+      "name": "matching",
+      "patch": 20261005,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170000,
+            202610,
+            0,
+            20261005
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 198,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 202610,
+          "vendor_patch": 20261005
+        },
+        "first_mismatch": null,
+        "status": 0
+      }
+    },
+    {
+      "name": "old-format",
+      "patch": 20261005,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000004",
+          "values": [
+            170000,
+            202610,
+            0,
+            20261005
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 30,
+        "logs_suppressed": 0,
+        "branches": [
+          "0x9908"
+        ],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -62
+      }
+    },
+    {
+      "name": "os-mismatch",
+      "patch": 20261005,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170001,
+            202610,
+            0,
+            20261005
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 221,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 202610,
+          "vendor_patch": 20261005
+        },
+        "first_mismatch": {
+          "field": "os",
+          "comparison_branch": "0x994c"
+        },
+        "status": -62
+      }
+    },
+    {
+      "name": "os-patch-mismatch",
+      "patch": 20261005,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170000,
+            202611,
+            0,
+            20261005
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 219,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 202610,
+          "vendor_patch": 20261005
+        },
+        "first_mismatch": {
+          "field": "os_patch",
+          "comparison_branch": "0x9944"
+        },
+        "status": -62
+      }
+    },
+    {
+      "name": "boot-patch-mismatch",
+      "patch": 20261005,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170000,
+            202610,
+            1,
+            20261005
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 229,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 202610,
+          "vendor_patch": 20261005
+        },
+        "first_mismatch": {
+          "field": "boot_patch",
+          "comparison_branch": "0x9968"
+        },
+        "status": -62
+      }
+    },
+    {
+      "name": "vendor-patch-mismatch",
+      "patch": 20261005,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170000,
+            202610,
+            0,
+            20261006
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 231,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 202610,
+          "vendor_patch": 20261005
+        },
+        "first_mismatch": {
+          "field": "vendor_patch",
+          "comparison_branch": "0x9970"
+        },
+        "status": -62
+      }
+    },
+    {
+      "name": "fbe-bypass-control-only",
+      "patch": 20261005,
+      "public_decode": {
+        "instructions": 4617,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000004",
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "fbe": true
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 21,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": 0
+      }
+    },
+    {
+      "name": "matching",
+      "patch": 20991231,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170000,
+            209912,
+            0,
+            20991231
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 198,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 209912,
+          "vendor_patch": 20991231
+        },
+        "first_mismatch": null,
+        "status": 0
+      }
+    },
+    {
+      "name": "old-format",
+      "patch": 20991231,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000004",
+          "values": [
+            170000,
+            209912,
+            0,
+            20991231
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 30,
+        "logs_suppressed": 0,
+        "branches": [
+          "0x9908"
+        ],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -62
+      }
+    },
+    {
+      "name": "os-mismatch",
+      "patch": 20991231,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170001,
+            209912,
+            0,
+            20991231
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 221,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 209912,
+          "vendor_patch": 20991231
+        },
+        "first_mismatch": {
+          "field": "os",
+          "comparison_branch": "0x994c"
+        },
+        "status": -62
+      }
+    },
+    {
+      "name": "os-patch-mismatch",
+      "patch": 20991231,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170000,
+            209913,
+            0,
+            20991231
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 219,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 209912,
+          "vendor_patch": 20991231
+        },
+        "first_mismatch": {
+          "field": "os_patch",
+          "comparison_branch": "0x9944"
+        },
+        "status": -62
+      }
+    },
+    {
+      "name": "boot-patch-mismatch",
+      "patch": 20991231,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170000,
+            209912,
+            1,
+            20991231
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 229,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 209912,
+          "vendor_patch": 20991231
+        },
+        "first_mismatch": {
+          "field": "boot_patch",
+          "comparison_branch": "0x9968"
+        },
+        "status": -62
+      }
+    },
+    {
+      "name": "vendor-patch-mismatch",
+      "patch": 20991231,
+      "public_decode": {
+        "instructions": 4427,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000005",
+          "values": [
+            170000,
+            209912,
+            0,
+            20991232
+          ],
+          "fbe": false
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 231,
+        "logs_suppressed": 5,
+        "branches": [
+          "0x9a1c"
+        ],
+        "getters": {
+          "os": 170000,
+          "boot_patch": 0,
+          "os_patch": 209912,
+          "vendor_patch": 20991231
+        },
+        "first_mismatch": {
+          "field": "vendor_patch",
+          "comparison_branch": "0x9970"
+        },
+        "status": -62
+      }
+    },
+    {
+      "name": "fbe-bypass-control-only",
+      "patch": 20991231,
+      "public_decode": {
+        "instructions": 4617,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "stopped_before": "0x25d4",
+        "status": null,
+        "public": {
+          "magic": "0x4b4d4b44",
+          "format_version": "0x400000004",
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "fbe": true
+        }
+      },
+      "counterfactual_gate": {
+        "instructions": 21,
+        "logs_suppressed": 0,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": 0
+      }
+    }
+  ],
+  "paired_controls": [
+    {
+      "name": "fixed-old-format",
+      "same_synthetic_envelope": true,
+      "rows": [
+        {
+          "patch": 20261005,
+          "instructions": 30,
+          "logs_suppressed": 0,
+          "branches": [
+            "0x9908"
+          ],
+          "getters": {},
+          "first_mismatch": null,
+          "status": -62
+        },
+        {
+          "patch": 20991231,
+          "instructions": 30,
+          "logs_suppressed": 0,
+          "branches": [
+            "0x9908"
+          ],
+          "getters": {},
+          "first_mismatch": null,
+          "status": -62
+        }
+      ]
+    },
+    {
+      "name": "fixed-wrong-os",
+      "same_synthetic_envelope": true,
+      "rows": [
+        {
+          "patch": 20261005,
+          "instructions": 221,
+          "logs_suppressed": 5,
+          "branches": [
+            "0x9a1c"
+          ],
+          "getters": {
+            "os": 170000,
+            "boot_patch": 0,
+            "os_patch": 202610,
+            "vendor_patch": 20261005
+          },
+          "first_mismatch": {
+            "field": "os",
+            "comparison_branch": "0x994c"
+          },
+          "status": -62
+        },
+        {
+          "patch": 20991231,
+          "instructions": 219,
+          "logs_suppressed": 5,
+          "branches": [
+            "0x9a1c"
+          ],
+          "getters": {
+            "os": 170000,
+            "boot_patch": 0,
+            "os_patch": 209912,
+            "vendor_patch": 20991231
+          },
+          "first_mismatch": {
+            "field": "os_patch",
+            "comparison_branch": "0x9944"
+          },
+          "status": -62
+        }
+      ]
+    },
+    {
+      "name": "fixed-A-values",
+      "same_synthetic_envelope": true,
+      "rows": [
+        {
+          "patch": 20261005,
+          "instructions": 198,
+          "logs_suppressed": 0,
+          "branches": [],
+          "getters": {
+            "os": 170000,
+            "boot_patch": 0,
+            "os_patch": 202610,
+            "vendor_patch": 20261005
+          },
+          "first_mismatch": null,
+          "status": 0
+        },
+        {
+          "patch": 20991231,
+          "instructions": 219,
+          "logs_suppressed": 5,
+          "branches": [
+            "0x9a1c"
+          ],
+          "getters": {
+            "os": 170000,
+            "boot_patch": 0,
+            "os_patch": 209912,
+            "vendor_patch": 20991231
+          },
+          "first_mismatch": {
+            "field": "os_patch",
+            "comparison_branch": "0x9944"
+          },
+          "status": -62
+        }
+      ]
+    },
+    {
+      "name": "fixed-B-values",
+      "same_synthetic_envelope": true,
+      "rows": [
+        {
+          "patch": 20261005,
+          "instructions": 219,
+          "logs_suppressed": 5,
+          "branches": [
+            "0x9a1c"
+          ],
+          "getters": {
+            "os": 170000,
+            "boot_patch": 0,
+            "os_patch": 202610,
+            "vendor_patch": 20261005
+          },
+          "first_mismatch": {
+            "field": "os_patch",
+            "comparison_branch": "0x9944"
+          },
+          "status": -62
+        },
+        {
+          "patch": 20991231,
+          "instructions": 198,
+          "logs_suppressed": 0,
+          "branches": [],
+          "getters": {
+            "os": 170000,
+            "boot_patch": 0,
+            "os_patch": 209912,
+            "vendor_patch": 20991231
+          },
+          "first_mismatch": null,
+          "status": 0
+        }
+      ]
+    }
+  ],
+  "malformed": [
+    {
+      "name": "bad-magic",
+      "result": {
+        "instructions": 1094,
+        "logs_suppressed": 1,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -33
+      }
+    },
+    {
+      "name": "truncated",
+      "result": {
+        "instructions": 1749,
+        "logs_suppressed": 2,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -33
+      }
+    }
+  ],
+  "error_suffix_controls": [
+    {
+      "return_site": "0x30efc",
+      "injected_synthetic_status": -62,
+      "result": {
+        "instructions": 25,
+        "logs_suppressed": 1,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -62
+      }
+    },
+    {
+      "return_site": "0x30f58",
+      "injected_synthetic_status": -62,
+      "result": {
+        "instructions": 25,
+        "logs_suppressed": 1,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -62
+      }
+    },
+    {
+      "return_site": "0x30efc",
+      "injected_synthetic_status": -33,
+      "result": {
+        "instructions": 25,
+        "logs_suppressed": 1,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -33
+      }
+    },
+    {
+      "return_site": "0x30f58",
+      "injected_synthetic_status": -33,
+      "result": {
+        "instructions": 25,
+        "logs_suppressed": 1,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -33
+      }
+    },
+    {
+      "return_site": "0x30efc",
+      "injected_synthetic_status": -38,
+      "result": {
+        "instructions": 25,
+        "logs_suppressed": 1,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -38
+      }
+    },
+    {
+      "return_site": "0x30f58",
+      "injected_synthetic_status": -38,
+      "result": {
+        "instructions": 25,
+        "logs_suppressed": 1,
+        "branches": [],
+        "getters": {},
+        "first_mismatch": null,
+        "status": -38
+      }
+    }
+  ],
+  "boundary_checks": [
+    "0x292d8",
+    "0x43a30",
+    "0x18e38",
+    "smc",
+    "loop",
+    "mutated-input"
+  ],
+  "limits": [
+    "Prefix stops before algorithm lookup/authentication; gate re-entry is a separate synthetic counterfactual.",
+    "No real blob, material, phone, KeyMint service, generate/upgrade, SMC or persistence.",
+    "A/B screen status/lengths do not identify which gate branch executed on the phone.",
+    "Authentication callback return sites also propagate injected -62 unchanged; this does not prove those callees can actually originate -62.",
+    "Earlier claim that begin reaches the gate only through operation function pointers is incorrect."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_begin_version.py": "09a4181f38a9200974073d2696d26e1bf1dd85e87019eb0b5b66165686281e34",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb",
+    "tools/audit_fuxi_m3_configure_gate.py": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3",
+    "tools/collect_fuxi_m3_blob_public.py": "57177a8e9495f7b7530ed427617cefc77daca7c44aab5620a1384e4694c55bff"
+  }
+}

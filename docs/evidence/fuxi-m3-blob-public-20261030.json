@@ -1,0 +1,39 @@
+{
+  "result": "captured",
+  "serial": "fcde91e",
+  "properties": {
+    "ro.product.device": "fuxi",
+    "ro.boot.serialno": "fcde91e",
+    "ro.boot.slot_suffix": "_a",
+    "ro.twrp.version": "3.7.1_12-Xiaomi13_v9.0_A15",
+    "ro.build.version.release": "17"
+  },
+  "reference_library_sha256": "657093d0991515f91e6ea35192b0cfe66bcbd52196a3b906fabe64086ab1ddcb",
+  "stable_snapshots": 2,
+  "blob_bytes": 208,
+  "public": {
+    "authenticated": false,
+    "format_version": "0x400000005",
+    "required_format_version": "0x400000005",
+    "format_below_required": false,
+    "public_prefix_bytes": 142,
+    "unread_tail_bytes": 66,
+    "hardware": {
+      "algorithm": 32,
+      "os_version": 170000,
+      "os_patch": 202610,
+      "vendor_patch": 20260801,
+      "boot_patch": 202610
+    },
+    "software": {},
+    "scope": "Unauthenticated public outer fields only; not a live version-gate trace."
+  },
+  "total_bytes_read": 284,
+  "commands": "Fixed identity/stat/library hash and exact public-prefix dd reads only.",
+  "limits": [
+    "No encrypted tail requested, raw prefix/digest saved, KeyMint API, process-memory read or device write.",
+    "Public fields are unauthenticated and do not prove the live TA returned from a particular PC."
+  ],
+  "collected_utc": "2026-10-30T12:22:25.523139+00:00",
+  "collector_sha256": "57177a8e9495f7b7530ed427617cefc77daca7c44aab5620a1384e4694c55bff"
+}
