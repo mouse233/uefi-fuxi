@@ -43,6 +43,8 @@ def main():
     parser.add_argument("--m3-smci-version", action="store_true", help="one KeyMint getVersion after load; no key or decrypt")
     parser.add_argument("--m3-smci-resume", action="store_true", help="bounded SCM interrupted-call continuation")
     parser.add_argument("--m3-smci-date", action="store_true", help="read-only KeyMint date capability query")
+    parser.add_argument("--m3-recover-key", action="store_true", help="recover one existing metadata key, wipe output, close session; no convert/ICE")
+    parser.add_argument("--recovery-binding", type=Path, help="exact pinned real Android unbound-context evidence; required for recovery")
     parser.add_argument("--m3-smci-setver", action="store_true", help="one bounded KeyMint set-version 200 request")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
     parser.add_argument("--m3-bridge-large", action="store_true", help="0x82000 HLOS bridge after LUN4 hashes")
@@ -120,6 +122,14 @@ def main():
         parser.error("set-version requires version and resume")
     if args.m3_smci_date and (not (args.m3_smci_version and args.m3_smci_resume) or args.m3_smci_setver):
         parser.error("date query requires version and resume and excludes set-version")
+    recovery_binding=None
+    if args.m3_recover_key:
+        if not (args.m3_smci_version and args.m3_smci_resume and args.m3_smci_mode=="object" and args.m2_metadata_files) or args.m3_metadata_key or args.m3_smci_setver or args.m3_smci_date:
+            parser.error("recovery requires the version/resume object batch and excludes discovery/date/set-version")
+        if not args.recovery_binding:parser.error("recovery requires --recovery-binding")
+        from m3_recovery_binding import load_binding
+        recovery_binding=load_binding(args.recovery_binding)
+    elif args.recovery_binding:parser.error("binding evidence is only valid with --m3-recover-key")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -151,6 +161,8 @@ def main():
     binding["framework_ref"] = subprocess.check_output(["git", "-C", str(base), "rev-parse", "HEAD"], text=True).strip()
     binding["framework_dirty"] = bool(subprocess.check_output(["git", "-C", str(base), "status", "--porcelain"], text=True))
     (out / "build-inputs.json").write_text(json.dumps(binding, indent=2) + "\n")
+    if recovery_binding:
+        shutil.copyfile(args.recovery_binding,out/"recovery-binding.json")
     ctx.work, ctx.logs = out / "work", out / "logs"
     ctx.tree = ctx.work / "tree"
     ctx.tree.mkdir(parents=True, exist_ok=True)
@@ -193,6 +205,10 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_RESUME"] = str(int(args.m3_smci_resume))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_DATE"] = str(int(args.m3_smci_date))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_SETVER"] = str(int(args.m3_smci_setver))
+    ctx.board["firmware"]["defines"]["FUXI_M3_KEY_RECOVERY"] = str(int(args.m3_recover_key))
+    ctx.board["firmware"]["defines"]["FUXI_M3_SECRET_EXCHANGE"] = str(int(args.m3_recover_key))
+    ctx.board["firmware"]["defines"]["FUXI_M3_BINDING_NONE"] = str(int(args.m3_recover_key))
+    ctx.board["firmware"]["defines"]["FUXI_M3_BINDING_TAG"] = recovery_binding['tag'] if recovery_binding else '0'
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_ROOT"] = str(int(args.m3_smci_root))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_HLOS"] = str(int(args.m3_bridge_hlos))
     ctx.board["firmware"]["defines"]["FUXI_M3_BRIDGE_BLOB"] = str(int(args.m3_bridge_blob))
@@ -242,12 +258,14 @@ def main():
                   m3_smci_root=args.m3_smci_root, m3_smci_loader=args.m3_smci_loader,
                   m3_smci_lookup=args.m3_smci_lookup, m3_smci_load=args.m3_smci_load,
                   m3_smci_version=args.m3_smci_version, m3_smci_resume=args.m3_smci_resume, m3_smci_setver=args.m3_smci_setver, m3_smci_date=args.m3_smci_date,
+                  m3_recover_key=args.m3_recover_key, m3_recovery_binding=recovery_binding,
+                  m3_recovery_output_discarded=bool(args.m3_recover_key),
                   m3_smci_mode=("context" if args.m3_smc_context else args.m3_smci_mode) if args.m3_smci_root else None,
                   m3_smci_fnid=("42000601" if args.m3_smc_context else "72000602" if args.m3_smci_mode == "object" else "72000600") if args.m3_smci_root else None,
                   m3_smci_arginfo=("1" if args.m3_smc_context else "224") if args.m3_smci_root else None,
                   m3_smci_ops=(["standard-info-control"] if args.m3_smc_context else ["root-register-null", "open-loader-uid122", "lookup-keymaster64", "lookup-keymaster", "ta-release", "loader-release", "environment-release"] if args.m3_smci_lookup else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "set-version-200", "ta-release", "loader-release", "environment-release"] if args.m3_smci_setver else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "date-support", "ta-release", "loader-release", "environment-release"] if args.m3_smci_date else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "ta-release", "loader-release", "environment-release"] if args.m3_smci_version else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "ta-release", "loader-release", "environment-release"] if args.m3_smci_load else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if args.m3_smci_loader else ["root-register-null", "remote-release"]) if args.m3_smci_root else None,
                   m3_smci_ta_bytes=0x63058 if args.m3_smci_load else None,
-                  m3_smci_no_keys=True if args.m3_smci_root else None,
+                  m3_smci_no_keys=(not args.m3_recover_key) if args.m3_smci_root else None,
                   m3_bridge_abi="standard64-a0-status-a1-service-a2-handle64" if args.m3_bridge_call else None,
                   m3_bridge_fnids=["42000c1c","42000c1e","42000c1d"] if args.m3_bridge_call and not args.m3_smc_context else [],
                   m3_bridge_hlos=args.m3_bridge_hlos,
@@ -277,6 +295,9 @@ def main():
                   hardware_result="pending", kernel_handoff=False, receiver_only=not args.m2_metadata_files, diagnostic_only=args.m2_metadata_files,
                   partition_io=False, raw_partition_reads=not args.without_ufs,
                   partition_writes=False, system_handoff=False)
+    if args.m3_recover_key:
+        report['m3_smci_ops']=['root-register-null','open-loader-uid122','loadfrombuffer-keymaster64','get-version','recover-existing-key','wipe-recovered-key','ta-release','loader-release','environment-release']
+        report['native_ufs_takeover']='read-only diagnostic; existing key recovery, no convert/ICE or userdata decryption'
     (out / "candidate.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 
@@ -298,6 +319,7 @@ def write_sources(uefi, out):
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3BridgeBlob.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3BridgeDiagnostic.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmciDiagnostic.inc",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3RecoveryDiagnostic.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmcContext.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/APRIORI.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.dsc", uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.fdf",
@@ -310,6 +332,15 @@ def write_sources(uefi, out):
         *sorted((uefi / "tools/tests").glob("fuxi_f2fs*_host.c")),
         *sorted((uefi / "tools").glob("test_fuxi_f2fs*.py")),
         Path(__file__),
+        uefi / "tools/m3_recovery_binding.py",
+        uefi / "tools/qualify_fuxi_ufs_candidate.py",
+        uefi / "tools/check_fuxi_ufs_report_image.py",
+        uefi / "tools/test_m3_recovery_binding.py",
+        uefi / "tools/test_fuxi_m3_recovery_entry.py",
+        uefi / "tools/tests/m3_smci_resume_host.c",
+        uefi / "tools/tests/m3_recovery_entry_fixture.inc",
+        uefi / "tools/tests/m3_recovery_entry_cases.inc",
+        uefi / "docs/evidence/fuxi-m3-android-binding-20261030.json",
     ]
     (out / "sources.json").write_text(json.dumps({str(x.relative_to(uefi)):
         hashlib.sha256(x.read_bytes()).hexdigest() for x in paths if x.is_file()}, indent=2) + "\n")

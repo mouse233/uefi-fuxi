@@ -105,8 +105,8 @@ EFI_STATUS FkmDecode(FKR_STAGE Stage, CONST UINT8 *P, UINTN N, FKR_REPLY *Reply,
   return EFI_SUCCESS;
 }
 
-STATIC EFI_STATUS Quarantine(FKM_CONTEXT *C, FKR_REPLY *Reply) {
-  C->Quarantined=TRUE; Reply->Terminal=FALSE; return EFI_NOT_READY;
+STATIC EFI_STATUS Quarantine(FKM_CONTEXT *C, FKR_REPLY *Reply, UINT32 Fault) {
+  C->Fault=Fault; C->Quarantined=TRUE; Reply->Terminal=FALSE; return EFI_NOT_READY;
 }
 STATIC EFI_STATUS Call(FKM_CONTEXT *C, FKR_STAGE Stage, CONST FKR_BEGIN_REQUEST *B,
                         UINT64 Handle, CONST UINT8 *Input, UINTN InputBytes,
@@ -118,7 +118,7 @@ STATIC EFI_STATUS Call(FKM_CONTEXT *C, FKR_STAGE Stage, CONST FKR_BEGIN_REQUEST 
   Wipe(Reply,sizeof(*Reply));
   if (C==NULL || !C->Ready || C->Quarantined) return EFI_NOT_READY;
   if ((Stage==FkrBegin && C->Handle) || (Stage!=FkrBegin && (!Handle || C->Handle!=Handle)))
-    return Quarantine(C,Reply);
+    return Quarantine(C,Reply,1);
   if (Capacity && Output==NULL) return EFI_INVALID_PARAMETER;
   // Stage-specific callbacks cannot emit configure/generate/upgrade commands.
   Command=Stage==FkrBegin ? 0x310f : Stage==FkrUpdate ? 0x3111 : Stage==FkrFinish ? 0x3112 : 0x2113;
@@ -139,13 +139,13 @@ STATIC EFI_STATUS Call(FKM_CONTEXT *C, FKR_STAGE Stage, CONST FKR_BEGIN_REQUEST 
   Put32(P+52,(UINT32)Bo1); Put32(P+56,(UINT32)ResponseCap);
   Put32(P+Bi3,1); Copy(P+96,C->Request,SendBytes); Copy(Header,P,sizeof(Header));
   Status=C->Exchange(C->ExchangeContext,P,FKM_MESSAGE_BYTES,4096,&Ret);
-  if (EFI_ERROR(Status) || Ret.A0 || Ret.A1 || Ret.A2 || Ret.A3) return Quarantine(C,Reply);
+  if (EFI_ERROR(Status) || Ret.A0 || Ret.A1 || Ret.A2 || Ret.A3) return Quarantine(C,Reply,2);
   if (!((Get32(P+FKM_MESSAGE_BYTES)==0 && Get32(P+FKM_MESSAGE_BYTES+4)==0) ||
         (Get32(P+FKM_MESSAGE_BYTES)==0x10002 &&
          (Get32(P+FKM_MESSAGE_BYTES+4)==0xfffd || Get32(P+FKM_MESSAGE_BYTES+4)==0xffff))) ||
-      !Zero(P+FKM_MESSAGE_BYTES+8,4088)) return Quarantine(C,Reply);
+      !Zero(P+FKM_MESSAGE_BYTES+8,4088)) return Quarantine(C,Reply,3);
   OutReq=Get32(P+48); OutResp=Get32(P+56);
-  if (OutReq>SendBytes || OutResp<8 || OutResp>ResponseCap) return Quarantine(C,Reply);
+  if (OutReq>SendBytes || OutResp<8 || OutResp>ResponseCap) return Quarantine(C,Reply,4);
   for (I=0;I<FKM_MESSAGE_BYTES;++I) {
     UINT8 Expected=0;
     if ((I>=48 && I<52) || (I>=56 && I<60) ||
@@ -153,21 +153,21 @@ STATIC EFI_STATUS Call(FKM_CONTEXT *C, FKR_STAGE Stage, CONST FKR_BEGIN_REQUEST 
     if (I<96) Expected=Header[I];
     else if (I>=96 && I<96+SendBytes) Expected=C->Request[I-96];
     else if (I==Bi3) Expected=1;
-    if (P[I]!=Expected) return Quarantine(C,Reply);
+    if (P[I]!=Expected) return Quarantine(C,Reply,5);
   }
   TaStatus=Get32(P+Bo1); Payload=Get32(P+Bo1+4);
-  if (Payload>OutResp-8 || !Zero(P+Bo1+8+Payload,OutResp-8-Payload)) return Quarantine(C,Reply);
+  if (Payload>OutResp-8 || !Zero(P+Bo1+8+Payload,OutResp-8-Payload)) return Quarantine(C,Reply,6);
   if (TaStatus) {
-    if (!(TaStatus&0x80000000U) || Payload) return Quarantine(C,Reply);
-    if (Stage==FkrAbort) return Quarantine(C,Reply); // no verified closure
+    if (!(TaStatus&0x80000000U) || Payload) return Quarantine(C,Reply,7);
+    if (Stage==FkrAbort) return Quarantine(C,Reply,8); // no verified closure
     Reply->Terminal=TRUE; Reply->KeyMintStatus=(INT32)TaStatus;
   } else if (Stage==FkrAbort) {
-    if (Payload) return Quarantine(C,Reply);
+    if (Payload) return Quarantine(C,Reply,6);
     Reply->Terminal=TRUE; Reply->OperationClosed=TRUE; C->Handle=0;
   } else {
     Status=FkmDecode(Stage,P+Bo1+8,Payload,&Parsed,&Data,&Encoded);
     if (EFI_ERROR(Status) || Encoded>Capacity || (Stage==FkrUpdate && Parsed.Consumed>InputBytes))
-      return Quarantine(C,Reply);
+      return Quarantine(C,Reply,9);
     *Reply=Parsed; Reply->Terminal=TRUE;
     if (Stage==FkrBegin) C->Handle=Reply->Handle;
     if (Stage==FkrFinish) { Reply->OperationClosed=TRUE; C->Handle=0; }

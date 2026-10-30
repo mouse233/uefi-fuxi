@@ -74,6 +74,16 @@ def main():
             '--edk2',str(edk2),'--report',str(out/'m3-load-tests.json')]))
     if candidate.get('m3_smci_date'):
         commands.append(('m3-date', ['python3', str(root/'tools/test_fuxi_m3_smci_date.py'), '--edk2',str(edk2),'--report',str(out/'m3-date-tests.json')]))
+    if candidate.get('m3_smci_version'):
+        commands.append(('m3-version', ['python3',str(root/'tools/test_fuxi_m3_smci_version.py'),'--edk2',str(edk2),'--report',str(out/'m3-version-tests.json')]))
+        commands.append(('ta-read', ['python3',str(root/'tools/test_ta_read.py'),'--edk2',str(edk2),'--partition',str(root/'out/m3-date-support-v1/keymaster-partition-verified.img'),'--report',str(out/'ta-read-tests.json')]))
+    if candidate.get('m3_smci_resume'):
+        commands.append(('m3-resume', ['python3',str(root/'tools/test_fuxi_m3_smci_resume.py'),'--edk2',str(edk2),'--report',str(out/'m3-resume-tests.json')]))
+    if candidate.get('m3_recover_key'):
+        commands.append(('recovery-binding', ['python3',str(root/'tools/test_m3_recovery_binding.py'),'--report',str(out/'recovery-binding-tests.json')]))
+        commands.append(('recovery-entry', ['python3',str(root/'tools/test_fuxi_m3_recovery_entry.py'),'--edk2',str(edk2),'--report',str(out/'recovery-entry-tests.json')]))
+        commands.append(('secret-exchange', ['python3',str(root/'tools/test_fuxi_m3_secret_exchange.py'),'--edk2',str(edk2),'--report',str(out/'secret-exchange-tests.json')]))
+        commands.append(('keymint-backend', ['python3',str(root/'tools/test_fuxi_m3_keymint_backend.py'),'--edk2',str(edk2),'--vendor-vectors',str(root/'out/m3-recovery-backend-v1/vendor-codec'),'--report',str(out/'keymint-backend-tests.json')]))
     if candidate.get('m3_smc_context'):
         commands.append(('m3-context', ['python3', str(root / 'tools/test_fuxi_m3_smc_context.py'),
                                       '--edk2', str(edk2), '--report', str(out / 'm3-context-tests.json')]))

@@ -167,6 +167,12 @@
 #if FUXI_M3_SMCI_DATE && (!FUXI_M3_SMCI_VERSION || !FUXI_M3_SMCI_RESUME || FUXI_M3_SMCI_SETVER)
 #error Date capability requires version and resume, and forbids setVersion
 #endif
+#ifndef FUXI_M3_KEY_RECOVERY
+#define FUXI_M3_KEY_RECOVERY 0
+#endif
+#if FUXI_M3_KEY_RECOVERY && (!FUXI_M3_SECRET_EXCHANGE || !FUXI_M3_BINDING_NONE || !FUXI_M3_SMCI_VERSION || !FUXI_M3_SMCI_RESUME || !FUXI_M3_SMCI_OBJECT || !FUXI_M3_BRIDGE_HLOS || !FUXI_UFS_M2_FILES || FUXI_M3_METADATA_KEY || FUXI_M3_SMCI_SETVER)
+#error Existing-key recovery requires the pinned unbound capture, stopped UFS and gated object session
+#endif
 // One load attempt per boot. The signed extent is read while the LUN4 queue is
 // still live; the M3 stage runs after ShutdownQueue and cannot read it again.
 #if FUXI_M3_SMCI_LOAD
@@ -344,6 +350,7 @@ STATIC VOID FnuCacheInv(FNU_OPS *Ops, VOID *Va, UINTN Bytes) {
 
 #include "M3BridgeBlob.inc"
 #include "M3BridgeDiagnostic.inc"
+#include "M3RecoveryDiagnostic.inc"
 #include "M3SmciDiagnostic.inc"
 #include "M3SmcContext.inc"
 
@@ -902,6 +909,9 @@ STATIC VOID RunDiagnostic(VOID) {
       InspectPartition(&Disk, &Parts.Userdata, L"userdata", Scratch);
 #if FUXI_UFS_M2_FILES
       RunM2(&Disk, &Parts.Metadata, Scratch, Repeat);
+#if FUXI_M3_KEY_RECOVERY
+      if(!mPoisoned && !EFI_ERROR(mM2Status))FnuPrepareRecovery(&Disk,&Parts.Metadata,Scratch);
+#endif
 #if FUXI_UFS_LUN4_KEYS
       if (!mPoisoned && !EFI_ERROR(mM2Status)) { FNU_STAGE("lun4-keymaster"); mLun4Passed=RunLun4Keys(Scratch); }
       else FnuLog(L"FUXILUN4 skipped: M2 failed or DMA quarantined");
@@ -974,6 +984,9 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
 #if FUXI_M3_BRIDGE_LARGE
       && mLun4Passed
 #endif
+#if FUXI_M3_KEY_RECOVERY
+      && !mReady && !EFI_ERROR(mRecoveryStatus) && mRecoveryWork!=NULL && mRecoveryWork->State==FkrPrepared
+#endif
       ) {
     UINT64 El, Daif;
     __asm__ __volatile__("mrs %0, CurrentEL" : "=r"(El));
@@ -982,6 +995,11 @@ EFI_STATUS EFIAPI FuxiNativeUfsDxeEntry(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE
     FnuSmciRootProbe();
   }
   else FnuLog(L"FUXIM3 SMCI skipped: UFS/INFO/invoke availability not ready");
+#endif
+#if FUXI_M3_KEY_RECOVERY
+  FnuDropRecoveryInput();
+  if(!mRecoveryAttempted && !EFI_ERROR(mRecoveryStatus))mRecoveryStatus=EFI_NOT_READY;
+  FnuLog(L"FUXIM3 RECOVERY END: result=%r attempted=%u retained=%u; userdata decrypt not tested",mRecoveryStatus,(UINT32)mRecoveryAttempted,(UINT32)mRecoveryRetained);
 #endif
   FnuLog(L"FUXIUFS final stage=%a poisoned=%u ready=%u smmu-configured=%u",
          mLastStage, (UINT32)mPoisoned, (UINT32)mReady, (UINT32)mSmmuConfigured);

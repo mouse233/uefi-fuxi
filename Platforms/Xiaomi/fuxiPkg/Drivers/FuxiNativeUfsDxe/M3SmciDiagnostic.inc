@@ -328,6 +328,11 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
     FnuLog(L"FUXIM3 SMCI version bytes=%x fields=%08x/%08x/%08x/%08x",
            ResponseBytes,SmciU32(Page+0xa07c),SmciU32(Page+0xa080),
            SmciU32(Page+0xa084),SmciU32(Page+0xa088));
+#if FUXI_M3_KEY_RECOVERY
+    mRecoveryVersionOk=(SmciU32(Page+0xa07c)==4 && SmciU32(Page+0xa080)==1 &&
+                        SmciU32(Page+0xa084)==4 && SmciU32(Page+0xa088)==1012);
+    if(!mRecoveryVersionOk)return EFI_UNSUPPORTED;
+#endif
     return EFI_SUCCESS;
   }
 #endif
@@ -429,13 +434,20 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   UINT32 Ta=0;
   EFI_STATUS LookupStatus=EFI_NOT_FOUND;
 #endif
+#if FUXI_M3_KEY_RECOVERY
+  EFI_STATUS RecoveryResult=EFI_NOT_READY;
+#endif
   mSmciStatus=EFI_NOT_READY;
 #if FUXI_M3_SMCI_LOOKUP
   FNU_STAGE("m3-smci-lookup");
   FnuLog(L"FUXIM3 BATCH plan=root/open122/lookup64/lookup/ta-release/release-loader/release-env/delete; gated, no retry");
 #elif FUXI_M3_SMCI_LOAD
   FNU_STAGE("m3-smci-load");
+#if FUXI_M3_KEY_RECOVERY
+  FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/version/recover/wipe/release/delete; no persistence");
+#else
   FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/ta-release/release-loader/release-env/delete; gated, no retry");
+#endif
 #elif FUXI_M3_SMCI_LOADER
   FNU_STAGE("m3-smci-loader");
   FnuLog(L"FUXIM3 BATCH plan=root/open122/release-loader/release-env/delete; gated, no retry");
@@ -452,6 +464,10 @@ STATIC VOID FnuSmciRootProbe(VOID) {
 #endif
 #if FUXI_M3_SMCI_LOAD
     SmciReleaseTaImage();
+#endif
+#if FUXI_M3_KEY_RECOVERY
+    mRecoveryStatus=mSmciStatus;
+    FnuDropRecoveryInput();
 #endif
     return;
   }
@@ -548,6 +564,14 @@ STATIC VOID FnuSmciRootProbe(VOID) {
 #else
   FnuLog(L"FUXIM3 BATCH loader-load=Success app=%x; continue app-release",App);
 #endif
+#if FUXI_M3_KEY_RECOVERY
+  Step="key-recovery";
+  RecoveryResult=FnuRunRecovery((UINT64)Raw,Page,Bytes,Bridge,App,(BOOLEAN)(!mReady && !mPoisoned));
+  if(mRecoveryRetained) { mSmciStatus=RecoveryResult;goto Done; }
+  if(!EFI_ERROR(RecoveryResult))Passed|=0x200;
+  // A known failure with a verified closed operation still closes the session.
+  // Preserve that failure after the app/loader/env/bridge teardown succeeds.
+#endif
   Step="app-release";
   mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,App,0,&Ignored);
   if (EFI_ERROR(mSmciStatus)) goto Done;
@@ -582,6 +606,9 @@ STATIC VOID FnuSmciRootProbe(VOID) {
     Retain=FALSE;
 #if FUXI_M3_SMCI_LOADER
     Passed|=16;Step="complete";
+#if FUXI_M3_KEY_RECOVERY
+    if(EFI_ERROR(RecoveryResult)) { Step="recovery-failed";mSmciStatus=RecoveryResult; }
+#endif
 #if FUXI_M3_SMCI_LOOKUP
     if (LookupStatus!=EFI_SUCCESS) { Step="lookup-missing";mSmciStatus=LookupStatus; }
 #endif
@@ -595,14 +622,20 @@ Done:
 #endif
   if (Retain) {
     // No further call, wipe, delete or free: callback/in-flight ownership is
-    // unknown. No secret was put in either page. The parked probe will reboot.
+    // unknown. A recovery candidate may hold secrets here. Park until reboot.
     FnuLog(L"FUXIM3 SMCI retained bridge=%lx object=%x; unknown/error state, no retry",Bridge,Object);
   } else {
     ZeroMem(Page,Bytes);FnuCacheCiv(&mOps,Page,Bytes);gBS->FreePages(Raw,Pages);
     FnuLog(L"FUXIM3 SMCI released bytes=%x",(UINT32)Bytes);
   }
 #if FUXI_M3_SMCI_LOAD
+#if FUXI_M3_KEY_RECOVERY
+  FnuLog(L"FUXIM3 SMCI result=%r retained=%u; existing-key recovery diagnostic only",mSmciStatus,(UINT32)Retain);
+  if(!mRecoveryAttempted)mRecoveryStatus=EFI_ERROR(mSmciStatus)?mSmciStatus:EFI_NOT_READY;
+  FnuDropRecoveryInput();
+#else
   FnuLog(L"FUXIM3 SMCI result=%r retained=%u; one load, no key, no decrypt",mSmciStatus,(UINT32)Retain);
+#endif
   SmciReleaseTaImage();
 #else
   FnuLog(L"FUXIM3 SMCI result=%r retained=%u; no TA, no key, no decrypt",mSmciStatus,(UINT32)Retain);

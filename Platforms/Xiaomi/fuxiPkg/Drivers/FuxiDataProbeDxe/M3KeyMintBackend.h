@@ -26,6 +26,7 @@ typedef struct {
   UINT64 Handle;
   UINT8 Request[FKM_REQUEST_LIMIT];
   UINTN RequestBytes;
+  UINT32 Fault; // non-secret rejection category only, never buffer bytes
 } FKM_CONTEXT;
 
 // New zeroed, exclusively owned CPU context and an independently allocated,

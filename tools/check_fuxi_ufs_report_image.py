@@ -59,6 +59,13 @@ def main():
         extra += ("m3-date-tests.json",)
     if candidate.get("m3_smci_setver"):
         extra += ("m3-setversion-tests.json",)
+    if candidate.get("m3_recover_key"):
+        extra += ("recovery-binding-tests.json", "recovery-entry-tests.json", "secret-exchange-tests.json", "keymint-backend-tests.json")
+        from m3_recovery_binding import load_binding
+        assert load_binding(out/"recovery-binding.json") == candidate["m3_recovery_binding"]
+        assert candidate["m3_recovery_output_discarded"] and not candidate["m3_smci_no_keys"]
+        assert candidate["m3_smci_version"] and candidate["m3_smci_resume"]
+        assert not candidate["m3_smci_setver"] and not candidate["m3_smci_date"] and not candidate["m3_metadata_key"]
     if candidate.get("m3_smc_context"):
         extra += ("m3-context-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
@@ -137,7 +144,8 @@ def main():
             assert marker.encode("utf-16-le") in ufs, marker
     if candidate.get("m3_smci_root") and not candidate.get("m3_smc_context"):
         assert candidate["m3_bridge_call"] and candidate["m3_scm_invoke"] and park
-        assert candidate["m3_bridge_bytes"] == (0x82000 if candidate.get("m3_bridge_large") else 8192) and candidate["m3_smci_no_keys"]
+        assert candidate["m3_bridge_bytes"] == (0x82000 if candidate.get("m3_bridge_large") else 8192)
+        assert candidate["m3_smci_no_keys"] == (not candidate.get("m3_recover_key", False))
         if candidate.get("m3_bridge_large"):
             assert candidate["lun4_keymaster"] and candidate["m3_bridge_hlos"]
         assert not candidate["m3_bridge_blob"] and not candidate["m3_metadata_key"]
@@ -145,6 +153,8 @@ def main():
         assert candidate["m3_smci_fnid"] == ("72000602" if candidate["m3_smci_mode"] == "object" else "72000600")
         assert candidate["m3_smci_arginfo"] == "224"
         expected_ops = ["root-register-null", "open-loader-uid122", "lookup-keymaster64", "lookup-keymaster", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_lookup") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "set-version-200", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_setver") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "date-support", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_date") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_version") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_load") else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if candidate.get("m3_smci_loader") else ["root-register-null", "remote-release"]
+        if candidate.get("m3_recover_key"):
+            expected_ops=["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "recover-existing-key", "wipe-recovered-key", "ta-release", "loader-release", "environment-release"]
         assert candidate["m3_smci_ops"] == expected_ops
         if candidate.get("m3_smci_loader"):
             assert candidate["m3_bridge_hlos"] and candidate["m3_smci_mode"] == "object"
@@ -163,7 +173,8 @@ def main():
         if candidate.get("m3_smci_load"):
             assert candidate.get("m3_smci_loader") and candidate["m3_bridge_hlos"] and candidate["m3_bridge_large"]
             assert candidate["m3_smci_ta_bytes"] == 0x63058
-            for marker in ("FUXIM3 BATCH plan=root/open122/load64/ta-release/release-loader/release-env/delete; gated, no retry",
+            plan=("FUXIM3 BATCH plan=root/open122/load64/version/recover/wipe/release/delete; no persistence" if candidate.get("m3_recover_key") else "FUXIM3 BATCH plan=root/open122/load64/ta-release/release-loader/release-env/delete; gated, no retry")
+            for marker in (plan,
                            "FUXIM3 SMCI loader-load elf=%x name=%x bo=%x msg=%x; no key, no decrypt",
                            "FUXIM3 SMCI loader-app=%x; no command, no key",
                            ("FUXIM3 BATCH loader-load=Success app=%x; continue get-version" if candidate.get("m3_smci_version") else "FUXIM3 BATCH loader-load=Success app=%x; continue app-release"),
@@ -227,11 +238,19 @@ def main():
                        "FUXIM3 SMCI bridge-delete return a0=%lx a1=%lx a2=%lx a3=%lx",
                        "FUXIM3 SMCI retained bridge=%lx object=%x; unknown/error state, no retry"):
             assert marker.encode("utf-16-le") in ufs, marker
-        result_marker = ("FUXIM3 SMCI result=%r retained=%u; one load, no key, no decrypt"
+        result_marker = ("FUXIM3 SMCI result=%r retained=%u; existing-key recovery diagnostic only" if candidate.get("m3_recover_key") else
+                         "FUXIM3 SMCI result=%r retained=%u; one load, no key, no decrypt"
                          if candidate.get("m3_smci_load") else
                          "FUXIM3 SMCI result=%r retained=%u; no TA, no key, no decrypt")
         assert result_marker.encode("utf-16-le") in ufs, result_marker
         assert "FUXIM3 BLOB prefix32=%s".encode("utf-16-le") not in ufs
+        if candidate.get("m3_recover_key"):
+            for marker in ("FUXIM3 RECOVERY prepared=%r binding=%08x; no material output",
+                           "FUXIM3 RECOVERY begin: decrypt existing key; no configure or persistence",
+                           "FUXIM3 RECOVERY result=%r state=%u stage=%u km=%d bytes=%u retained=%u",
+                           "FUXIM3 RECOVERY fault=%u exchange=%u commands=%u resumes=%u",
+                           "FUXIM3 RECOVERY END: result=%r attempted=%u retained=%u; userdata decrypt not tested"):
+                assert marker.encode("utf-16-le") in ufs, marker
     if candidate.get("m3_smc_context"):
         assert candidate["m3_smci_root"] and park and candidate["m3_scm_info"]
         assert candidate["m3_smci_ops"] == ["standard-info-control"] and candidate["m3_bridge_ops"] == []

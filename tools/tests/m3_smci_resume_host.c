@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: BSD-2-Clause-Patent
 // Production gated C2/C3 load stage; monitor is simulated, never a real SMC.
+#define _GNU_SOURCE
 #define _POSIX_C_SOURCE 200112L
+#ifndef TEST_RECOVERY_ENTRY
+#define TEST_RECOVERY_ENTRY 0
+#endif
+#if TEST_RECOVERY_ENTRY
+#define FUXI_M3_KEY_RECOVERY 1
+#define FUXI_M3_BINDING_NONE 1
+#define FUXI_M3_BINDING_TAG 0xf2e5a8b4U
+#endif
 #define FUXI_M3_BRIDGE_LARGE 1
 #define TEST_PAGES 130
 #define TEST_BYTES (TEST_PAGES * 4096)
@@ -19,6 +28,12 @@
 #define FUXI_M3_BRIDGE_BLOB 0
 #include "DataReadOnly.h"
 #include "UfsReport.h"
+#if TEST_RECOVERY_ENTRY
+#include "M3KeyRecoveryF2fs.h"
+#include "M3SecretExchange.h"
+#include <Library/CacheMaintenanceLib.h>
+#include <sys/mman.h>
+#endif
 #include <Library/ArmSmcLib.h>
 #include <assert.h>
 #include <stdio.h>
@@ -34,13 +49,19 @@ static FNU_REPORT Report;
 static void *ZeroMem(void *p,UINTN n){return memset(p,0,n);}
 static void *CopyMem(void *d,const void *s,UINTN n){return memcpy(d,s,n);}
 static void FnuLog(CONST CHAR16 *f,...){++LogCalls;FnuReportAppend(&Report,f);}
-static void FnuCacheCiv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && (n==8192 || n==TEST_BYTES));}
-static void FnuCacheInv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && (n==8192 || n==TEST_BYTES));}
+static void FnuCacheCiv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && (n==8192 || n==TEST_BYTES || n==0x16000));}
+static void FnuCacheInv(void *ops,void *p,UINTN n){(void)ops;assert(p==Page && (n==8192 || n==TEST_BYTES || n==0x16000));}
 static EFI_STATUS AllocatePages(int t,int m,UINTN n,EFI_PHYSICAL_ADDRESS *p){
  (void)t;(void)m;
  if(Phase==99)return EFI_OUT_OF_RESOURCES;
  assert(n==TEST_PAGES && !Page);
- assert(posix_memalign((void **)&Page,4096,TEST_BYTES)==0);*p=(UINTN)Page;return EFI_SUCCESS;
+ #if TEST_RECOVERY_ENTRY
+ Page=mmap((void*)0x20000000,TEST_BYTES,PROT_READ|PROT_WRITE,MAP_ANON|MAP_PRIVATE,-1,0);
+ assert(Page!=MAP_FAILED && (UINTN)Page+TEST_BYTES<=0x100000000ULL);
+#else
+ assert(posix_memalign((void **)&Page,4096,TEST_BYTES)==0);
+#endif
+ *p=(UINTN)Page;return EFI_SUCCESS;
 }
 static EFI_STATUS FreePages(EFI_PHYSICAL_ADDRESS raw,UINTN n){
  if (n==TA_PAGES) {
@@ -52,7 +73,12 @@ static EFI_STATUS FreePages(EFI_PHYSICAL_ADDRESS raw,UINTN n){
  assert(n==TEST_PAGES && (UINTN)Page==raw);
  for(UINTN i=0;i<TEST_BYTES;++i)assert(!Page[i]);
  ++Frees;
- free(Page);Page=NULL;return EFI_SUCCESS;
+ #if TEST_RECOVERY_ENTRY
+ munmap(Page,TEST_BYTES);
+#else
+ free(Page);
+#endif
+ Page=NULL;return EFI_SUCCESS;
 }
 static struct {EFI_STATUS (*AllocatePages)(int,int,UINTN,EFI_PHYSICAL_ADDRESS *);
  EFI_STATUS (*FreePages)(EFI_PHYSICAL_ADDRESS,UINTN);} Boot={AllocatePages,FreePages},*gBS=&Boot;
@@ -61,7 +87,13 @@ static UINT32 Loader(void){return Special==2?0x44:0x88;}
 static UINT32 App(void){return 0xa0;}
 static UINT64 Bridge(void){return Special==1?0x123456780000005cULL:0x5c;}
 static UINT8 *OutPage(void){return Page+0x64000;}
+#if TEST_RECOVERY_ENTRY
+#include "m3_recovery_entry_fixture.inc"
+#endif
 VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
+#if TEST_RECOVERY_ENTRY
+ if(Page && *(UINT32*)(Page+4)==0 && *(UINT32*)(Page+8)==0x424 && SecretMonitor(a))return;
+#endif
  if(ResumePending){
    assert(a->Arg0==1 && a->Arg1==0x224 && a->Arg2==(UINTN)Page && a->Arg3==4096);
    assert(a->Arg4==(UINTN)(Page+4096) && a->Arg5==4096 && a->Arg6==(UINTN)(0x1234+ResumeCalls) && a->Arg7==0);
@@ -126,7 +158,12 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  if(Calls==3)Put(Page+20,0x44);
  if(Calls==4)Put(Page+20,Loader());
  if(Calls==5){Put(Page+36,App());Put(Page+32,8);}
- if(Calls==6){Put(Page+56,20);Put(Page+0xa07c,1);Put(Page+0xa080,2);Put(Page+0xa084,3);Put(Page+0xa088,4);
+ if(Calls==6){Put(Page+56,20);
+#if TEST_RECOVERY_ENTRY
+   Put(Page+0xa07c,4);Put(Page+0xa080,1);Put(Page+0xa084,4);Put(Page+0xa088,Scenario==10?1013:1012);
+#else
+   Put(Page+0xa07c,1);Put(Page+0xa080,2);Put(Page+0xa084,3);Put(Page+0xa088,4);
+#endif
    Put(Page+0x15000,0x00010002);Put(Page+0x15004,0x0000fffd);}
  // The device returned a non-empty out page: version/op only, counts zero.
  if(Calls>=3&&Calls<=5){UINT8 *o=(Calls==5)?OutPage():Page+4096;Put(o,0x00010002);Put(o+4,0x0000fffd);}
@@ -163,6 +200,9 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  }
 }
 #include "M3BridgeDiagnostic.inc"
+#if TEST_RECOVERY_ENTRY
+#include "M3RecoveryDiagnostic.inc"
+#endif
 #include "M3SmciDiagnostic.inc"
 static void SetupTa(void){
  assert(posix_memalign((void **)&TaBuf,4096,TA_ALLOC)==0);
@@ -170,6 +210,7 @@ static void SetupTa(void){
  memcpy(TaBuf,"\177ELF\002\001",6);
  mTaImage=TaBuf;mTaImageBytes=TA_BYTES;mTaImagePages=TA_PAGES;
 }
+#if !TEST_RECOVERY_ENTRY
 static int Vectors,MaxLogCalls;
 static void Run(int phase,int fault){
  Phase=phase;Fault=fault;Special=0;Calls=Frees=TaFrees=LogCalls=0;assert(!Page);assert(!TaBuf);
@@ -233,3 +274,7 @@ int main(void){
  printf("PASS %d SCM continuation vectors; max batch logs=%d; simulated monitor only\n",Vectors,MaxLogCalls);
  return 0;
 }
+
+#else
+#include "m3_recovery_entry_cases.inc"
+#endif
