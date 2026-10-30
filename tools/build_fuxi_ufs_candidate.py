@@ -38,6 +38,7 @@ def main():
                         help="explicit root invoke entry; no runtime fallback")
     parser.add_argument("--m3-smci-loader", action="store_true", help="gated root/open UID122/release batch; no TA or keys")
     parser.add_argument("--m3-smci-lookup", action="store_true", help="loader lookup of keymaster64/keymaster only; no load or keys")
+    parser.add_argument("--m3-smci-lookup-arch", action="store_true", help="matched TZ 1011/BO4 lookup of keymaster64 only; no fallback, load or TA command")
     parser.add_argument("--m3-smci-load", action="store_true",
                         help="one loadFromBuffer of the keymaster_a extent, then release; no command or key")
     parser.add_argument("--m3-smci-version", action="store_true", help="one KeyMint getVersion after load; no key or decrypt")
@@ -117,6 +118,12 @@ def main():
         parser.error("large bridge requires LUN4, HLOS bridge and INFO, no blob")
     if args.m3_smci_lookup and not args.m3_smci_loader:
         parser.error("lookup batch requires --m3-smci-loader")
+    lookup_binding=None
+    if args.m3_smci_lookup_arch:
+        if not args.m3_smci_lookup or args.m3_smci_load or args.m3_recover_key:
+            parser.error('deployed lookup requires lookup-only; no load or recovery')
+        from m3_lookup_arch_binding import load_binding
+        lookup_binding=load_binding()
     if args.m3_smci_load and (not args.m3_smci_loader or args.m3_smci_lookup or not args.m3_bridge_large or not args.lun4_keymaster):
         parser.error("load stage requires the large LUN4 loader batch and no lookup")
     if args.m3_smci_version and not args.m3_smci_load:
@@ -215,6 +222,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_OBJECT"] = str(int(args.m3_smci_mode == "object"))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_LOADER"] = str(int(args.m3_smci_loader))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_LOOKUP"] = str(int(args.m3_smci_lookup))
+    ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_LOOKUP_ARCH"] = str(int(args.m3_smci_lookup_arch))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_LOAD"] = str(int(args.m3_smci_load))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_VERSION"] = str(int(args.m3_smci_version))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_RESUME"] = str(int(args.m3_smci_resume))
@@ -276,6 +284,7 @@ def main():
                   m3_smc_context=args.m3_smc_context,
                   m3_smci_root=args.m3_smci_root, m3_smci_loader=args.m3_smci_loader,
                   m3_smci_lookup=args.m3_smci_lookup, m3_smci_load=args.m3_smci_load,
+                  m3_smci_lookup_arch=args.m3_smci_lookup_arch,m3_lookup_arch_binding=lookup_binding,
                   m3_smci_version=args.m3_smci_version, m3_smci_resume=args.m3_smci_resume, m3_smci_setver=args.m3_smci_setver, m3_smci_date=args.m3_smci_date,
                   m3_recover_key=args.m3_recover_key, m3_recovery_binding=recovery_binding,
                   m3_configure_recovery=args.m3_configure_recovery,m3_configure_binding=configure_binding,
@@ -316,6 +325,8 @@ def main():
                   hardware_result="pending", kernel_handoff=False, receiver_only=not args.m2_metadata_files, diagnostic_only=args.m2_metadata_files,
                   partition_io=False, raw_partition_reads=not args.without_ufs,
                   partition_writes=False, system_handoff=False)
+    if args.m3_smci_lookup_arch:
+        report['m3_smci_ops']=['root-register-null','open-loader-uid122','lookup-keymaster64-arch','ta-release','loader-release','environment-release']
     if args.m3_recover_key:
         report['m3_smci_ops']=['root-register-null','open-loader-uid122','loadfrombuffer-keymaster64','get-version','recover-existing-key','wipe-recovered-key','ta-release','loader-release','environment-release']
         if args.m3_configure_recovery:report['m3_smci_ops'].insert(4,'configure-public-once')
@@ -362,6 +373,11 @@ def write_sources(uefi, out):
         *sorted((uefi / "tools").glob("test_fuxi_f2fs*.py")),
         Path(__file__),
         uefi / "tools/m3_recovery_binding.py",
+        uefi / "tools/m3_lookup_arch_binding.py",
+        uefi / "tools/test_fuxi_m3_lookup_arch.py",
+        uefi / "tools/tests/m3_lookup_arch_host.c",
+        uefi / "tools/audit_fuxi_m3_lookup_arch_contract.py",
+        uefi / "docs/evidence/fuxi-m3-deployed-loader-20261030.json",
         uefi / "tools/m3_configure_binding.py",
         uefi / "tools/test_m3_configure_binding.py",
         uefi / "tools/check_fuxi_m3_configure_pair.py",

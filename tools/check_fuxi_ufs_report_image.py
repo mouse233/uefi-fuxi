@@ -49,6 +49,16 @@ def main():
         extra += ("m3-loader-tests.json", "m3-loader-contract-tests.json")
     if candidate.get("m3_smci_lookup"):
         extra += ("m3-lookup-tests.json", "m3-lookup-contract-tests.json")
+    if candidate.get('m3_smci_lookup_arch'):
+        extra += ('m3-lookup-arch-tests.json',)
+        from m3_lookup_arch_binding import load_binding
+        assert candidate['m3_lookup_arch_binding']==load_binding()
+        assert candidate['m3_smci_lookup'] and candidate['m3_smci_no_keys']
+        assert not any(candidate.get(flag) for flag in (
+            'm3_smci_load','m3_smci_version','m3_smci_date','m3_smci_setver',
+            'm3_recover_key','m3_configure_recovery','m3_characteristics_probe','m3_smci_resume'))
+        board=json.loads((out/'board-effective.json').read_text())
+        assert board['firmware']['defines']['FUXI_M3_SMCI_LOOKUP_ARCH']=='1'
     if candidate.get("m3_smci_load"):
         extra += ("m3-load-tests.json",)
     if candidate.get("m3_smci_version"):
@@ -172,6 +182,8 @@ def main():
         assert candidate["m3_smci_fnid"] == ("72000602" if candidate["m3_smci_mode"] == "object" else "72000600")
         assert candidate["m3_smci_arginfo"] == "224"
         expected_ops = ["root-register-null", "open-loader-uid122", "lookup-keymaster64", "lookup-keymaster", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_lookup") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "set-version-200", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_setver") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "date-support", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_date") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_version") else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "ta-release", "loader-release", "environment-release"] if candidate.get("m3_smci_load") else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if candidate.get("m3_smci_loader") else ["root-register-null", "remote-release"]
+        if candidate.get('m3_smci_lookup_arch'):
+            expected_ops=['root-register-null','open-loader-uid122','lookup-keymaster64-arch','ta-release','loader-release','environment-release']
         if candidate.get("m3_recover_key"):
             expected_ops=["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "recover-existing-key", "wipe-recovered-key", "ta-release", "loader-release", "environment-release"]
             if candidate.get('m3_configure_recovery'):expected_ops.insert(4,'configure-public-once')
@@ -231,17 +243,31 @@ def main():
             assert load["result"]=="passed" and load["vectors"]>=10
         if candidate.get("m3_smci_lookup"):
             assert candidate.get("m3_smci_loader") and candidate["m3_bridge_hlos"]
-            for marker in ("FUXIM3 BATCH plan=root/open122/lookup64/lookup/ta-release/release-loader/release-env/delete; gated, no retry",
+            lookup_markers=("FUXIM3 BATCH plan=root/open122/lookup64/lookup/ta-release/release-loader/release-env/delete; gated, no retry",
                            "FUXIM3 SMCI %a BI offset=32 bytes=%u name=%a; lookup only, no load",
-                           "FUXIM3 SMCI lookup-object=%x; %a only",
-                           "FUXIM3 BATCH lookup=Success handle=%x",
+                           "FUXIM3 SMCI lookup-object=%x; %a only")
+            if candidate.get('m3_smci_lookup_arch'):
+                lookup_markers=("FUXIM3 BATCH plan=root/open122/lookup64-arch/ta-release/release-loader/release-env/delete; no fallback",
+                                "FUXIM3 SMCI lookup-arch count=1011 BI=40/11 BO=56/4 OO=28; no load",
+                                "FUXIM3 SMCI lookup-object=%x arch=%u; keymaster64 only")
+            for marker in lookup_markers+("FUXIM3 BATCH lookup=Success handle=%x",
                            "FUXIM3 BATCH ta-release=Success handle=%x",
                            "FUXIM3 BATCH stop=%a passed=%x env=%x loader=%x ta=%x retained=%u"):
                 assert marker.encode("utf-16-le") in ufs,marker
             test=json.loads((out/"m3-lookup-tests.json").read_text())
             assert test["result"]=="passed" and test["vectors"]>=11
             contract=json.loads((out/"m3-lookup-contract-tests.json").read_text())
-            assert contract["operation"]==2 and contract["counts"]=="1001" and contract["payload_offset"]==32
+            if candidate.get('m3_smci_lookup_arch'):
+                assert all(contract[k]==v for k,v in candidate['m3_lookup_arch_binding'].items())
+                assert contract['wire_compile_assertions']==5
+                test=json.loads((out/'m3-lookup-arch-tests.json').read_text())
+                assert test['vectors']==38 and test['production_lifecycle'] and test['report_cache_exercised']
+                assert test['sanitizers']==['address','undefined']
+                for forbidden in ('FUXIM3 SMCI loader-load elf=', 'FUXIM3 CONFIGURE begin once:',
+                                  'FUXIM3 SMCI version bytes=', 'FUXIM3 SMCI set-version status='):
+                    assert forbidden.encode('utf-16-le') not in ufs,forbidden
+            else:
+                assert contract["operation"]==2 and contract["counts"]=="1001" and contract["payload_offset"]==32
         if candidate.get("m3_bridge_hlos"):
             assert candidate["m3_smci_mode"] == "object"
             assert candidate["m3_bridge_abi"] == "standard64-a0-status-a1-service-a2-handle64"

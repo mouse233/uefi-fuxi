@@ -43,6 +43,37 @@ STATIC UINT32 SmciCallWithResume(CONST UINT64 Regs[8], ARM_SMC_ARGS *Out) {
   return Count;
 }
 #endif
+#if FUXI_M3_SMCI_LOOKUP_ARCH
+// Current slot-A TZ: BI1/BO1/OO1, architecture BO is exactly four bytes.
+// All unrecognized replies retain the bridge/objects; no fallback or TA call.
+STATIC EFI_STATUS SmciLookupArchReply(UINT8 *Page,UINT32 Object,UINT64 Status,UINT32 *Returned) {
+  CONST CHAR8 *Name="keymaster64";UINTN I;UINT32 Handle,Arch;
+  if(SmciU32(Page)!=Object || SmciU32(Page+4)!=2 || SmciU32(Page+8)!=0x1011 ||
+     SmciU32(Page+12)!=40 || SmciU32(Page+16)!=11 ||
+     SmciU32(Page+20)!=56 || SmciU32(Page+24)!=4)return EFI_COMPROMISED_DATA;
+  if(!((SmciU32(Page+4096)==0 && SmciU32(Page+4100)==0) ||
+       (SmciU32(Page+4096)==0x10002 &&
+        (SmciU32(Page+4100)==0xfffd || SmciU32(Page+4100)==0xffff))) ||
+     !SmciZero(Page+4104,4088))return EFI_COMPROMISED_DATA;
+  for(I=28;I<4096;++I) {
+    if((I>=28 && I<32) || (I>=56 && I<60))continue;
+    if(I>=40 && I<51) { if(Page[I]!=(UINT8)Name[I-40])return EFI_COMPROMISED_DATA; }
+    else if(Page[I])return EFI_COMPROMISED_DATA;
+  }
+  Handle=SmciU32(Page+28);Arch=SmciU32(Page+56);
+  if(Status) {
+    // A clean object error owns no returned capability. This does not mean
+    // that the TA is absent; report the raw result and perform cleanup only.
+    if(Handle || Arch)return EFI_COMPROMISED_DATA;
+    FnuLog(L"FUXIM3 SMCI lookup-arch status=%lx no-object; cleanup only",Status);
+    return EFI_NOT_FOUND;
+  }
+  if(Handle<=1 || (Handle&0x80000000U) || (Arch!=1 && Arch!=2))return EFI_COMPROMISED_DATA;
+  *Returned=Handle;
+  FnuLog(L"FUXIM3 SMCI lookup-object=%x arch=%u; keymaster64 only",Handle,Arch);
+  return EFI_SUCCESS;
+}
+#endif
 STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object,
                               UINT32 Kind, UINT32 *Returned) {
   UINT64 Regs[8]; ARM_SMC_ARGS Out;
@@ -85,6 +116,10 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
   if (Name) {
     while (Name[NameLen]) ++NameLen;
     Lookup=TRUE;Op=2;Counts=0x1001;
+#if FUXI_M3_SMCI_LOOKUP_ARCH
+    if(Kind!=3)return EFI_INVALID_PARAMETER;
+    Counts=0x1011;
+#endif
     Stage=(Kind==3) ? "lookup-keymaster64" : "lookup-keymaster";
   }
 #endif
@@ -101,12 +136,19 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
 #endif
 #if FUXI_M3_SMCI_LOOKUP
   if (Lookup) {
+#if FUXI_M3_SMCI_LOOKUP_ARCH
+    SmciPut32(Page+12,40);SmciPut32(Page+16,11);
+    SmciPut32(Page+20,56);SmciPut32(Page+24,4);
+    for(I=0;I<11;++I)Page[40+I]=(UINT8)Name[I];
+    FnuLog(L"FUXIM3 SMCI lookup-arch count=1011 BI=40/11 BO=56/4 OO=28; no load");
+#else
     // IQSEEComCompatAppLoader_lookupTA(handle, name): BI1/OO1 at op2. The BI
     // descriptor sits at +12 and the ASCII name at +32 (12 + 16 aligned to 8).
     // Name is bounded to < 64 bytes and carries no path separator.
     SmciPut32(Page+12,32);SmciPut32(Page+16,(UINT32)NameLen);
     for (I=0; I<NameLen; ++I) Page[32+I]=(UINT8)Name[I];
     FnuLog(L"FUXIM3 SMCI %a BI offset=32 bytes=%u name=%a; lookup only, no load", Stage, (UINT32)NameLen, Name);
+#endif
   }
 #endif
 #if FUXI_M3_SMCI_LOAD
@@ -237,6 +279,14 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
            SmciU32(Page+OutOff), SmciU32(Page+OutOff+4), SmciNonZero(Page+OutOff,4096));
   else
 #endif
+#if FUXI_M3_SMCI_LOOKUP_ARCH
+  if (Lookup)
+    FnuLog(L"FUXIM3 SMCI lookup-arch reply BI=%x/%x BO=%x/%x OO=%x/%x arch=%x out=%x/%x nz=%u",
+           SmciU32(Page+12),SmciU32(Page+16),SmciU32(Page+20),SmciU32(Page+24),
+           SmciU32(Page+28),SmciU32(Page+32),SmciU32(Page+56),
+           SmciU32(Page+OutOff),SmciU32(Page+OutOff+4),SmciNonZero(Page+OutOff,4096));
+  else
+#endif
   FnuLog(L"FUXIM3 SMCI %a buffers hdr=%08x/%08x/%08x oi=%08x/%08x oo=%08x/%08x out=%08x/%08x/%08x/%08x nz=%u",
          Stage, SmciU32(Page), SmciU32(Page+4), SmciU32(Page+8),
          SmciU32(Page+12), SmciU32(Page+16), SmciU32(Page+20), SmciU32(Page+24),
@@ -363,6 +413,9 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
     return EFI_SUCCESS;
   }
 #endif
+#if FUXI_M3_SMCI_LOOKUP_ARCH
+  if(Lookup)return SmciLookupArchReply(Page,Object,(UINT64)Out.Arg2,Returned);
+#endif
   // The out page is not part of the object result. The pinned reference reads
   // it only as a piggyback message (version/op at +0/+4, loop count at +8) and
   // never requires it to be zero; a tzcb_req reading would carry its count at
@@ -441,7 +494,11 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   mSmciStatus=EFI_NOT_READY;
 #if FUXI_M3_SMCI_LOOKUP
   FNU_STAGE("m3-smci-lookup");
+#if FUXI_M3_SMCI_LOOKUP_ARCH
+  FnuLog(L"FUXIM3 BATCH plan=root/open122/lookup64-arch/ta-release/release-loader/release-env/delete; no fallback");
+#else
   FnuLog(L"FUXIM3 BATCH plan=root/open122/lookup64/lookup/ta-release/release-loader/release-env/delete; gated, no retry");
+#endif
 #elif FUXI_M3_SMCI_LOAD
   FNU_STAGE("m3-smci-load");
 #if FUXI_M3_KEY_RECOVERY
@@ -523,16 +580,27 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   FnuLog(L"FUXIM3 BATCH loader-open=Success; continue lookup");
   Step="lookup-keymaster64";
   mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Loader,3,&Ta);
+#if !FUXI_M3_SMCI_LOOKUP_ARCH
   if (mSmciStatus==EFI_NOT_FOUND) {
     FnuLog(L"FUXIM3 BATCH lookup=keymaster64 result=Not Found; try keymaster");
     Step="lookup-keymaster";
     mSmciStatus=SmciInvoke((UINT64)Raw,Page,Bytes,Loader,4,&Ta);
   }
+#endif
   if (mSmciStatus==EFI_NOT_FOUND) {
+#if FUXI_M3_SMCI_LOOKUP_ARCH
+    FnuLog(L"FUXIM3 BATCH lookup-arch=no object returned; cleanup only");
+#else
     FnuLog(L"FUXIM3 BATCH lookup=keymaster result=Not Found; cleanup only");
+#endif
     mSmciStatus=EFI_SUCCESS;
   } else if (EFI_ERROR(mSmciStatus)) goto Done;
   else {
+#if FUXI_M3_SMCI_LOOKUP_ARCH
+    // This finite probe requires a distinct returned capability. Ambiguous
+    // alias ownership must not trigger two releases of a live handle.
+    if(Ta==Object || Ta==Loader) { mSmciStatus=EFI_COMPROMISED_DATA;goto Done; }
+#endif
     LookupStatus=EFI_SUCCESS;Passed|=0x100;
     FnuLog(L"FUXIM3 BATCH lookup=Success handle=%x",Ta);
   }

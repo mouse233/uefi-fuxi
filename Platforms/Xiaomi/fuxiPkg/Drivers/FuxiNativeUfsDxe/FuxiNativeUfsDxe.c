@@ -131,6 +131,12 @@
 #ifndef FUXI_M3_SMCI_LOOKUP
 #define FUXI_M3_SMCI_LOOKUP 0
 #endif
+#ifndef FUXI_M3_SMCI_LOOKUP_ARCH
+#define FUXI_M3_SMCI_LOOKUP_ARCH 0
+#endif
+#if FUXI_M3_SMCI_LOOKUP_ARCH && !FUXI_M3_SMCI_LOOKUP
+#error Deployed lookup ABI requires the explicit lookup-only diagnostic
+#endif
 #if FUXI_M3_SMCI_LOOKUP && (!FUXI_M3_SMCI_LOADER || !FUXI_M3_SMCI_ROOT || !FUXI_M3_SMCI_OBJECT || !FUXI_M3_BRIDGE_HLOS || FUXI_M3_SMC_CONTEXT)
 #error Lookup batch requires the HLOS loader batch and no context probe
 #endif
