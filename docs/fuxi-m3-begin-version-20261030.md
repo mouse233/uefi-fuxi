@@ -136,3 +136,11 @@ PYTHONDONTWRITEBYTECODE=1 python3 tools/collect_fuxi_m3_blob_public.py \
 同一次UEFI启动内仅公开字段的对照；在此之前不靠替换日期、补发208/setVersion、
 升级或清除隔离来尝试过门。本轮不生成新启动候选。认证、真实密钥恢复、ICE/DUN、
 userdata明文、M3/M4/M5与免USB重传均未通过。
+
+## 后续boot/索引核验
+
+[boot/client离线核验](fuxi-m3-boot-client-20261030.md)确认5a308的RELATIVE重定位
+指向RX常量4c544=0，给此前client0模型补上默认映像依据。GetVersion与configure
+不写boot；但加载路径中的三个外部SDK初始化尚未覆盖，因此boot0仍不能升级为
+实机事实。208转换片段可产生202610/20261005并先写状态再继续调用，未发送该命令。
+用户本轮选择仅离线，实际初始化/返回PC和M3通过结论均未取得。

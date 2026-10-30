@@ -1,0 +1,325 @@
+{
+  "result": "passed",
+  "partition_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+  "deviceutils_sha256": "1c2172c492cbe8d1c4dc990c8d0fd8deed036d8bf9c0e337139d66f0caa3d7d2",
+  "evidence": {
+    "selector-getters": {
+      "start": "0xb808",
+      "end": "0xb960",
+      "sha256": "128d460596a34d7e38b5533be6cc1d93e213f9db6cceec12befcf9e9b8cb2fdf"
+    },
+    "app-init": {
+      "start": "0xb490",
+      "end": "0xb4b8",
+      "sha256": "c30b2ea9cecf64b0a166b8ebae68e8392f79152af6b3951fcad0fd77651a363a"
+    },
+    "boot-handler": {
+      "start": "0xbb7c",
+      "end": "0xbedc",
+      "sha256": "14aeaeb57385a41a4d59a3c7a86d951ec36b2d7ee33cac9dae93a68946651335"
+    },
+    "elf-load-entry": {
+      "start": "0x44034",
+      "end": "0x44314",
+      "sha256": "c9bab3014a4b1344181b916bfa0b3d4ee01c1fd01bfbc1fd1e0030c774e7387f"
+    },
+    "get-version": {
+      "start": "0xddf4",
+      "end": "0xdef0",
+      "sha256": "9591443eae07f4095fcee1249faa4c1bd864210b377515d9528fa0bbe97bb74d"
+    },
+    "deviceutils-constructor": {
+      "start": "0x61c8",
+      "end": "0x6400",
+      "sha256": "2361918b3a1ff3bc9d76078371cf19ddcb8328368f608c3453c46835b53ccc24"
+    },
+    "deviceutils-initialize": {
+      "start": "0x66c0",
+      "end": "0x66cc",
+      "sha256": "eeca0dba06eb11029bbee70d8643afe5f899ba55d98e44a4f5bb02dde998d31c"
+    }
+  },
+  "command_table": {
+    "0x200": "0xddf4 version query",
+    "0x208": "0xbb7c boot context handler; not sent",
+    "0x3121": "absent",
+    "0xc8": "absent"
+  },
+  "boundary_controls": [
+    "smc",
+    "bounded-loop",
+    "modified-TA"
+  ],
+  "selector": {
+    "got": "0x5a308",
+    "relocation": "R_AARCH64_RELATIVE",
+    "target": "0x4c544",
+    "initial_value": 0,
+    "target_segment": "R E",
+    "write_protection_control": true
+  },
+  "relocation_types": {
+    "1027": 273,
+    "257": 4,
+    "1025": 1
+  },
+  "constructor_array": {
+    "begin": "0x5ab70",
+    "end": "0x5ab70",
+    "empty": true
+  },
+  "unresolved_initialization_imports": {
+    "0x5a2c0": "cmnlib_init",
+    "0x5a2c8": "GPAppLib_init",
+    "0x5a2d0": "GPAppLib_appInit"
+  },
+  "public_configure_controls": [
+    {
+      "patch": 20261005,
+      "selector": 0,
+      "b490_flag_after": 1,
+      "b490_entry_completed": true,
+      "configure_status": 0,
+      "effective_getters": [
+        170000,
+        202610,
+        20261005,
+        0
+      ],
+      "writes": [
+        {
+          "va": "0x5b4ec",
+          "bytes": 1
+        },
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ed",
+          "bytes": 1
+        }
+      ],
+      "scope": "Relocated fixed image + b490 init + public configure. SDK initializers not run; boot0 remains a model value."
+    },
+    {
+      "patch": 20991231,
+      "selector": 0,
+      "b490_flag_after": 1,
+      "b490_entry_completed": true,
+      "configure_status": 0,
+      "effective_getters": [
+        170000,
+        209912,
+        20991231,
+        0
+      ],
+      "writes": [
+        {
+          "va": "0x5b4ec",
+          "bytes": 1
+        },
+        {
+          "va": "0x5b4f0",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4f8",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4fc",
+          "bytes": 4
+        },
+        {
+          "va": "0x5b4ed",
+          "bytes": 1
+        }
+      ],
+      "scope": "Relocated fixed image + b490 init + public configure. SDK initializers not run; boot0 remains a model value."
+    }
+  ],
+  "get_version_controls": [
+    {
+      "capacity": 19,
+      "status": -29,
+      "public_version_fields": [],
+      "selector_after": 0,
+      "boot_after": 0
+    },
+    {
+      "capacity": 20,
+      "status": 0,
+      "public_version_fields": [
+        4,
+        1,
+        4,
+        1012
+      ],
+      "selector_after": 0,
+      "boot_after": 0
+    },
+    {
+      "capacity": 64,
+      "status": 0,
+      "public_version_fields": [
+        4,
+        1,
+        4,
+        1012
+      ],
+      "selector_after": 0,
+      "boot_after": 0
+    }
+  ],
+  "boot_fragment_controls": [
+    {
+      "os_parts": [
+        17,
+        0,
+        0
+      ],
+      "year": 2026,
+      "month": 10,
+      "day": 0,
+      "normalized_os": 170000,
+      "normalized_boot_patch": 202610,
+      "stopped_before_completion_call": "0x404b4",
+      "boot_flag_already_written": true,
+      "scope": "Synthetic 48-byte post-parse record; bounded memcpy modeled. Input processing/authorization/SDK/completion not executed."
+    },
+    {
+      "os_parts": [
+        17,
+        0,
+        0
+      ],
+      "year": 2026,
+      "month": 10,
+      "day": 5,
+      "normalized_os": 170000,
+      "normalized_boot_patch": 20261005,
+      "stopped_before_completion_call": "0x404b4",
+      "boot_flag_already_written": true,
+      "scope": "Synthetic 48-byte post-parse record; bounded memcpy modeled. Input processing/authorization/SDK/completion not executed."
+    },
+    {
+      "os_parts": [
+        16,
+        1,
+        2
+      ],
+      "year": 2026,
+      "month": 10,
+      "day": 0,
+      "normalized_os": 160102,
+      "normalized_boot_patch": 202610,
+      "stopped_before_completion_call": "0x404b4",
+      "boot_flag_already_written": true,
+      "scope": "Synthetic 48-byte post-parse record; bounded memcpy modeled. Input processing/authorization/SDK/completion not executed."
+    },
+    {
+      "os_parts": [
+        17,
+        0,
+        0
+      ],
+      "year": 2000,
+      "month": 1,
+      "day": 0,
+      "normalized_os": 170000,
+      "normalized_boot_patch": 200001,
+      "stopped_before_completion_call": "0x404b4",
+      "boot_flag_already_written": true,
+      "scope": "Synthetic 48-byte post-parse record; bounded memcpy modeled. Input processing/authorization/SDK/completion not executed."
+    },
+    {
+      "os_parts": [
+        17,
+        0,
+        0
+      ],
+      "year": 2127,
+      "month": 12,
+      "day": 31,
+      "normalized_os": 170000,
+      "normalized_boot_patch": 21271231,
+      "stopped_before_completion_call": "0x404b4",
+      "boot_flag_already_written": true,
+      "scope": "Synthetic 48-byte post-parse record; bounded memcpy modeled. Input processing/authorization/SDK/completion not executed."
+    },
+    {
+      "os_parts": [
+        17,
+        0,
+        0
+      ],
+      "year": 2026,
+      "month": 0,
+      "day": 0,
+      "normalized_os": 170000,
+      "normalized_boot_patch": 202600,
+      "stopped_before_completion_call": "0x404b4",
+      "boot_flag_already_written": true,
+      "scope": "Synthetic 48-byte post-parse record; bounded memcpy modeled. Input processing/authorization/SDK/completion not executed."
+    },
+    {
+      "os_parts": [
+        17,
+        0,
+        0
+      ],
+      "year": 2026,
+      "month": 10,
+      "day": 0,
+      "normalized_os": 170000,
+      "normalized_boot_patch": 202610,
+      "stopped_before_completion_call": "0x404b4",
+      "boot_flag_already_written": true,
+      "scope": "Synthetic 48-byte post-parse record; bounded memcpy modeled. Input processing/authorization/SDK/completion not executed."
+    }
+  ],
+  "one_time_guard_controls": [
+    {
+      "already_set": 0,
+      "stopped_before": "0xbc00",
+      "scope": "Guard fragment only, after an unexecuted platform-state query."
+    },
+    {
+      "already_set": 1,
+      "stopped_before": "0xbbd0",
+      "scope": "Guard fragment only, after an unexecuted platform-state query."
+    }
+  ],
+  "twrp_reference": {
+    "qcom_init_sha256": "ea0049522493a2f2175d9f1c93a8ebaffea1f650da6ae4c9c54da041f2a10f1c",
+    "listeners_before_keymint": true,
+    "constructor_waits_for_listeners": true,
+    "loader": "keymaster64 then keymaster from /vendor/firmware_mnt/image",
+    "named_initialize": "0x66c0 returns immediately; no boot setup",
+    "boot_parameter_provider_proven": false
+  },
+  "limits": [
+    "Relocated image default selector is zero; actual secure loader protections/relocations were not read back.",
+    "cmnlib_init/GPAppLib_init/GPAppLib_appInit not executed or modeled as successful.",
+    "Image boot0 + b490/public configure do not establish real post-SDK runtime boot0.",
+    "Post-parse boot fragment is partial and may write ready state before completion; not an authorized command sender.",
+    "TWRP init ordering/library constructor is not a trace of boot parameter provenance.",
+    "No phone, real boot record/blob, KeyMint command, generation, upgrade, SMC or persistence."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_boot_client.py": "d65b43b1945cf9d61e139f9e2ad0908ef353e83e9fc74062dfef3f6ea5574a71",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb",
+    "tools/audit_fuxi_m3_begin_version.py": "09a4181f38a9200974073d2696d26e1bf1dd85e87019eb0b5b66165686281e34",
+    "tools/audit_fuxi_m3_configure_gate.py": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3"
+  }
+}
