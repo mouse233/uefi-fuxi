@@ -84,6 +84,8 @@ def main():
         commands.append(('recovery-entry', ['python3',str(root/'tools/test_fuxi_m3_recovery_entry.py'),'--edk2',str(edk2),'--report',str(out/'recovery-entry-tests.json')]))
         if candidate.get('m3_configure_recovery'):
             commands.append(('configured-recovery', ['python3',str(root/'tools/test_fuxi_m3_recovery_entry.py'),'--edk2',str(edk2),'--configured','--report',str(out/'configured-recovery-tests.json')]))
+        if candidate.get('m3_characteristics_probe'):
+            commands.append(('characteristics', ['python3',str(root/'tools/test_fuxi_m3_characteristics.py'),'--edk2',str(edk2),'--report',str(out/'characteristics-tests.json')]))
         commands.append(('secret-exchange', ['python3',str(root/'tools/test_fuxi_m3_secret_exchange.py'),'--edk2',str(edk2),'--report',str(out/'secret-exchange-tests.json')]))
         commands.append(('keymint-backend', ['python3',str(root/'tools/test_fuxi_m3_keymint_backend.py'),'--edk2',str(edk2),'--vendor-vectors',str(root/'out/m3-recovery-backend-v1/vendor-codec'),'--report',str(out/'keymint-backend-tests.json')]))
         commands.append(('live-objects', ['python3',str(root/'tools/check_fuxi_m3_live_objects.py'),'--output',str(out)]))

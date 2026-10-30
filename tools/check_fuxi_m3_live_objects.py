@@ -20,6 +20,7 @@ def main():
             count=len(re.findall(r'\bsmc\s',asm));assert count==int(query and name=='FuxiDataProbeDxe')
             rows.append(dict(mode=mode,module=name,sha256=h(f),smc=count))
             assert 'FUXIM3 CONFIGURE Success; continue existing-key recovery'.encode('utf-16-le') not in f.read_bytes()
+            assert 'FUXIM3 CHARACTERISTICS begin once: read-only blob version fields'.encode('utf-16-le') not in f.read_bytes()
         syms=subprocess.check_output([nm,str(base/'M3SecretExchange.obj')],text=True)
         assert not re.findall(r'\bU (\S+)$',syms,re.M)
     src=root/'Build/fuxiPkg/DEBUG_CLANGPDB/AARCH64/fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe/OUTPUT'
@@ -52,7 +53,15 @@ def main():
         body=re.search(r'mConfigureRequest\[\] = \{(.*?)\};',source,re.S).group(1)
         packet=bytes(int(s.strip(),0) for s in body.strip().split(','))
         assert packet[:4]==bytes.fromhex('16210000') and packet[4:]==bytes.fromhex(configure['configure_cbor_hex'])
+    assert defs['FUXI_M3_CHARACTERISTICS_PROBE']==str(int(candidate.get('m3_characteristics_probe',False)))
+    probe=None
+    if candidate.get('m3_characteristics_probe'):
+        assert candidate.get('m3_configure_recovery') and candidate['m3_smci_ops'][5]=='characteristics-probe'
+        backend=(root/'Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyMintBackend.c').read_text()
+        assert 'Put32(C->Request,0x2109)' in backend
+        assert 'Head(&W,5,1); BytesPair(&W,23,Blob,BlobBytes);' in backend
+        probe=dict(command='0x2109',request='map{23:blob}',sources={str(Path(__file__).relative_to(root)):h(Path(__file__))})
     image=out/'Mu-fuxi-ufs-m1.img';assert h(image)==json.loads((out/'candidate.json').read_text())['sha256']
-    report=dict(result='passed',image_sha256=h(image),modules=rows,objects=objects,native_object_sha256=h(nt),linked_map_sha256=h(mf),board_sha256=h(board),configure_binding=configure,sources={str(Path(__file__).relative_to(root)):h(Path(__file__))},scope='AARCH64 objects and linked map only. No live authentication proof.')
+    report=dict(result='passed',image_sha256=h(image),modules=rows,objects=objects,native_object_sha256=h(nt),linked_map_sha256=h(mf),board_sha256=h(board),configure_binding=configure,characteristics_probe=probe,sources={str(Path(__file__).relative_to(root)):h(Path(__file__))},scope='AARCH64 objects and linked map only. No live authentication proof.')
     (out/'live-object-checks.json').write_text(json.dumps(report,indent=2)+'\n');print('PASS live AARCH64 references, exchange imports and off-mode gates')
 if __name__=='__main__':main()

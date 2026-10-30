@@ -47,6 +47,8 @@ def main():
     parser.add_argument("--recovery-binding", type=Path, help="exact pinned real Android unbound-context evidence; required for recovery")
     parser.add_argument("--m3-configure-recovery", action="store_true", help="one fixed public configure before first secret request; explicit audited recovery only")
     parser.add_argument("--configure-evidence", type=Path, help="exact pinned live -64 / TA gate / QTI date-support proof")
+    parser.add_argument("--m3-characteristics-probe", action="store_true",
+                        help="one read-only getKeyCharacteristics (0x2109) after configure; version integers only")
     parser.add_argument("--m3-smci-setver", action="store_true", help="one bounded KeyMint set-version 200 request")
     parser.add_argument("--m3-smci-root", action="store_true", help="C2 root register/release only; no TA or keys")
     parser.add_argument("--m3-bridge-large", action="store_true", help="0x82000 HLOS bridge after LUN4 hashes")
@@ -138,6 +140,8 @@ def main():
         from m3_configure_binding import load_configure_evidence
         configure_binding=load_configure_evidence(args.configure_evidence)
     elif args.configure_evidence:parser.error('configure evidence requires --m3-configure-recovery')
+    if args.m3_characteristics_probe and not (args.m3_configure_recovery and args.m3_recover_key):
+        parser.error('characteristics probe requires the configured recovery candidate')
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -218,6 +222,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_KEY_RECOVERY"] = str(int(args.m3_recover_key))
     ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_RECOVERY"] = str(int(args.m3_configure_recovery))
     ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_TAG"] = configure_binding['tag'] if configure_binding else '0'
+    ctx.board["firmware"]["defines"]["FUXI_M3_CHARACTERISTICS_PROBE"] = str(int(args.m3_characteristics_probe))
     ctx.board["firmware"]["defines"]["FUXI_M3_SECRET_EXCHANGE"] = str(int(args.m3_recover_key))
     ctx.board["firmware"]["defines"]["FUXI_M3_BINDING_NONE"] = str(int(args.m3_recover_key))
     ctx.board["firmware"]["defines"]["FUXI_M3_BINDING_TAG"] = recovery_binding['tag'] if recovery_binding else '0'
@@ -272,6 +277,7 @@ def main():
                   m3_smci_version=args.m3_smci_version, m3_smci_resume=args.m3_smci_resume, m3_smci_setver=args.m3_smci_setver, m3_smci_date=args.m3_smci_date,
                   m3_recover_key=args.m3_recover_key, m3_recovery_binding=recovery_binding,
                   m3_configure_recovery=args.m3_configure_recovery,m3_configure_binding=configure_binding,
+                  m3_characteristics_probe=args.m3_characteristics_probe,
                   m3_recovery_output_discarded=bool(args.m3_recover_key),
                   m3_smci_mode=("context" if args.m3_smc_context else args.m3_smci_mode) if args.m3_smci_root else None,
                   m3_smci_fnid=("42000601" if args.m3_smc_context else "72000602" if args.m3_smci_mode == "object" else "72000600") if args.m3_smci_root else None,
@@ -311,6 +317,7 @@ def main():
     if args.m3_recover_key:
         report['m3_smci_ops']=['root-register-null','open-loader-uid122','loadfrombuffer-keymaster64','get-version','recover-existing-key','wipe-recovered-key','ta-release','loader-release','environment-release']
         if args.m3_configure_recovery:report['m3_smci_ops'].insert(4,'configure-public-once')
+        if args.m3_characteristics_probe:report['m3_smci_ops'].insert(5,'characteristics-probe')
         report['native_ufs_takeover']='read-only diagnostic; existing key recovery, no convert/ICE or userdata decryption'
     (out / "candidate.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
@@ -335,6 +342,11 @@ def write_sources(uefi, out):
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmciDiagnostic.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3RecoveryDiagnostic.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3ConfigureDiagnostic.inc",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3CharacteristicsDiagnostic.inc",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyMintBackend.c",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyMintBackend.h",
+        uefi / "tools/test_fuxi_m3_characteristics.py",
+        uefi / "tools/tests/m3_characteristics_host.c",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmcContext.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/Include/APRIORI.inc",
         uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.dsc", uefi / "Platforms/Xiaomi/fuxiPkg/fuxi.fdf",

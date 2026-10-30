@@ -445,7 +445,9 @@ STATIC VOID FnuSmciRootProbe(VOID) {
 #elif FUXI_M3_SMCI_LOAD
   FNU_STAGE("m3-smci-load");
 #if FUXI_M3_KEY_RECOVERY
-#if FUXI_M3_CONFIGURE_RECOVERY
+#if FUXI_M3_CONFIGURE_RECOVERY && FUXI_M3_CHARACTERISTICS_PROBE
+  FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/version/configure/characteristics/recover/wipe/release/delete");
+#elif FUXI_M3_CONFIGURE_RECOVERY
   FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/version/configure/recover/wipe/release/delete; one configure");
 #else
   FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/version/recover/wipe/release/delete; no persistence");

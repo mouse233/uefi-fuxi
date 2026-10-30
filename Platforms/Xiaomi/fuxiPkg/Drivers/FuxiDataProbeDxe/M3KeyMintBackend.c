@@ -194,6 +194,132 @@ STATIC EFI_STATUS Finish(VOID *C, UINT64 H, UINT8 *O, UINTN Cap, FKR_REPLY *R) {
 STATIC EFI_STATUS Abort(VOID *C, UINT64 H, FKR_REPLY *R) {
   return Call(C,FkrAbort,NULL,H,NULL,0,NULL,0,R);
 }
+// Lenient token walk over a definite-length CBOR body. Only the two non-secret
+// version tags are retained; every other value is skipped, never copied.
+STATIC BOOLEAN CborHead(READER *R, UINT8 *Type, UINT64 *V) {
+  UINT8 B, Ai; UINTN I, N;
+  if (R->At>=R->N) return FALSE;
+  B=R->P[R->At++]; Ai=B&31; *Type=(UINT8)(B>>5);
+  if (Ai<24) { *V=Ai; return TRUE; }
+  if (Ai>27) return FALSE;
+  N=(UINTN)1<<(Ai-24);
+  if (N>R->N-R->At) return FALSE;
+  *V=0; for (I=0;I<N;++I) *V=(*V<<8)|R->P[R->At++];
+  return TRUE;
+}
+STATIC VOID KeepTag(UINT32 Tag, UINT32 Value, FKM_CHARACTERISTICS *Out) {
+  if (Tag==0x300002c1U) { Out->HaveOsVersion=TRUE; Out->OsVersion=Value; }
+  if (Tag==0x300002c2U) { Out->HaveOsPatchLevel=TRUE; Out->OsPatchLevel=Value; }
+}
+STATIC BOOLEAN ScanTagged(READER *R, UINTN Limit, FKM_CHARACTERISTICS *Out) {
+  UINT32 Stack[8], Depth=0, Pending=0; UINTN Items=0; UINT8 Type; UINT64 V;
+  while (R->At<R->N && Items<Limit) {
+    if (Depth && Stack[Depth-1]==0) { --Depth; continue; }
+    if (!CborHead(R,&Type,&V)) return FALSE;
+    ++Items; if (Depth) --Stack[Depth-1];
+    if (Type==0 || Type==1) {
+      UINT32 Key=Type==1 ? (UINT32)~V : (UINT32)V;
+      if (Pending) { KeepTag(Pending,(UINT32)V,Out); Pending=0; }
+      else if (Key==0x300002c1U || Key==0x300002c2U) Pending=Key;
+      continue;
+    }
+    Pending=0;
+    if (Type==2 || Type==3) { if (V>R->N-R->At) return FALSE; R->At+=(UINTN)V; continue; }
+    if (Type==6) { if (Depth>=8) return FALSE; Stack[Depth++]=1; continue; }
+    if (Type==4 || Type==5) {
+      if (Depth>=8 || V>0x10000ULL) return FALSE;
+      Stack[Depth++]=(UINT32)(Type==5 ? V*2 : V); continue;
+    }
+  }
+  while (Depth && Stack[Depth-1]==0) --Depth;
+  if (Depth || R->At!=R->N) return FALSE;
+  Out->TagsScanned=(UINT32)Items;
+  return TRUE;
+}
+EFI_STATUS FkmProbeCharacteristics(FKM_CONTEXT *C, CONST UINT8 *Blob,
+                                   UINTN BlobBytes, FKM_CHARACTERISTICS *Out) {
+  EFI_STATUS Status; FKM_RETURN Ret; UINT8 Header[96]; WRITER W; READER R;
+  UINTN SendBytes, ResponseCap, Bi1, Bi3, Bo0, Bo1, OutReq, OutResp, Payload, I;
+  UINT8 *P; UINT32 TaStatus;
+  if (C==NULL || Out==NULL) return EFI_INVALID_PARAMETER;
+  Wipe(Out,sizeof(*Out));
+  if (!C->Ready || C->Quarantined || C->Handle) return EFI_NOT_READY;
+  if (Blob==NULL || BlobBytes==0 || BlobBytes>FKR_BLOB_LIMIT) return EFI_INVALID_PARAMETER;
+  C->ResponseHeaderSeen=FALSE;
+  C->ResponseStatus=C->ResponsePayloadBytes=C->ResponseWireBytes=0;
+  W.P=C->Request+4; W.N=0; W.Cap=sizeof(C->Request)-4; W.Bad=FALSE;
+  // Same map{23: blob} shape the pinned HAL serializes for 0x2109.
+  Head(&W,5,1); BytesPair(&W,23,Blob,BlobBytes);
+  if (W.Bad) { Wipe(C->Request,sizeof(C->Request)); return EFI_BUFFER_TOO_SMALL; }
+  Put32(C->Request,0x2109); C->RequestBytes=SendBytes=W.N+4;
+  ResponseCap=0xa000-((SendBytes+3)&~(UINTN)3);
+  Bi1=Align8(96+SendBytes); Bi3=Align8(Bi1+ResponseCap);
+  Bo0=Align8(Bi3+4); Bo1=Align8(Bo0+SendBytes);
+  if (Bo1+ResponseCap>FKM_MESSAGE_BYTES) {
+    Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0; return EFI_BAD_BUFFER_SIZE;
+  }
+  P=C->Shared; Wipe(P,FKM_SHARED_BYTES); Wipe(&Ret,sizeof(Ret));
+  Put32(P,C->App); Put32(P+4,0); Put32(P+8,0x424);
+  Put32(P+12,96); Put32(P+16,(UINT32)SendBytes);
+  Put32(P+20,(UINT32)Bi1); Put32(P+24,(UINT32)ResponseCap);
+  Put32(P+28,(UINT32)Bi3); Put32(P+32,0);
+  Put32(P+36,(UINT32)Bi3); Put32(P+40,4);
+  Put32(P+44,(UINT32)Bo0); Put32(P+48,(UINT32)SendBytes);
+  Put32(P+52,(UINT32)Bo1); Put32(P+56,(UINT32)ResponseCap);
+  Put32(P+Bi3,1); Copy(P+96,C->Request,SendBytes); Copy(Header,P,sizeof(Header));
+  Status=C->Exchange(C->ExchangeContext,P,FKM_MESSAGE_BYTES,4096,&Ret);
+  if (EFI_ERROR(Status) || Ret.A0 || Ret.A1 || Ret.A2 || Ret.A3) {
+    C->Fault=2; C->Quarantined=TRUE;
+    Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
+    return EFI_NOT_READY;
+  }
+  if (!((Get32(P+FKM_MESSAGE_BYTES)==0 && Get32(P+FKM_MESSAGE_BYTES+4)==0) ||
+        (Get32(P+FKM_MESSAGE_BYTES)==0x10002 &&
+         (Get32(P+FKM_MESSAGE_BYTES+4)==0xfffd || Get32(P+FKM_MESSAGE_BYTES+4)==0xffff))) ||
+      !Zero(P+FKM_MESSAGE_BYTES+8,4088)) {
+    C->Fault=3; C->Quarantined=TRUE;
+    Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
+    return EFI_NOT_READY;
+  }
+  OutReq=Get32(P+48); OutResp=Get32(P+56);
+  if (OutReq>SendBytes || OutResp<8 || OutResp>ResponseCap) {
+    C->Fault=4; C->Quarantined=TRUE;
+    Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
+    return EFI_NOT_READY;
+  }
+  for (I=0;I<FKM_MESSAGE_BYTES;++I) {
+    UINT8 Expected=0;
+    if ((I>=48 && I<52) || (I>=56 && I<60) ||
+        (I>=Bo0 && I<Bo0+OutReq) || (I>=Bo1 && I<Bo1+OutResp)) continue;
+    if (I<96) Expected=Header[I];
+    else if (I>=96 && I<96+SendBytes) Expected=C->Request[I-96];
+    else if (I==Bi3) Expected=1;
+    if (P[I]!=Expected) {
+      C->Fault=5; C->Quarantined=TRUE;
+      Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
+      return EFI_NOT_READY;
+    }
+  }
+  TaStatus=Get32(P+Bo1); Payload=Get32(P+Bo1+4);
+  if (Payload>OutResp-8 || !Zero(P+Bo1+8+Payload,OutResp-8-Payload)) {
+    C->Fault=6; C->Quarantined=TRUE;
+    Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
+    return EFI_NOT_READY;
+  }
+  C->ResponseStatus=TaStatus; C->ResponsePayloadBytes=(UINT32)Payload;
+  C->ResponseWireBytes=(UINT32)OutResp; C->ResponseHeaderSeen=TRUE;
+  if (TaStatus) {
+    // A negative status is a legitimate answer for this probe; it is recorded
+    // and the session is kept usable. Positive status stays a hard rejection.
+    if (!(TaStatus&0x80000000U)) C->Quarantined=TRUE;
+    Status=EFI_DEVICE_ERROR;
+  } else {
+    R.P=P+Bo1+8; R.N=Payload; R.At=0;
+    Status=ScanTagged(&R,4096,Out) ? EFI_SUCCESS : EFI_COMPROMISED_DATA;
+  }
+  Wipe(P,FKM_SHARED_BYTES); Wipe(C->Request,sizeof(C->Request)); C->RequestBytes=0;
+  return Status;
+}
 EFI_STATUS FkmInitialize(FKM_CONTEXT *C, UINT32 App, UINT8 *Shared, UINTN SharedBytes,
                          FKM_EXCHANGE Exchange, VOID *ExchangeContext,
                          BOOLEAN SessionVerified, FKR_OPS *Ops) {

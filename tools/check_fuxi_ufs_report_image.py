@@ -75,6 +75,12 @@ def main():
         extra += ('configured-recovery-tests.json',)
         configured=json.loads((out/'configured-recovery-tests.json').read_text())
         assert configured.get('configured') is True and configured.get('cases')==27
+    if candidate.get('m3_characteristics_probe'):
+        assert candidate.get('m3_configure_recovery') and 'characteristics-probe' in candidate.get('m3_smci_ops',[])
+        assert candidate.get('m3_smci_ops',[])[5] == 'characteristics-probe'
+        extra += ('characteristics-tests.json',)
+        probe=json.loads((out/'characteristics-tests.json').read_text())
+        assert probe.get('result')=='passed' and 'PASS 13 probe cases' in probe.get('host_output','')
     if candidate.get("m3_smc_context"):
         extra += ("m3-context-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
@@ -165,6 +171,7 @@ def main():
         if candidate.get("m3_recover_key"):
             expected_ops=["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "recover-existing-key", "wipe-recovered-key", "ta-release", "loader-release", "environment-release"]
             if candidate.get('m3_configure_recovery'):expected_ops.insert(4,'configure-public-once')
+            if candidate.get('m3_characteristics_probe'):expected_ops.insert(5,'characteristics-probe')
         assert candidate["m3_smci_ops"] == expected_ops
         if candidate.get("m3_smci_loader"):
             assert candidate["m3_bridge_hlos"] and candidate["m3_smci_mode"] == "object"
@@ -185,6 +192,7 @@ def main():
             assert candidate["m3_smci_ta_bytes"] == 0x63058
             plan=("FUXIM3 BATCH plan=root/open122/load64/version/recover/wipe/release/delete; no persistence" if candidate.get("m3_recover_key") else "FUXIM3 BATCH plan=root/open122/load64/ta-release/release-loader/release-env/delete; gated, no retry")
             if candidate.get('m3_configure_recovery'):plan='FUXIM3 BATCH plan=root/open122/load64/version/configure/recover/wipe/release/delete; one configure'
+            if candidate.get('m3_characteristics_probe'):plan='FUXIM3 BATCH plan=root/open122/load64/version/configure/characteristics/recover/wipe/release/delete'
             for marker in (plan,
                            "FUXIM3 SMCI loader-load elf=%x name=%x bo=%x msg=%x; no key, no decrypt",
                            "FUXIM3 SMCI loader-app=%x; no command, no key",

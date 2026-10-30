@@ -173,6 +173,12 @@
 #ifndef FUXI_M3_CONFIGURE_RECOVERY
 #define FUXI_M3_CONFIGURE_RECOVERY 0
 #endif
+#ifndef FUXI_M3_CHARACTERISTICS_PROBE
+#define FUXI_M3_CHARACTERISTICS_PROBE 0
+#endif
+#if FUXI_M3_CHARACTERISTICS_PROBE && (!FUXI_M3_CONFIGURE_RECOVERY || FUXI_M3_SMCI_DATE)
+#error "characteristics probe requires the configured recovery candidate"
+#endif
 #if FUXI_M3_CONFIGURE_RECOVERY && (!FUXI_M3_KEY_RECOVERY || FUXI_M3_SMCI_DATE)
 #error Configure is only allowed in the explicit audited recovery candidate
 #endif
@@ -356,6 +362,7 @@ STATIC VOID FnuCacheInv(FNU_OPS *Ops, VOID *Va, UINTN Bytes) {
 
 #include "M3BridgeBlob.inc"
 #include "M3BridgeDiagnostic.inc"
+#include "M3CharacteristicsDiagnostic.inc"
 #include "M3RecoveryDiagnostic.inc"
 #include "M3SmciDiagnostic.inc"
 #include "M3SmcContext.inc"

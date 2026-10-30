@@ -20,6 +20,7 @@
   M3SmciDiagnostic.inc
   M3RecoveryDiagnostic.inc
   M3ConfigureDiagnostic.inc
+  M3CharacteristicsDiagnostic.inc
   M3SmcContext.inc
   ../../Include/Protocol/FuxiUfsReport.h
   ../FuxiDataProbeDxe/DataReadOnly.c

@@ -49,4 +49,13 @@ EFI_STATUS FkmEncode(FKR_STAGE Stage, CONST FKR_BEGIN_REQUEST *Begin,
                      UINT8 *Request, UINTN Capacity, UINTN *Bytes);
 EFI_STATUS FkmDecode(FKR_STAGE Stage, CONST UINT8 *Payload, UINTN Bytes,
                      FKR_REPLY *Reply, CONST UINT8 **Output, UINTN *OutputBytes);
+// Non-secret version fields of a stored key blob, read through one read-only
+// getKeyCharacteristics (0x2109). Only OS version/patch integers are reported;
+// no other authorization-set value is retained or logged.
+typedef struct {
+  BOOLEAN HaveOsVersion, HaveOsPatchLevel;
+  UINT32 OsVersion, OsPatchLevel, TagsScanned;
+} FKM_CHARACTERISTICS;
+EFI_STATUS FkmProbeCharacteristics(FKM_CONTEXT *Context, CONST UINT8 *Blob,
+                                   UINTN BlobBytes, FKM_CHARACTERISTICS *Out);
 #endif

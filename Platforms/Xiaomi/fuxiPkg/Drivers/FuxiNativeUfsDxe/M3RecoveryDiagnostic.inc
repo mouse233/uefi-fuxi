@@ -48,6 +48,9 @@ STATIC EFI_STATUS FnuRunRecovery(UINT64 Raw,UINT8 *Page,UINTN Bytes,UINT64 Bridg
     Result=FkmInitialize(&mRecoverySession->Backend,App,Page,FKM_SHARED_BYTES,
                           FseExchange,&mRecoverySession->Exchange,TRUE,&Ops);
     if(!EFI_ERROR(Result)) {
+#if FUXI_M3_CHARACTERISTICS_PROBE
+      FnuProbeCharacteristics(&mRecoverySession->Backend,mRecoveryWork);
+#endif
       FNU_STAGE("m3-key-recovery");
       FnuLog(L"FUXIM3 RECOVERY begin: decrypt existing key; no persistence");
       mRecoveryAttempted=TRUE;
