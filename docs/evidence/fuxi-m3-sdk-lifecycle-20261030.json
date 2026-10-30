@@ -1,0 +1,240 @@
+{
+  "result": "passed",
+  "ta_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+  "tz_sha256": "d4b8afbe3a8b3468a0f4f740059ab9aed0a8ef803af4f1f58b164ce1c460d418",
+  "identity_sha256": "bcc7f0a6590ca47d24e65aeed69717da4e8c3fb30b53f4bba888e1503c28dfd0",
+  "sdk_relocations_applied": false,
+  "full_sdk_initialization_executed": false,
+  "symbols": {
+    "GPAppLib_init": {
+      "relative": 67356,
+      "bytes": 512
+    },
+    "cmnlib_init": {
+      "relative": 12664,
+      "bytes": 676
+    },
+    "qsee_cfg_getpropval": {
+      "relative": 186580,
+      "bytes": 52
+    },
+    "qsee_is_sw_fuse_blown": {
+      "relative": 205400,
+      "bytes": 264
+    },
+    "GPAppLib_appInit": {
+      "relative": 67868,
+      "bytes": 132
+    }
+  },
+  "controls": [
+    {
+      "case": "cmnlib-context-object-False",
+      "synthetic_object_present": false,
+      "execution": {
+        "instructions": 28,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "stopped_before": "0xd860f044",
+        "return_status": null,
+        "ta_boot_after": 0
+      }
+    },
+    {
+      "case": "cmnlib-context-object-True",
+      "synthetic_object_present": true,
+      "execution": {
+        "instructions": 24,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "stopped_before": "0xd86109b0",
+        "return_status": null,
+        "ta_boot_after": 0
+      }
+    },
+    {
+      "case": "GPAppLib-init-allocator-boundary",
+      "requested_bytes": 56,
+      "execution": {
+        "instructions": 9,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "stopped_before": "0xd86401a4",
+        "return_status": null,
+        "ta_boot_after": 0
+      }
+    },
+    {
+      "case": "appInit-negative-return-site",
+      "injected_status": -1,
+      "operation": 1,
+      "counts": "0x10",
+      "output_capacity": 4,
+      "before_service": {
+        "instructions": 17,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "stopped_before": "0xd86109f0",
+        "return_status": null,
+        "ta_boot_after": 0
+      },
+      "counterfactual_suffix": {
+        "instructions": 13,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "return_status": 0,
+        "ta_boot_after": 0
+      },
+      "tls_result": "ffff0000",
+      "tls_state": 3
+    },
+    {
+      "case": "appInit-negative-return-site",
+      "injected_status": -65536,
+      "operation": 1,
+      "counts": "0x10",
+      "output_capacity": 4,
+      "before_service": {
+        "instructions": 17,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "stopped_before": "0xd86109f0",
+        "return_status": null,
+        "ta_boot_after": 0
+      },
+      "counterfactual_suffix": {
+        "instructions": 13,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "return_status": 0,
+        "ta_boot_after": 0
+      },
+      "tls_result": "ffff0000",
+      "tls_state": 3
+    },
+    {
+      "case": "208-precondition-software-fuse",
+      "fuse_id": 1,
+      "output_bytes": 1,
+      "service_uid": 22,
+      "execution": {
+        "instructions": 36,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "stopped_before": "0xd863d014",
+        "return_status": null,
+        "ta_boot_after": 0
+      }
+    },
+    {
+      "case": "boot-completion-property-boundary",
+      "property": "enable_spu_uefi",
+      "syscall_id": -95,
+      "output_capacity": 12,
+      "before_service": {
+        "instructions": 42,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "stopped_before": "0xd8695b00",
+        "return_status": null,
+        "ta_boot_after": 0
+      },
+      "injected_negative_status": -1,
+      "counterfactual_suffix": {
+        "instructions": 28,
+        "logs_suppressed": 1,
+        "ta_boot_writes": [],
+        "return_status": 0,
+        "ta_boot_after": 0
+      },
+      "cached_fallback": 0
+    },
+    {
+      "case": "synthetic-cached-spu-property",
+      "value": 0,
+      "execution": {
+        "instructions": 31,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "return_status": 50360320,
+        "ta_boot_after": 0
+      }
+    },
+    {
+      "case": "synthetic-cached-spu-property",
+      "value": 1,
+      "execution": {
+        "instructions": 31,
+        "logs_suppressed": 0,
+        "ta_boot_writes": [],
+        "return_status": 50360320,
+        "ta_boot_after": 0
+      }
+    }
+  ],
+  "boundary_controls": [
+    "SMC",
+    "SVC",
+    "loop",
+    "modified-TZ"
+  ],
+  "evidence": {
+    "sdk-app-init": {
+      "start": "0xd861f91c",
+      "end": "0xd861f9a0",
+      "sha256": "d80d221cc0c8abea069108364d74814d7cc39badab2a79bea935b3337f3a18b3"
+    },
+    "sdk-cmnlib-init": {
+      "start": "0xd8612178",
+      "end": "0xd861241c",
+      "sha256": "a6a007f24c899de4a83b49030cfb1e1bc30a530bb60d193c62854c06aa099511"
+    },
+    "sdk-gp-init": {
+      "start": "0xd861f71c",
+      "end": "0xd861f91c",
+      "sha256": "d27b0d3b8782f572a292c92aaa9179f1fe2ab3c8038df3436731e4c8ff1953aa"
+    },
+    "sdk-fuse": {
+      "start": "0xd8641258",
+      "end": "0xd8641360",
+      "sha256": "73467306f304a20469c095bcd8e2e99638c0124baf40cb0b3b94f280fb39ac42"
+    },
+    "sdk-property": {
+      "start": "0xd863c8d4",
+      "end": "0xd863c908",
+      "sha256": "d1e046a241d837d03c6ae4f39f01d4e0f86d87d0b6a54794134bae05ed856fb6"
+    },
+    "sdk-syscall": {
+      "start": "0xd8695b00",
+      "end": "0xd8695b70",
+      "sha256": "c184b4ea4647e09d443440418154a112d79e96e1e958ed98fe71d8cb1c71efc5"
+    },
+    "ta-boot-fuse": {
+      "start": "0x194fc",
+      "end": "0x195a0",
+      "sha256": "ad54760a8941d0350a52a7c6cae7f6f17808711c91529639bbc399c6f57e3f39"
+    },
+    "ta-spu-property": {
+      "start": "0x18d4c",
+      "end": "0x18e38",
+      "sha256": "6b2d4acba74fa361bfb42da5765ce2808a499657e4a4e62b63c817404c5e0847"
+    }
+  },
+  "limits": [
+    "Only private synthetic public TLS/frames. Every external object/allocator/syscall stopped before execution.",
+    "SDK mapped at fixed TZ virtual addresses for these TLS/argument-only fragments; no complete SDK relocation/load model.",
+    "Negative return-site injections are counterfactuals, not observed service results or successful initialization.",
+    "appInit returning zero alone does not prove its external operation succeeded; TLS can retain an error.",
+    "Fragment boot remains zero; cmnlib/GP init and platform/completion were not fully executed.",
+    "No actual TA instance reuse/freshness, boot context inheritance, -62 return PC or M3/M4/M5 proof."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_sdk_lifecycle.py": "3f40414af5fc26c09bf5ddae67e4f2ceaee2993ebf1297545905d0c5abead1da",
+    "tools/audit_fuxi_m3_boot_client.py": "d65b43b1945cf9d61e139f9e2ad0908ef353e83e9fc74062dfef3f6ea5574a71",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3",
+    "tools/audit_fuxi_m3_sdk_reference.py": "488668712365c5e31ddd6220f42b94665726af080d9ac41eda98a158c9133338",
+    "tools/audit_fuxi_m3_begin_version.py": "09a4181f38a9200974073d2696d26e1bf1dd85e87019eb0b5b66165686281e34",
+    "tools/audit_fuxi_m3_configure_gate.py": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e"
+  }
+}

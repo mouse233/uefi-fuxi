@@ -538,3 +538,14 @@ M3/M4/M5及免USB重传未通过。
 分区版本，未证明加载RAM、实际来源选择、SDK服务或TA实例延续，-62未锁定。
 没有新固件/安全命令/写入。详见[当前固件身份](fuxi-m3-firmware-identity-20261030.md)。
 下一门槛是匹配SDK的服务和实例生命周期，M3/M4/M5及免USB重传未通过。
+
+## 2026-10-30：匹配SDK服务边界及UEFI同App生命周期
+
+离线真实指令追踪确认208前置经qsee_is_sw_fuse_blown准备fuse1/UID22服务，
+收尾经qsee_cfg_getpropval查询enable_spu_uefi（syscall -95），均在服务前停。
+appInit在两个负返回对照中仍返回0但TLS留错误，不能据返回0证明完整初始化。
+9片段/4执行边界通过。给既有生产流程模拟增加观察器，两日期共54场景/52批次
+验证一次load、version/configure/recovery同App、隔离后不release/delete；没有
+修改原测试或固件。lookup=2不证明不存在，loadFromBuffer成功不证明新建/复用；
+真实实例关联/初始化服务和-62返回PC仍缺证。无手机访问、新安全命令或M3通过。
+详见[SDK与会话核验](fuxi-m3-sdk-lifecycle-20261030.md)。

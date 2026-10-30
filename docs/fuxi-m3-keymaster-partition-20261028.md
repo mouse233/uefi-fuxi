@@ -54,3 +54,10 @@ KeyMint app，`lookupTA("keymaster64")` 与 `("keymaster")` 都返回对象结�
 - 失败时应看到 AppLoader 的具体错误（10..26），成功则返回远端 app 对象并可释放。
 
 仍在边界内：不发送 KeyMint 命令、不读密钥、不转换、不写 ICE、不解密。
+
+## 2026-10-30：历史 lookup / 实例推断边界补充
+
+上文“全新启动里loader没有已加载app”是当时推断，不能作为已证事实。
+lookup对象错误2只证明请求被拒绝，不证明应用表里没有TA；后来的loadFromBuffer
+成功同样不证明实例新建或复用。见[SDK与会话生命周期核验](fuxi-m3-sdk-lifecycle-20261030.md)。
+当前UEFI内部同App连续性在源码/模拟中已验证，ABL实例和boot上下文继承仍未知。
