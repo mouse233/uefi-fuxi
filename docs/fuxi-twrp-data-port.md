@@ -454,3 +454,7 @@ generate_key，upgrade_key 使用 `0x2114`；两者均不接入。-33 的 key-id
 仅保留为静态候选，-62 仍不能由两个版本字段唯一识别；OS patch 比较还存在
 YYYYMMDD到YYYYMM的规范化。详见
 [隔离修复、固定命令与版本证据](fuxi-m3-characteristics-isolation-20261030.md)。
+
+该候选15:55的attempt-01照片已确认：特性-33后RECOVERY skipped，commands1、
+attempted0/retained1，最终m3-characteristics/PARK；本次失败分支没有继续begin。
+这不代表密钥恢复或M3/M4/M5通过，也不以照片替代共享页物理回读与未知完成验证。

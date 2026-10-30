@@ -68,3 +68,18 @@ blob、恢复密钥或安全服务，也没有据这些对照确定 v3/v5/v6 实
 生成/升级/写回；继续做恢复上下文的差分证据，不按错误码猜测新命令。
 
 真实恢复、convert/HWKM/ICE/DUN、userdata 明文、fscrypt 与 RAM 交接仍分别待验。
+
+## attempt-01：-33 后跳过恢复并 PARK（15:55 Asia/Shanghai）
+
+用户确认fastboot，互斥和设备身份/解锁/slot_a核对后，固定镜像80c605a1…62b9541
+单次临时boot成功（Sending0.040s、Booting1.640s、exit0）；无flash/分区写/改slot。
+30项资格与86个提交/当前源码在启动前重新绑定，原始记录在候选attempt-01。
+
+照片SHA256 `8fa93c39ed6301c498056d78bbcbcd3808abb2754d87123daec51c2bfd9d4ada`
+确认CONFIGURE status0/Success；CHARACTERISTICS -33、payload40660/wire40668，
+随后`RECOVERY skipped`、state1/stage0、commands1/resumes0、attempted0/retained1；
+最终stage=m3-characteristics，PARK/no USB receiver/no handoff。
+
+这是本次负状态分支停止后续begin的实机证据，不是共享页物理内容回读或全部未知
+完成分支的硬件验收。保留不改页的证明仍来自绑定源码和主机快照测试。UFS stop1/
+db0/tdb0/run0可见，但历史FSR0x400仍未解释。-33根因、真实恢复与M3/M4/M5仍未通过。
