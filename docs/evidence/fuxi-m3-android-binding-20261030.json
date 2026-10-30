@@ -1,0 +1,36 @@
+{
+  "runtime_binding": {
+    "schema": 1,
+    "collected_utc": "2026-10-30T02:59:32.917169+00:00",
+    "serial": "fcde91e",
+    "process": "vold",
+    "executable_sha256": "9c20de9cb015e066474ad9cc23e1364d5ddf4fa55fca5f2c9a57e3ad0caed418",
+    "process_pid": 833,
+    "process_start_ticks": "161",
+    "data_mount": {
+      "device": "/dev/block/dm-47",
+      "filesystem": "f2fs"
+    },
+    "binding": {
+      "state": 2,
+      "meaning": "used without seed",
+      "vector_empty": true,
+      "stable_snapshots": 2
+    },
+    "collector_sha256": "eebb7b319a75f89c4b7e3b1c5535b8a1a417b04a8ee02c5df19b586353948655",
+    "scope": "Read-only fixed process runtime binding metadata. No seed, key, authentication token or decrypted contents read. Does not prove a UEFI recovery or identify/authorize a per-key configuration."
+  },
+  "metadata_file_sizes": {
+    "version": 1,
+    "secdiscardable": 16384,
+    "keymaster_key_blob": 208,
+    "encrypted_key": 276
+  },
+  "offset_audit": {
+    "executable_sha256": "9c20de9cb015e066474ad9cc23e1364d5ddf4fa55fca5f2c9a57e3ad0caed418",
+    "global_pointer_va": "0xf9790",
+    "state_offset": 24,
+    "capture_object_bytes": 28
+  },
+  "scope": "Only current Android binding metadata and stat sizes; no seed/key/content/digest read, no UEFI authentication/decryption evidence."
+}

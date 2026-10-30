@@ -20,6 +20,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--scm-query", action="store_true")
     parser.add_argument("--m2-metadata-files", action="store_true")
+    parser.add_argument("--secret-exchange", action="store_true", help="compile the default-off log-free exchange library; no runtime caller")
     args = parser.parse_args()
     if platform.system() != "Linux" or platform.machine() not in ("aarch64", "arm64", "x86_64", "AMD64"):
         parser.error("UEFI compilation must run in unixnu-fuxi-build-arm64")
@@ -49,7 +50,8 @@ def main():
                "-b", "DEBUG", "-t", "CLANGPDB", "-n", "4",
                "-D", f"FUXI_DATA_SCM_QUERY={int(args.scm_query)}",
                "-D", f"FUXI_UFS_M2_FILES={int(args.m2_metadata_files)}",
-               "-D", f"FUXI_UFS_DIAGNOSTIC_PARK={int(args.m2_metadata_files)}"]
+               "-D", f"FUXI_UFS_DIAGNOSTIC_PARK={int(args.m2_metadata_files)}",
+               "-D", f"FUXI_M3_SECRET_EXCHANGE={int(args.secret_exchange)}"]
     with (out / "build.log").open("w") as log:
         result = subprocess.run(command, cwd=workspace, env=env,
                                 stdout=log, stderr=subprocess.STDOUT)
@@ -66,6 +68,11 @@ def main():
         shutil.copyfile(source, target)
         modules[name] = dict(path=str(target), bytes=target.stat().st_size,
                              sha256=hashlib.sha256(target.read_bytes()).hexdigest())
+    # Keep the transport object for each macro mode: unused library functions
+    # can disappear from EFI, so its hash alone cannot qualify the gate.
+    object_source = workspace / "Build/FuxiDataPort/DEBUG_CLANGPDB/AARCH64/fuxiPkg/Drivers/FuxiNativeUfsDxe/FuxiNativeUfsDxe/OUTPUT/FuxiDataProbeDxe/M3SecretExchange.obj"
+    object_target = out / "M3SecretExchange.obj"
+    shutil.copyfile(object_source, object_target)
     source_paths = [workspace / "Platforms/Xiaomi/fuxiPkg/DataPort.dsc", Path(__file__),
                     workspace / "Platforms/Xiaomi/fuxiPkg/Include/Protocol/FuxiUfsReport.h",
                     *sorted((workspace / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe").glob("*")),
@@ -75,6 +82,8 @@ def main():
         modules=modules, module=str(destination), sha256=hashlib.sha256(destination.read_bytes()).hexdigest(),
         bytes=destination.stat().st_size, scm_queries_enabled=args.scm_query,
         m2_runtime_compiled=args.m2_metadata_files,
+        secret_exchange_compiled=args.secret_exchange,
+        secret_exchange_object=dict(file=object_target.name, sha256=hashlib.sha256(object_target.read_bytes()).hexdigest()),
         hardware_result="not tested", boot_image=False, native_ufs_takeover=False,
         data_decryption=False, data_file_read=False,
         sources={str(path.relative_to(workspace)): hashlib.sha256(path.read_bytes()).hexdigest()
