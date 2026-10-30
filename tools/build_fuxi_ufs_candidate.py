@@ -46,6 +46,7 @@ def main():
     parser.add_argument("--m3-recover-key", action="store_true", help="recover one existing metadata key, wipe output, close session; no convert/ICE")
     parser.add_argument("--recovery-binding", type=Path, help="exact pinned real Android unbound-context evidence; required for recovery")
     parser.add_argument("--m3-configure-recovery", action="store_true", help="one fixed public configure before first secret request; explicit audited recovery only")
+    parser.add_argument("--configure-patch", type=int, choices=(20261005,20991231), default=20261005, help="fixed public OS/vendor patch profile; alternate requires A/B evidence")
     parser.add_argument("--configure-evidence", type=Path, help="exact pinned live -64 / TA gate / QTI date-support proof")
     parser.add_argument("--m3-characteristics-probe", action="store_true",
                         help="one read-only getKeyCharacteristics (0x2109) after configure; version integers only")
@@ -138,8 +139,8 @@ def main():
     if args.m3_configure_recovery:
         if not args.m3_recover_key or not args.configure_evidence:parser.error('configure requires recovery and explicit --configure-evidence')
         from m3_configure_binding import load_configure_evidence
-        configure_binding=load_configure_evidence(args.configure_evidence)
-    elif args.configure_evidence:parser.error('configure evidence requires --m3-configure-recovery')
+        configure_binding=load_configure_evidence(args.configure_evidence,args.configure_patch)
+    elif args.configure_evidence or args.configure_patch!=20261005:parser.error('configure evidence/profile requires --m3-configure-recovery')
     if args.m3_characteristics_probe and not (args.m3_configure_recovery and args.m3_recover_key):
         parser.error('characteristics probe requires the configured recovery candidate')
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
@@ -221,6 +222,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_SETVER"] = str(int(args.m3_smci_setver))
     ctx.board["firmware"]["defines"]["FUXI_M3_KEY_RECOVERY"] = str(int(args.m3_recover_key))
     ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_RECOVERY"] = str(int(args.m3_configure_recovery))
+    ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_PATCH"] = str(args.configure_patch)
     ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_TAG"] = configure_binding['tag'] if configure_binding else '0'
     ctx.board["firmware"]["defines"]["FUXI_M3_CHARACTERISTICS_PROBE"] = str(int(args.m3_characteristics_probe))
     ctx.board["firmware"]["defines"]["FUXI_M3_SECRET_EXCHANGE"] = str(int(args.m3_recover_key))
@@ -361,6 +363,9 @@ def write_sources(uefi, out):
         Path(__file__),
         uefi / "tools/m3_recovery_binding.py",
         uefi / "tools/m3_configure_binding.py",
+        uefi / "tools/test_m3_configure_binding.py",
+        uefi / "tools/check_fuxi_m3_configure_pair.py",
+        uefi / "tools/audit_fuxi_m3_configure_profiles.py",
         uefi / "tools/qualify_fuxi_ufs_candidate.py",
         uefi / "tools/check_fuxi_ufs_report_image.py",
         uefi / "tools/check_fuxi_m3_live_objects.py",
@@ -375,6 +380,8 @@ def write_sources(uefi, out):
         uefi / "tools/tests/m3_characteristics_entry_cases.inc",
         uefi / "docs/evidence/fuxi-m3-android-binding-20261030.json",
         uefi / "docs/evidence/fuxi-m3-configure-gate-20261030.json",
+        uefi / "docs/evidence/fuxi-m3-configure-profiles-20261030.json",
+        uefi / "docs/evidence/fuxi-m3-twrp-keystore-context-20261030.json",
     ]
     (out / "sources.json").write_text(json.dumps({str(x.relative_to(uefi)):
         hashlib.sha256(x.read_bytes()).hexdigest() for x in paths if x.is_file()}, indent=2) + "\n")

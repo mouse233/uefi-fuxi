@@ -23,7 +23,7 @@ the entry point, not this README.
 | M0 | Bounded read-only probe: BlockIo discovery, GPT CRC/geometry checks, F2FS header identification, SCM/QSEE discovery | done (host-verified) |
 | M1 | Native UFS read-only takeover and repeated raw reads | bounded device proof passed; original USB stop remains a separate issue |
 | M2 | `/metadata` file read (checkpoint/NAT/directory walking) | inline and non-inline file hashes match TWRP on-device; nonempty NAT journal remains unverified |
-| M3 | Key wrapping, ICE slots, metadata decryption via SCM/QSEE | metadata address/DUN planner host-tested; mapping and decryption unverified |
+| M3 | Key wrapping, ICE slots, metadata decryption via SCM/QSEE | transport/getVersion/configure observed; existing-key begin blocked at -62; ICE and decryption unverified |
 | M4 | Named `/data` file plaintext with hash comparison | not started |
 | M5 | Full object load + RAM publication to the existing handoff | not started |
 
@@ -40,9 +40,11 @@ Main modules under `Platforms/Xiaomi/fuxiPkg/Drivers/`:
 
 ## What this branch deliberately does not do
 
-No decryption, no key material handling, no BlockIo publication, no writes to
-storage, no SMC calls beyond the opt-in INFO existence query
-(`FUXI_DATA_SCM_QUERY=1`). Any command completion doubt quarantines the DMA
+Default modules keep UFS and secret exchange disabled. Explicit M3 diagnostic
+candidates can load the fixed TA, configure public fields and attempt recovery
+of one existing metadata key; recovered material is wiped without export.
+There is no BlockIo publication, storage write, generate/upgrade path, ICE setup
+or userdata decryption. Any command completion doubt quarantines the DMA
 window and stops issuing commands. A successful build or a completed diagnostic
 is not, by itself, evidence of decryption or of a readable `/data`.
 
@@ -61,8 +63,8 @@ is not, by itself, evidence of decryption or of a readable `/data`.
 
 ## Build and test
 
-Reproduction commands (host tests, container builds, candidate build, the six
-delivery checks) are in
+Reproduction commands (host tests, container builds, candidate build and
+candidate-specific delivery checks) are in
 [`docs/fuxi-twrp-data-port.md`](docs/fuxi-twrp-data-port.md) §9; candidate
 reviews live in `out/<candidate>/REVIEW.md` and the device-side log in the
 `UniXNU-fuxi` checkout at `diagnostics/ram-root/usb-bulk.md`. Only

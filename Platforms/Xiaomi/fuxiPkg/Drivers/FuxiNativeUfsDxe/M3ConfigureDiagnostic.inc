@@ -1,12 +1,20 @@
 // SPDX-License-Identifier: BSD-2-Clause-Patent
 // One PUBLIC configure before any secret request. Fixed audited TA/QTI subset.
 #if FUXI_M3_CONFIGURE_RECOVERY
+#ifndef FUXI_M3_CONFIGURE_PATCH
+#define FUXI_M3_CONFIGURE_PATCH 20261005
+#endif
+#if FUXI_M3_CONFIGURE_PATCH != 20261005 && FUXI_M3_CONFIGURE_PATCH != 20991231
+#error Unsupported public configure profile
+#endif
+#define FKM_PATCH_BYTES 0x1a, ((FUXI_M3_CONFIGURE_PATCH >> 24) & 255), ((FUXI_M3_CONFIGURE_PATCH >> 16) & 255), ((FUXI_M3_CONFIGURE_PATCH >> 8) & 255), (FUXI_M3_CONFIGURE_PATCH & 255)
 STATIC CONST UINT8 mConfigureRequest[] = {
   0x16,0x21,0,0,0xa4,0x16,3,
   0x1a,0x30,0,2,0xc1,0x1a,0,2,0x98,0x10,
-  0x1a,0x30,0,2,0xc2,0x1a,1,0x35,0x28,0x8d,
-  0x1a,0x30,0,2,0xce,0x1a,1,0x35,0x28,0x8d
+  0x1a,0x30,0,2,0xc2,FKM_PATCH_BYTES,
+  0x1a,0x30,0,2,0xce,FKM_PATCH_BYTES
 };
+#undef FKM_PATCH_BYTES
 STATIC EFI_STATUS SmciConfigureRecovery(UINT64 Raw,UINT8 *Page,UINTN Bytes,UINT32 App) {
   UINT64 Regs[8]; ARM_SMC_ARGS Out; UINT8 Header[96];UINTN I;
   CONST UINTN Send=sizeof(mConfigureRequest),Cap=0x9fd8,Bi1=0x88,Bi3=0xa060,Bo0=0xa068,Bo1=0xa090;
@@ -27,7 +35,7 @@ STATIC EFI_STATUS SmciConfigureRecovery(UINT64 Raw,UINT8 *Page,UINTN Bytes,UINT3
   ZeroMem(Regs,sizeof(Regs));Regs[0]=0x72000602;Regs[1]=0x224;
   Regs[2]=Raw;Regs[3]=0x15000;Regs[4]=Raw+0x15000;Regs[5]=4096;
   FNU_STAGE("m3-configure-recovery");
-  FnuLog(L"FUXIM3 CONFIGURE begin once: os=170000 os-patch=20261005 vendor-patch=20261005 evidence=%08x",(UINT32)FUXI_M3_CONFIGURE_TAG);
+  FnuLog(L"FUXIM3 CONFIGURE begin once: os=170000 os-patch=%u vendor-patch=%u evidence=%08x",(UINT32)FUXI_M3_CONFIGURE_PATCH,(UINT32)FUXI_M3_CONFIGURE_PATCH,(UINT32)FUXI_M3_CONFIGURE_TAG);
   FnuCacheCiv(&mOps,Page,Bytes);Resumes=SmciCallWithResume(Regs,&Out);
   FnuLog(L"FUXIM3 CONFIGURE return a0=%lx a1=%lx a2=%lx a3=%lx resumes=%u",
          (UINT64)Out.Arg0,(UINT64)Out.Arg1,(UINT64)Out.Arg2,(UINT64)Out.Arg3,Resumes);

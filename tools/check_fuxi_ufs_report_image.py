@@ -71,10 +71,11 @@ def main():
         assert entry.get('configured') is False and entry.get('cases')==17
     if candidate.get("m3_configure_recovery"):
         from m3_configure_binding import load_configure_evidence
-        assert candidate['m3_recover_key'] and load_configure_evidence(out/'configure-evidence.json')==candidate['m3_configure_binding']
-        extra += ('configured-recovery-tests.json',)
+        assert candidate['m3_recover_key'] and load_configure_evidence(out/'configure-evidence.json',candidate['m3_configure_binding']['os_patch'])==candidate['m3_configure_binding']
+        extra += ('configured-recovery-tests.json','configure-binding-tests.json')
         configured=json.loads((out/'configured-recovery-tests.json').read_text())
         assert configured.get('configured') is True and configured.get('cases')==27
+        assert configured.get('configure_patch')==candidate['m3_configure_binding']['os_patch']
     if candidate.get('m3_characteristics_probe'):
         assert candidate.get('m3_configure_recovery') and 'characteristics-probe' in candidate.get('m3_smci_ops',[])
         assert candidate.get('m3_smci_ops',[])[5] == 'characteristics-probe'
@@ -275,8 +276,13 @@ def main():
                            "FUXIM3 RECOVERY END: result=%r attempted=%u retained=%u; userdata decrypt not tested"):
                 assert marker.encode("utf-16-le") in ufs, marker
             if candidate.get('m3_configure_recovery'):
-                for marker in ('FUXIM3 CONFIGURE begin once: os=170000 os-patch=20261005 vendor-patch=20261005 evidence=%08x','FUXIM3 CONFIGURE Success; continue existing-key recovery','FUXIM3 CONFIGURE header status=%08x payload=%u wire=%u; public fields only'):
+                for marker in ('FUXIM3 CONFIGURE begin once: os=170000 os-patch=%u vendor-patch=%u evidence=%08x','FUXIM3 CONFIGURE Success; continue existing-key recovery','FUXIM3 CONFIGURE header status=%08x payload=%u wire=%u; public fields only'):
                     assert marker.encode('utf-16-le') in ufs,marker
+    if candidate.get('m3_configure_recovery'):
+        packet=bytes.fromhex('16210000'+candidate['m3_configure_binding']['configure_cbor_hex'])
+        assert packet in ufs
+        if not candidate.get('m3_characteristics_probe'):
+            assert 'FUXIM3 CHARACTERISTICS begin once: read-only blob version fields'.encode('utf-16-le') not in ufs
     if candidate.get("m3_smc_context"):
         assert candidate["m3_smci_root"] and park and candidate["m3_scm_info"]
         assert candidate["m3_smci_ops"] == ["standard-info-control"] and candidate["m3_bridge_ops"] == []

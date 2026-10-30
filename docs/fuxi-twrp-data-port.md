@@ -472,3 +472,13 @@ TWRP recovery固定72字节绑定元数据两次为state2/空向量，与Android
 两组公开configure离线解析通过；存在-62→upgrade→重试代码，不证明实机使用。
 没有新增固件/SMC、触发升级/解密/写回，M3/M4/M5未通过。详见
 [TWRP/keystore2上下文及后续差分边界](fuxi-m3-twrp-keystore-context-20261030.md)。
+
+## 2026-10-30：同源 public configure A/B 候选就绪
+
+`out/m3-configure-context-a-v1`（169e7401…185e44b）与
+`out/m3-configure-context-b-v1`（81e1abd4…77474f5）均已构建、29项资格全0；
+91文件源码/实际框架脚本/构建输入相同，board仅公开patch值20261005/20991231不同。
+都关闭特性探针，configure后直接进入既有恢复；不接入generate/upgrade/写回。
+12组厂商编码匹配、26项TA公开解析、11项证据拒绝及每组27项配置入口模拟通过。
+仅完成主机候选，无本轮设备操作；真实-62、M3/M4/M5仍未通过。
+详见[候选、精确SHA与实机判据](fuxi-m3-configure-pair-20261030.md)。

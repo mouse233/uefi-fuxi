@@ -1,0 +1,39 @@
+{
+  "result": "passed",
+  "profiles": [
+    {
+      "profile": "A",
+      "patch": 20261005,
+      "image_sha256": "169e7401d2fa3fcce8347f50232b253c11bf884773b474fb2365b3b52185e44b",
+      "bytes": 1888256,
+      "checks": 29,
+      "efi_sha256": "1bbfbb14983c47cea04257bcc381ec92f611510140ee39a8d964d27dd9add2df"
+    },
+    {
+      "profile": "B",
+      "patch": 20991231,
+      "image_sha256": "81e1abd43ec63d27abd970be69943557d388b61e72ce6274f1684b9a977474f5",
+      "bytes": 1888256,
+      "checks": 29,
+      "efi_sha256": "8f950db034628a057b2b1493d0fc707dcbe70362fa03d58a5f1c2a36d9ee5a5d"
+    }
+  ],
+  "source_files": 91,
+  "same_sources": true,
+  "same_framework_scripts": true,
+  "same_build_inputs": true,
+  "board_difference": [
+    "FUXI_M3_CONFIGURE_PATCH"
+  ],
+  "inputs": {
+    "device": "/work/ramdisk-test/UniXNU-fuxi",
+    "config_ref": "1d071dae4618b0676d313cfbe1fc39689e6f139e",
+    "board_sha256": "8dde9e8c69412191a1af71a471f3f46695da0a32a27e2f19ade2f43e12d17905",
+    "framework_ref": "7e237de0aa81a8f38221134c752af2d71236cddc",
+    "framework_dirty": true
+  },
+  "sources": {
+    "tools/check_fuxi_m3_configure_pair.py": "c4d8f97dabd83d047306adc5e2cf15308732f213307c0b547c7612ee54291264"
+  },
+  "scope": "Host qualification only. No device boot or M3/M4/M5 result."
+}

@@ -1,0 +1,869 @@
+{
+  "result": "passed",
+  "command": "0x2116",
+  "date_support": 1,
+  "original_gate_sha256": "817bc13d0783d79380a054cfa0b6e5fa27d86a44b245a649016f1fbe1f6c2c32",
+  "twrp_context_sha256": "e6d10b4457c6e2a681c363d2bf1e574c141381073156698ee9d812db6cf4a42a",
+  "partition_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+  "profiles": [
+    {
+      "os_version": 170000,
+      "os_patch": 20261005,
+      "vendor_patch": 20261005,
+      "configure_cbor_hex": "a416031a300002c11a000298101a300002c21a0135288d1a300002ce1a0135288d",
+      "vendor_request_matches": 6,
+      "vendor_vectors": [
+        "a416031a300002c11a000298101a300002c21a0135288d1a300002ce1a0135288d",
+        "a416031a300002c11a000298101a300002ce1a0135288d1a300002c21a0135288d",
+        "a416031a300002c21a0135288d1a300002c11a000298101a300002ce1a0135288d",
+        "a416031a300002c21a0135288d1a300002ce1a0135288d1a300002c11a00029810",
+        "a416031a300002ce1a0135288d1a300002c11a000298101a300002c21a0135288d",
+        "a416031a300002ce1a0135288d1a300002c21a0135288d1a300002c11a00029810"
+      ],
+      "cases": 13,
+      "tests": [
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 9,
+          "export_reached": false,
+          "instructions": 1893,
+          "gate_getters": [
+            "0xb82c",
+            "0xb8ac",
+            "0xb940",
+            "0xb850"
+          ],
+          "status": -38,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ec",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            0,
+            0,
+            20261005,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 9,
+          "export_reached": false,
+          "instructions": 1812,
+          "gate_getters": [
+            "0xb82c",
+            "0xb8ac",
+            "0xb940",
+            "0xb850"
+          ],
+          "status": -38,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ec",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            0,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 9,
+          "export_reached": false,
+          "instructions": 1898,
+          "gate_getters": [
+            "0xb82c",
+            "0xb8ac",
+            "0xb940",
+            "0xb850"
+          ],
+          "status": -38,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ec",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            0
+          ]
+        },
+        {
+          "logs_suppressed": 6,
+          "export_reached": false,
+          "instructions": 2514,
+          "gate_getters": [],
+          "status": -40,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 5,
+          "export_reached": false,
+          "instructions": 2162,
+          "gate_getters": [],
+          "status": -40,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            20261005
+          ]
+        },
+        {
+          "logs_suppressed": 10,
+          "export_reached": false,
+          "instructions": 2330,
+          "gate_getters": [
+            "0xb82c",
+            "0xb8ac",
+            "0xb940",
+            "0xb850"
+          ],
+          "status": -38,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ec",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            0
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 1959,
+          "gate_getters": [],
+          "status": -40,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20261005,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "os_version": 170000,
+      "os_patch": 20991231,
+      "vendor_patch": 20991231,
+      "configure_cbor_hex": "a416031a300002c11a000298101a300002c21a01404cff1a300002ce1a01404cff",
+      "vendor_request_matches": 6,
+      "vendor_vectors": [
+        "a416031a300002c11a000298101a300002c21a01404cff1a300002ce1a01404cff",
+        "a416031a300002c11a000298101a300002ce1a01404cff1a300002c21a01404cff",
+        "a416031a300002c21a01404cff1a300002c11a000298101a300002ce1a01404cff",
+        "a416031a300002c21a01404cff1a300002ce1a01404cff1a300002c11a00029810",
+        "a416031a300002ce1a01404cff1a300002c11a000298101a300002c21a01404cff",
+        "a416031a300002ce1a01404cff1a300002c21a01404cff1a300002c11a00029810"
+      ],
+      "cases": 13,
+      "tests": [
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 2166,
+          "gate_getters": [],
+          "status": 0,
+          "configured": 1,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ed",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 9,
+          "export_reached": false,
+          "instructions": 1893,
+          "gate_getters": [
+            "0xb82c",
+            "0xb8ac",
+            "0xb940",
+            "0xb850"
+          ],
+          "status": -38,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ec",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            0,
+            0,
+            20991231,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 9,
+          "export_reached": false,
+          "instructions": 1812,
+          "gate_getters": [
+            "0xb82c",
+            "0xb8ac",
+            "0xb940",
+            "0xb850"
+          ],
+          "status": -38,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ec",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            0,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 9,
+          "export_reached": false,
+          "instructions": 1898,
+          "gate_getters": [
+            "0xb82c",
+            "0xb8ac",
+            "0xb940",
+            "0xb850"
+          ],
+          "status": -38,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ec",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            0
+          ]
+        },
+        {
+          "logs_suppressed": 6,
+          "export_reached": false,
+          "instructions": 2514,
+          "gate_getters": [],
+          "status": -40,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 5,
+          "export_reached": false,
+          "instructions": 2162,
+          "gate_getters": [],
+          "status": -40,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4fc",
+              "bytes": 4
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            20991231
+          ]
+        },
+        {
+          "logs_suppressed": 10,
+          "export_reached": false,
+          "instructions": 2330,
+          "gate_getters": [
+            "0xb82c",
+            "0xb8ac",
+            "0xb940",
+            "0xb850"
+          ],
+          "status": -38,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4ec",
+              "bytes": 1
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            0
+          ]
+        },
+        {
+          "logs_suppressed": 4,
+          "export_reached": false,
+          "instructions": 1959,
+          "gate_getters": [],
+          "status": -40,
+          "configured": 0,
+          "ta_ram_writes": [
+            {
+              "va": "0x5b4f0",
+              "bytes": 4
+            },
+            {
+              "va": "0x5b4f8",
+              "bytes": 4
+            }
+          ],
+          "values": [
+            170000,
+            0,
+            20991231,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_configure_profiles.py": "874cae3d91db08fe464dda40f58082b15fe99592d6b8bc7b70b4092d263c06cf",
+    "tools/audit_fuxi_m3_configure_gate.py": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e",
+    "tools/audit_fuxi_m3_recovery_wire.py": "d3279366735a41971546a8230ec2439e9840601db393b72e3d243c1a88619c0d",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb"
+  },
+  "scope": "Fixed vendor serializer and TA public parser in private emulator RAM. No phone, real blob, secret, SMC, upgrade or persistent write. Current TWRP properties do not prove constructor-sampled values or explain live -62."
+}

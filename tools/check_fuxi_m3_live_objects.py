@@ -47,12 +47,11 @@ def main():
     configure=None
     if candidate.get('m3_configure_recovery'):
         from m3_configure_binding import load_configure_evidence
-        configure=load_configure_evidence(out/'configure-evidence.json')
+        configure=load_configure_evidence(out/'configure-evidence.json',candidate['m3_configure_binding']['os_patch'])
         assert defs['FUXI_M3_CONFIGURE_TAG']==configure['tag'] and candidate['m3_configure_binding']==configure
-        source=(root/'Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3ConfigureDiagnostic.inc').read_text()
-        body=re.search(r'mConfigureRequest\[\] = \{(.*?)\};',source,re.S).group(1)
-        packet=bytes(int(s.strip(),0) for s in body.strip().split(','))
-        assert packet[:4]==bytes.fromhex('16210000') and packet[4:]==bytes.fromhex(configure['configure_cbor_hex'])
+        assert defs['FUXI_M3_CONFIGURE_PATCH']==str(configure['os_patch'])
+        packet=bytes.fromhex('16210000'+configure['configure_cbor_hex'])
+        assert packet in (out/'FuxiNativeUfsDxe.efi').read_bytes(), 'compiled configure request mismatch'
     assert defs['FUXI_M3_CHARACTERISTICS_PROBE']==str(int(candidate.get('m3_characteristics_probe',False)))
     probe=None
     if candidate.get('m3_characteristics_probe'):
