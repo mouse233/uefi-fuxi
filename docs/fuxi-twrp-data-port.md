@@ -435,8 +435,9 @@ TA RAM 状态槽。固定 QTI 编码器在 date-support 模式下两个补丁字
 getVersion 后、首条密钥请求前；失败/未知即保留并 PARK。镜像 SHA256
 `5620674f194370b0ac480296c0df4986d28af1ba6c0d2fdee0894608e5f01888`，
 28 项资格/81 源码绑定通过；attempt-01 实机 configure 返回 status=0 并被接受，
--64 门解除，但首条恢复 begin 返回 -14（status=FFFFFFF2），未取得 operation
-handle，-14 语义尚未归因。configure 成功也只解除本机 -64 门；
+-64 门解除，但首条恢复 begin 返回 -62（status=FFFFFFC2，两次启动一致），
+未取得 operation handle；-62 只由键 blob 版本/参数校验函数产生，具体命中
+“版本过低”还是“配置槽不符”尚未区分。configure 成功也只解除本机 -64 门；
 convert/HWKM/ICE/DUN 与 userdata 明文对照仍是后续独立环节，M3/M4/M5 未通过。
 详见 [恢复入口与实机判据](fuxi-m3-key-recovery-live-20261030.md) 与
 候选 REVIEW。

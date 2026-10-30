@@ -124,10 +124,10 @@ configured 入口 27 项、普通入口 17 项、后端 55 项、交换 25 项�
 convert、ICE 装槽或 userdata 明文。M3/M4/M5 仍未通过。详见
 `out/m3-key-recovery-configured-v3/REVIEW.md`。
 
-## configured-v3 attempt-01：configure 被接受，begin 返回 -14
+## configured-v3 attempt-01/02：configure 被接受，begin 返回 -62
 
-照片（`out/m3-key-recovery-configured-v3/attempt-01/screen-01.jpeg`，SHA256
-`aa69b26a…e89c27c`）显示：
+两次照片（`attempt-01/screen-01.jpeg` SHA256 `aa69b26a…e89c27c`；
+`attempt-02/screen-01.jpeg` SHA256 `b89a264c…0965faf0`）显示相同结果：
 
 - `CONFIGURE begin once os=170000 os-patch=20261005 vendor-patch=20261005`
 - `CONFIGURE return a0..a3=0 resumes=0`
@@ -135,28 +135,32 @@ convert、ICE 装槽或 userdata 明文。M3/M4/M5 仍未通过。详见
 - `CONFIGURE Success；continue existing-key recovery`
 - `RECOVERY result=Not Ready state=5 stage=1 km=0 bytes=0 retained=1`
 - `RECOVERY fault=7 commands=1 resumes=1`
-- `RECOVERY response-header=1 status=FFFFFFF2 payload-bytes=40616 wire-bytes=40624`
-- `BATCH stop=key-recovery passed=A43 retained=1`，最终 PARK
+- `RECOVERY response-header=1 status=FFFFFFC2 payload-bytes=40616 wire-bytes=40624`
+- `BATCH stop=key-recovery passed=4A3 retained=1`，最终 PARK
 
 即：configure 的固定请求被 TA 接受，-64“未配置”门解除；但第一条密钥 `begin`
-仍被拒绝，状态为 `0xFFFFFFF2`（-14），未取得 operation handle，恢复未开始。
+仍被拒绝，状态为 `0xFFFFFFC2`（-62），未取得 operation handle，恢复未开始。
 `payload-bytes` 与 `wire-bytes` 仍等于容量与其减 8，属同一种“无输出错误”形状。
+两次启动状态、长度与 `resumes=1` 完全一致，可复现。
 
--14 的语义**尚未确定**：固定 TA 中仅五处立即数产生 -14，分别位于
-generate/import 的 RPMB/熔丝助手与设备 ID 预置路径，均不在 `0x310f` 处理函数
-`0x8984` 的直接调用链内；而分发器 `0xb2a0` 派发前会经跳板调用外部回调。
-因此不应把 -14 直接解释为过期时间、RPMB 或任何单一校验。`resumes=1` 仅是
-观测事实。M3/M4/M5 仍未通过。
+> 更早的记录把该照片读成 `FFFFFFF2`（-14）；放大重读后确认是 `FFFFFFC2`（-62），
+> `passed` 为 `4A3`。此前基于 -14 的 `km_check_key_id`／KM 分区归因作废。
 
-### 追加：-14 的静态可达性（2026-10-30）
+### -62 的静态归属
 
-沿 `0x8984`（命令 `0x310f`）的直接 `bl` 边做可达性分析，五个 -14 立即数中只有
-`0x1d0d8`（-14 在 `0x1d124`）可达：`0x8984 → 0x8904`（`km_check_key_id`
-包装，读 `operation->keyblob.keyId`）`→ 0x1a3d8 → 0x1ae00 → 0x1d0d8`。
-`0x1d0d8` 是 KM 安全存储读取助手：当存储可用标志 `0x5b5a0=1` 而句柄
-`0x5b5b0`/`0x5b5b8` 为空时，打印 `Partition not opened for writing!` 并返回 -14。
-其余三处（generate/import 的熔丝与 RPMB 助手、设备 ID 预置）不可达。
+整个 TA 只有两处立即数产生 -62，均在函数 `0x98c0`（`mov w19, #-0x3e`）：
 
-边界：分区初始化 `0x1d9e8` 经 GOT 跳板调用外部 TEE 接口（`0x400/0x410/0x420/
-0x430`），这些间接返回无法静态排除；运行时标志与句柄状态也不可观测。因此
-“-14 = KM 分区未打开”仍是**静态推断**，不是已证明的根因。
+- `0x9908`：`[obj+8]`（u64 版本）小于 `0xdde0()` 返回的 `0x4_0000_0005`
+  时直接返回 -62，无日志。
+- `0x9a1c`：先打印四个 `Key blob …Level` 值，再在键 blob 的
+  osVersion/osPatchLevel（可能还有 vendor/boot patch）与 `0x5b4f0/0x5b4f4/0x5b4f8/
+  0x5b4fc` 已配置槽不一致时返回 -62。
+
+`0x98c0` 的调用者是键 blob 校验链（`0x347fc`、`0x3114` 处理函数）。begin 对这些
+校验走的是操作结构里的函数指针（`0x8b1c` 的 `[x21+0x10]`、`0x8db4` 的
+`[x19+0x40]`），所以直接 `bl` 边不可达，但 -62 只可能来自这里。
+
+结论边界：本次 -62 命中的是“版本过低”还是“已配置字段与键 blob 不符”，从 HLOS
+不可观测（TA 日志不对外）。同一设备上 TWRP 能正常解密，说明键 blob 本身可用，
+嫌疑更偏向已配置槽内容或版本索引（`0x5a308`，可能与缺失的 `0x3121` setVersion
+有关）。M3/M4/M5 仍未通过。
