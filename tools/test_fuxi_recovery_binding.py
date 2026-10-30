@@ -10,8 +10,9 @@ from collect_fuxi_recovery_binding import collect,RECOVERY_SHA,BINDING_POINTER_V
 
 
 class Fake:
-    def __init__(self,fault=''):
+    def __init__(self,fault='',recovery_tag=False):
         self.fault=fault;self.reads=[];self.stats=0;self.maps_calls=0
+        self.recovery_tag=recovery_tag
         self.base=0x7000000000;self.object=0x7100000000
     def __call__(self,*args):
         fault=self.fault
@@ -45,7 +46,11 @@ class Fake:
             parts=shlex.split(args[3]);assert parts[0:3]==['dd','if=/proc/123/mem','bs=1'] and parts[-1]=='2>/dev/null'
             address=int(parts[3].split('=')[1]);size=int(parts[4].split('=')[1]);self.reads.append((address,size))
             assert (address,size) in ((self.base+BINDING_POINTER_VA,8),(self.object,28))
-            if size==8:return struct.pack('<Q',self.object+(0x10000 if fault=='pointer' else 0))
+            if size==8:
+                pointer=self.object+(0x10000 if fault=='pointer' else 0)
+                if self.recovery_tag:pointer|=0xb400000000000000
+                if fault=='noncanonical-pointer':pointer|=0xb401000000000000
+                return struct.pack('<Q',pointer)
             state={'binding0':0,'binding1':1,'binding3':3}.get(fault,2)
             if fault=='header-race' and len(self.reads)==4:state=1
             raw=struct.pack('<QQQI',1 if fault=='vector' else 0,0,0,state)
@@ -78,7 +83,7 @@ def main():
     serialized=json.dumps(report)
     assert str(fake.object) not in serialized and 'seed_bytes' not in serialized
     faults=['state','ro.product.device','ro.boot.serialno','ro.build.version.release','ro.twrp.version','root','mount','pids','sha',
-            'map-origin','map-perms','map-malformed','pointer','binding0','binding1','binding3','vector','header-race','pid-race','map-race','short']
+            'map-origin','map-perms','map-malformed','pointer','noncanonical-pointer','binding0','binding1','binding3','vector','header-race','pid-race','map-race','short']
     for fault in faults:
         fake=Fake(fault)
         try:collect(fake)
@@ -87,8 +92,11 @@ def main():
     for tagged in (False,True):
         report=collect(AndroidFake(tagged),True)
         assert report['process']=='vold' and report['executable_sha256']==ANDROID_VOLD_SHA and report['binding']['state']==2
+    tagged_recovery=Fake(recovery_tag=True);report=collect(tagged_recovery)
+    assert report['pointer_tag_present'] and report['binding']['state']==2
+    assert [n for _,n in tagged_recovery.reads]==[8,28,8,28]
     root=Path(__file__).resolve().parents[1]
-    result=dict(result='passed',synthetic=True,cases=3+len(faults),metadata_bytes_per_success=72,
+    result=dict(result='passed',synthetic=True,cases=4+len(faults),metadata_bytes_per_success=72,
                 scope='Fake ADB and /proc headers only. Not a phone capture and never evidence to set BindingChecked.',
                 sources={str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in (Path(__file__),Path(__file__).with_name('collect_fuxi_recovery_binding.py'))})
     a.report.parent.mkdir(parents=True,exist_ok=True);a.report.write_text(json.dumps(result,indent=2)+'\n')

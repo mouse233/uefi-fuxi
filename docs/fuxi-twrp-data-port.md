@@ -458,3 +458,17 @@ YYYYMMDD到YYYYMM的规范化。详见
 该候选15:55的attempt-01照片已确认：特性-33后RECOVERY skipped，commands1、
 attempted0/retained1，最终m3-characteristics/PARK；本次失败分支没有继续begin。
 这不代表密钥恢复或M3/M4/M5通过，也不以照片替代共享页物理回读与未知完成验证。
+
+## 2026-10-30：TWRP 实际属性、绑定状态与 keystore2 中间层
+
+用户自行进入TWRP并授权读取后，独立上下文包`out/m3-twrp-context-audit-v1`
+取得三进程/四库哈希匹配、两次稳定的属性/进程证据：release17，system/vendor patch
+均2099-12-31，区别于此前Android/UEFI基准2026-10-05；当前属性不证明构造时采样值。
+TWRP recovery固定72字节绑定元数据两次为state2/空向量，与Android全局状态相符，
+不替换原候选绑定pin、不证明具体键的上下文。
+
+修复主机采集器遗漏TWRP顶字节堆标签，保留低48位/私有映射/读长检查；26项绑定
+采集器和17项新上下文采集器模拟通过。固定keystore2的8段代码、6组状态分支及
+两组公开configure离线解析通过；存在-62→upgrade→重试代码，不证明实机使用。
+没有新增固件/SMC、触发升级/解密/写回，M3/M4/M5未通过。详见
+[TWRP/keystore2上下文及后续差分边界](fuxi-m3-twrp-keystore-context-20261030.md)。

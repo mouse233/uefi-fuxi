@@ -85,7 +85,10 @@ def collect(run,android=False):
     for unused in range(2):
         pointer=memory(pointer_address,8)
         address=struct.unpack('<Q',pointer)[0]
-        if android:address&=0x00ffffffffffffff # strip only the AArch64 heap top-byte tag
+        # The pinned TWRP recovery also uses tagged AArch64 heap pointers, as
+        # observed by a pointer-only read. Strip only the top byte, then retain
+        # the existing low-48-bit, alignment and private-mapping checks.
+        address&=0x00ffffffffffffff
         if address&7 or not 4096<=address<(1<<48)-28:raise ValueError('invalid binding object pointer')
         readable(address,28,True)
         header=memory(address,28)
@@ -99,6 +102,7 @@ def collect(run,android=False):
         raise ValueError('unbound-used state with empty vector not established')
     return dict(schema=1,collected_utc=datetime.now(timezone.utc).isoformat(),serial=SERIAL,
                 process=process,executable_sha256=expected_sha,process_pid=int(pid),process_start_ticks=before,
+                pointer_tag_present=bool(struct.unpack('<Q',snapshots[0][0])[0]>>56),
                 data_mount=dict(device=data[0][0],filesystem=data[0][2]),
                 binding=dict(state=2,meaning='used without seed',vector_empty=True,stable_snapshots=2),
                 collector_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
