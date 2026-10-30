@@ -86,3 +86,8 @@ header-seen、32位status、payload长度、wire响应长度；不读取/打印�
 新增负status带payload、正status两组反例，入口17项、后端55项；两组都保持首条
 命令后隔离，注册页快照不变，不再调用且没有明文。默认仍关闭，等待新的独立启动。
 实际对象/链接map检查已纳入统一资格工具，避免只检查未使用库的EFI哈希。
+
+status-v2 attempt-01已于2026-10-30 12:00 Asia/Shanghai临时启动，固定镜像
+`c32884767117277ff89beb68b2fe2c4eedb6b7e675805ad0eafaf908320fc83e`，27资格/76源码
+绑定及fcde91e/fuxi/unlocked/slot_a核对通过。fastboot发送/Booting exit0，总1.735s；
+等待屏幕照片，尚无v2恢复/状态码或会话收尾结论，没有重试，M3仍未通过。
