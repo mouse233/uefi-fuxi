@@ -1,0 +1,980 @@
+{
+  "schema_version": 1,
+  "evidence_cutoff_local": "2026-10-30 23:35 Asia/Shanghai",
+  "repository_root": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data",
+  "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+  "device_log_baseline_commit": "9ae50c30b09dcea9a322c6b57df02c19514d7b7a",
+  "result": "local-inputs-verified",
+  "files_count": 110,
+  "files": [
+    {
+      "role": "keymaster-partition",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-date-support-v1/keymaster-partition-verified.img",
+      "bytes": 524288,
+      "sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+      "repo_relative_path": "out/m3-date-support-v1/keymaster-partition-verified.img",
+      "expected_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+      "expected_match": true
+    },
+    {
+      "role": "tz-rom",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-boot-provenance-audit-v1/rom-tz.img",
+      "bytes": 3973120,
+      "sha256": "d4b8afbe3a8b3468a0f4f740059ab9aed0a8ef803af4f1f58b164ce1c460d418",
+      "repo_relative_path": "out/m3-boot-provenance-audit-v1/rom-tz.img",
+      "expected_sha256": "d4b8afbe3a8b3468a0f4f740059ab9aed0a8ef803af4f1f58b164ce1c460d418",
+      "expected_match": true
+    },
+    {
+      "role": "abl-a-pe",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-firmware-identity-v1/LinuxLoader-a.efi",
+      "bytes": 1134592,
+      "sha256": "48de0c341840c30e99d483ebbbdc0df4de67bc971d76bd05477587ace87aab3b",
+      "repo_relative_path": "out/m3-firmware-identity-v1/LinuxLoader-a.efi",
+      "expected_sha256": "48de0c341840c30e99d483ebbbdc0df4de67bc971d76bd05477587ace87aab3b",
+      "expected_match": true
+    },
+    {
+      "role": "abl-b-pe",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/boot-tests/2026-10-22-stage-markers/private/LinuxLoader.efi",
+      "bytes": 1142784,
+      "sha256": "b5ccae26a30febeb6c303dde9c141eee2241f0046c27e5918667f1d7d316e954",
+      "expected_sha256": "b5ccae26a30febeb6c303dde9c141eee2241f0046c27e5918667f1d7d316e954",
+      "expected_match": true
+    },
+    {
+      "role": "recovery",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/boot-tests/2026-10-25-twrp-skkk-data-readonly-analysis/ramdisk-files/system/bin/recovery",
+      "bytes": 2606904,
+      "sha256": "9aa603b1b2851df9c773c153f7df4520b7c634be0c15bc55f43c2fb83b82e4b0",
+      "expected_sha256": "9aa603b1b2851df9c773c153f7df4520b7c634be0c15bc55f43c2fb83b82e4b0",
+      "expected_match": true
+    },
+    {
+      "role": "keystore2",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/boot-tests/2026-10-25-twrp-skkk-data-readonly-analysis/ramdisk-files/system/bin/keystore2",
+      "bytes": 1598824,
+      "sha256": "c969b1d32054d05943a7a101eb0ea92c2063aec5d0cb2a555226197c5f4f5f4a",
+      "expected_sha256": "c969b1d32054d05943a7a101eb0ea92c2063aec5d0cb2a555226197c5f4f5f4a",
+      "expected_match": true
+    },
+    {
+      "role": "qtikeymint-twrp",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/twrp-a17-analysis/ramdisk/vendor/lib64/libqtikeymint.so",
+      "bytes": 271224,
+      "sha256": "657093d0991515f91e6ea35192b0cfe66bcbd52196a3b906fabe64086ab1ddcb",
+      "repo_relative_path": "out/twrp-a17-analysis/ramdisk/vendor/lib64/libqtikeymint.so",
+      "expected_sha256": "657093d0991515f91e6ea35192b0cfe66bcbd52196a3b906fabe64086ab1ddcb",
+      "expected_match": true
+    },
+    {
+      "role": "deviceutils",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/twrp-a17-analysis/ramdisk/vendor/lib64/libkeymasterdeviceutils.so",
+      "bytes": 36200,
+      "sha256": "1c2172c492cbe8d1c4dc990c8d0fd8deed036d8bf9c0e337139d66f0caa3d7d2",
+      "repo_relative_path": "out/twrp-a17-analysis/ramdisk/vendor/lib64/libkeymasterdeviceutils.so",
+      "expected_sha256": "1c2172c492cbe8d1c4dc990c8d0fd8deed036d8bf9c0e337139d66f0caa3d7d2",
+      "expected_match": true
+    },
+    {
+      "role": "qcbor",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/twrp-a17-analysis/ramdisk/vendor/lib64/libqcbor.so",
+      "bytes": 23440,
+      "sha256": "bda86553e45dce1da186830619909b3bae95ff9a91ce3a5df94fa0801c8b2500",
+      "repo_relative_path": "out/twrp-a17-analysis/ramdisk/vendor/lib64/libqcbor.so",
+      "expected_sha256": "bda86553e45dce1da186830619909b3bae95ff9a91ce3a5df94fa0801c8b2500",
+      "expected_match": true
+    },
+    {
+      "role": "qseecom",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/twrp-a17-analysis/ramdisk/vendor/lib64/libQSEEComAPI.so",
+      "bytes": 62312,
+      "sha256": "5c996c509fdab3e5925af52f59d554bf54a7c54743c668017a83ef0d1b4e65ed",
+      "repo_relative_path": "out/twrp-a17-analysis/ramdisk/vendor/lib64/libQSEEComAPI.so",
+      "expected_sha256": "5c996c509fdab3e5925af52f59d554bf54a7c54743c668017a83ef0d1b4e65ed",
+      "expected_match": true
+    },
+    {
+      "role": "qcom-scm",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/twrp-a17-analysis/ramdisk/vendor/lib/modules/1.1/qcom-scm.ko",
+      "bytes": 204000,
+      "sha256": "8932f0206f8a0083af352684cd64de8c9406346dd639606d045136cf27b079a5",
+      "repo_relative_path": "out/twrp-a17-analysis/ramdisk/vendor/lib/modules/1.1/qcom-scm.ko",
+      "expected_sha256": "8932f0206f8a0083af352684cd64de8c9406346dd639606d045136cf27b079a5",
+      "expected_match": true
+    },
+    {
+      "role": "smcinvoke",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/twrp-a17-analysis/ramdisk/vendor/lib/modules/1.1/smcinvoke_dlkm.ko",
+      "bytes": 310112,
+      "sha256": "831a6db7570e66729db84cd0a7ddc63f8cdbc4b03fd250dee15b80b561969348",
+      "repo_relative_path": "out/twrp-a17-analysis/ramdisk/vendor/lib/modules/1.1/smcinvoke_dlkm.ko",
+      "expected_sha256": "831a6db7570e66729db84cd0a7ddc63f8cdbc4b03fd250dee15b80b561969348",
+      "expected_match": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmciDiagnostic.inc",
+      "bytes": 31727,
+      "sha256": "5ff8daf4336058cd97bddf3bf1fc131268d0afa6e62be9c482af8a0c7382ac5b",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3SmciDiagnostic.inc",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3RecoveryDiagnostic.inc",
+      "bytes": 5709,
+      "sha256": "1cae931f656593536d037ac47307e8efd5ba03722cae4736803a9176eed20db5",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3RecoveryDiagnostic.inc",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3ConfigureDiagnostic.inc",
+      "bytes": 4043,
+      "sha256": "e1329c5afc17e5fc2ea87e5da5d316b6149ec36d4eb439b7748754723c37f558",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3ConfigureDiagnostic.inc",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3CharacteristicsDiagnostic.inc",
+      "bytes": 1389,
+      "sha256": "0e7ad210f4f90c8d48dda3d30d472ef504a60e22386f04972f9ea945cd8e33a6",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3CharacteristicsDiagnostic.inc",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyRecovery.c",
+      "bytes": 8827,
+      "sha256": "691b46d58165a578ca55816ab813f9bf816730b40b66ee1549d93de2f71831d8",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyRecovery.c",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyRecovery.h",
+      "bytes": 4526,
+      "sha256": "5e62821611c9baecbfbdb2afef37848557bc1477809d13954c0b66769f50a6cd",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyRecovery.h",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyRecoveryF2fs.c",
+      "bytes": 1554,
+      "sha256": "bfbc7ae50a71b015ce9196066c2e9d68e1ad49cf1a755e798e78fce018bbc348",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyRecoveryF2fs.c",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3Secdiscardable.c",
+      "bytes": 4258,
+      "sha256": "46f7eef2e9ae607f090352ee149def706fe34824c4b644ae9384d4e8aab7a5f8",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3Secdiscardable.c",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyMintBackend.c",
+      "bytes": 17652,
+      "sha256": "71489c1633be6eb3d1e2535fd6feecf8f61bbab12c19f92ebe62fa8c0a2d8125",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyMintBackend.c",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyMintBackend.h",
+      "bytes": 3372,
+      "sha256": "1f160b3a5c8762140ee7d0edfcc4a513488b6d08a2db22a00f63f21b85a23f4a",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3KeyMintBackend.h",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3SecretExchange.c",
+      "bytes": 4895,
+      "sha256": "5fee38a8f452be0e0da938d08de254a57be33cf06a0ece78e7dcd31758990b39",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3SecretExchange.c",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3SecretExchange.h",
+      "bytes": 1666,
+      "sha256": "98f98bf42ad1220cddefe9cf0bc0d3de4a17e27a59bf9d8b7acbc3fbbc7258b4",
+      "repo_relative_path": "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiDataProbeDxe/M3SecretExchange.h",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_begin_version.py",
+      "bytes": 16698,
+      "sha256": "09a4181f38a9200974073d2696d26e1bf1dd85e87019eb0b5b66165686281e34",
+      "repo_relative_path": "tools/audit_fuxi_m3_begin_version.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_boot_client.py",
+      "bytes": 15199,
+      "sha256": "d65b43b1945cf9d61e139f9e2ad0908ef353e83e9fc74062dfef3f6ea5574a71",
+      "repo_relative_path": "tools/audit_fuxi_m3_boot_client.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_boot_provenance.py",
+      "bytes": 16312,
+      "sha256": "c363e9b3ecce95eb11e7f1e06f95b5aa803aa3fc02f54adac385d1a0f5de706e",
+      "repo_relative_path": "tools/audit_fuxi_m3_boot_provenance.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_active_firmware.py",
+      "bytes": 9943,
+      "sha256": "70a649d1a6e31c895294b2b39618e13d34a86b0538ce003c7b0931f865782486",
+      "repo_relative_path": "tools/audit_fuxi_m3_active_firmware.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_sdk_reference.py",
+      "bytes": 8288,
+      "sha256": "488668712365c5e31ddd6220f42b94665726af080d9ac41eda98a158c9133338",
+      "repo_relative_path": "tools/audit_fuxi_m3_sdk_reference.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_sdk_lifecycle.py",
+      "bytes": 12824,
+      "sha256": "3f40414af5fc26c09bf5ddae67e4f2ceaee2993ebf1297545905d0c5abead1da",
+      "repo_relative_path": "tools/audit_fuxi_m3_sdk_lifecycle.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_deployed_loader.py",
+      "bytes": 14335,
+      "sha256": "ba81c5ee77eb6668940c0b89dda2eec04502a4dec28d0e34053dff915f9308cf",
+      "repo_relative_path": "tools/audit_fuxi_m3_deployed_loader.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_keystore_context.py",
+      "bytes": 9159,
+      "sha256": "c93d1b1c0e5b6a34a983dd85ce0d3d9e3041e7d3580069667c85e45758c0a32b",
+      "repo_relative_path": "tools/audit_fuxi_m3_keystore_context.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_recovery_context.py",
+      "bytes": 6442,
+      "sha256": "bd49af75cb87369d578ad9c0c6323b70acb209d69b4451b5bd812b4f56313d39",
+      "repo_relative_path": "tools/audit_fuxi_m3_recovery_context.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_recovery_wire.py",
+      "bytes": 15258,
+      "sha256": "d3279366735a41971546a8230ec2439e9840601db393b72e3d243c1a88619c0d",
+      "repo_relative_path": "tools/audit_fuxi_m3_recovery_wire.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_key_recovery.py",
+      "bytes": 7961,
+      "sha256": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3",
+      "repo_relative_path": "tools/audit_fuxi_m3_key_recovery.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_metadata_read.py",
+      "bytes": 15900,
+      "sha256": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb",
+      "repo_relative_path": "tools/audit_fuxi_m3_metadata_read.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_configure_gate.py",
+      "bytes": 8460,
+      "sha256": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e",
+      "repo_relative_path": "tools/audit_fuxi_m3_configure_gate.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/audit_fuxi_m3_configure_profiles.py",
+      "bytes": 4697,
+      "sha256": "874cae3d91db08fe464dda40f58082b15fe99592d6b8bc7b70b4092d263c06cf",
+      "repo_relative_path": "tools/audit_fuxi_m3_configure_profiles.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/test_fuxi_m3_session_lifecycle.py",
+      "bytes": 5961,
+      "sha256": "357fd293d8503f393789d69932e1435e7a19bb56cdf367faf3ae6ca8eae55d75",
+      "repo_relative_path": "tools/test_fuxi_m3_session_lifecycle.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "production-or-audit-source",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/tools/collect_fuxi_m3_blob_public.py",
+      "bytes": 10320,
+      "sha256": "57177a8e9495f7b7530ed427617cefc77daca7c44aab5620a1384e4694c55bff",
+      "repo_relative_path": "tools/collect_fuxi_m3_blob_public.py",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-active-firmware-20261030.json",
+      "bytes": 6988,
+      "sha256": "4e9d233b962c36ce1170e8529d73351132534ac5a8037f52b3299a0cc5ba0230",
+      "repo_relative_path": "docs/evidence/fuxi-m3-active-firmware-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-android-binding-20261030.json",
+      "bytes": 1317,
+      "sha256": "f2e5a8b406a8040e6834afcec72c31613adf1a840eec759ad7b10bacf74dedfc",
+      "repo_relative_path": "docs/evidence/fuxi-m3-android-binding-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-begin-version-audit-20261030.json",
+      "bytes": 25800,
+      "sha256": "5bdc2d01b9c87c139cd75eada0c78c82f9be8f4ab6cce4eb886f3da4a91b8647",
+      "repo_relative_path": "docs/evidence/fuxi-m3-begin-version-audit-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-blob-public-20261030.json",
+      "bytes": 1395,
+      "sha256": "5533c6ffc3d67dc21da641934f5efce4e93cce437f73ea824eec581092b2002a",
+      "repo_relative_path": "docs/evidence/fuxi-m3-blob-public-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-boot-client-audit-20261030.json",
+      "bytes": 9178,
+      "sha256": "eb481f17e2302e59984753ce1d12b3f2a0d7ac72004fcc2029619a4130311bec",
+      "repo_relative_path": "docs/evidence/fuxi-m3-boot-client-audit-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-boot-provenance-20261030.json",
+      "bytes": 14755,
+      "sha256": "be900bdd0a0fcfc6bad8da70d235bbf10139191972fd079f1336f4f4a428cdad",
+      "repo_relative_path": "docs/evidence/fuxi-m3-boot-provenance-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-configure-a-attempt01-20261030.json",
+      "bytes": 3263,
+      "sha256": "8f6c2e1eb331b6d60eb2c98bb359cd71ca5b4dae8250019d579771633c713b2c",
+      "repo_relative_path": "docs/evidence/fuxi-m3-configure-a-attempt01-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-configure-b-attempt01-20261030.json",
+      "bytes": 3336,
+      "sha256": "f5d358725bf14c597822dd2453a85589057a8d01d34fa8336b1eb33d696ee122",
+      "repo_relative_path": "docs/evidence/fuxi-m3-configure-b-attempt01-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-configure-gate-20261030.json",
+      "bytes": 13055,
+      "sha256": "817bc13d0783d79380a054cfa0b6e5fa27d86a44b245a649016f1fbe1f6c2c32",
+      "repo_relative_path": "docs/evidence/fuxi-m3-configure-gate-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-configure-pair-20261030.json",
+      "bytes": 1291,
+      "sha256": "17ce15bc0037d913420ca4582153c32dbc5a28a45bb5262c4ef4f571f9b10cb0",
+      "repo_relative_path": "docs/evidence/fuxi-m3-configure-pair-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-configure-pair-live-20261030.json",
+      "bytes": 3284,
+      "sha256": "4076e97e634a0d25e81f04c6271a40d113dcd6413034f8a68e8cb99a50524e98",
+      "repo_relative_path": "docs/evidence/fuxi-m3-configure-pair-live-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-configure-profiles-20261030.json",
+      "bytes": 20205,
+      "sha256": "3cc89865a2f0de0298ef9fa5c2c593be7f8770594afb2f990cf0e1bff53f1320",
+      "repo_relative_path": "docs/evidence/fuxi-m3-configure-profiles-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-deployed-loader-20261030.json",
+      "bytes": 11603,
+      "sha256": "8c50771e55596540eeb60e3b1589656aa1a5af570f4bfbf7d55f49696e7a5018",
+      "repo_relative_path": "docs/evidence/fuxi-m3-deployed-loader-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-firmware-identity-20261030.json",
+      "bytes": 2753,
+      "sha256": "bcc7f0a6590ca47d24e65aeed69717da4e8c3fb30b53f4bba888e1503c28dfd0",
+      "repo_relative_path": "docs/evidence/fuxi-m3-firmware-identity-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-firmware-identity-tests-20261030.json",
+      "bytes": 1397,
+      "sha256": "9d77ac3e70ab7c04da7ea665e5bf983b9e71781db25242cf10bdef829d949e72",
+      "repo_relative_path": "docs/evidence/fuxi-m3-firmware-identity-tests-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-lookup-arch-candidate-20261030.json",
+      "bytes": 14976,
+      "sha256": "80aa5ce660e655c478a2acfd6d32af4f73df1cbfc9cd1379078eda72b967594e",
+      "repo_relative_path": "docs/evidence/fuxi-m3-lookup-arch-candidate-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-lookup-arch-device-20261030.json",
+      "bytes": 4944,
+      "sha256": "f27e5fef8260b75449df746d7ba9a90914ab96056189588ef07808d0d802fece",
+      "repo_relative_path": "docs/evidence/fuxi-m3-lookup-arch-device-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-recovery-context-20261030.json",
+      "bytes": 6373,
+      "sha256": "4f6db456f32198e8b014875399e3d2c2fca3d28bd42d0928449dd49455b591f7",
+      "repo_relative_path": "docs/evidence/fuxi-m3-recovery-context-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-sdk-lifecycle-20261030.json",
+      "bytes": 7377,
+      "sha256": "4b6582fea63c83eae47659644825d5e4595801d9908f7b60fd0fc86b272f61ac",
+      "repo_relative_path": "docs/evidence/fuxi-m3-sdk-lifecycle-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-sdk-reference-20261030.json",
+      "bytes": 2843,
+      "sha256": "4b9ea4e1e786e6a1ec6fec0b3ca11f9afd3dbc12e37350be5bde2b792cc8c018",
+      "repo_relative_path": "docs/evidence/fuxi-m3-sdk-reference-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-session-lifecycle-tests-20261030.json",
+      "bytes": 7588,
+      "sha256": "cd5931bf7c65f3abebfb1fd2963770d8a1cf234b0e18aceebabe9a5379e00a16",
+      "repo_relative_path": "docs/evidence/fuxi-m3-session-lifecycle-tests-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-smci-loader-20261028.json",
+      "bytes": 2274,
+      "sha256": "c127cafea1e11faf9d74dca04da7e82d6b45d0b00ba0bd14ca5ff2a6b74fafec",
+      "repo_relative_path": "docs/evidence/fuxi-m3-smci-loader-20261028.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "canonical-evidence",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/evidence/fuxi-m3-twrp-keystore-context-20261030.json",
+      "bytes": 11692,
+      "sha256": "e6d10b4457c6e2a681c363d2bf1e574c141381073156698ee9d812db6cf4a42a",
+      "repo_relative_path": "docs/evidence/fuxi-m3-twrp-keystore-context-20261030.json",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-twrp-data-port.md",
+      "bytes": 45256,
+      "sha256": "d0b14f43d0bbd94ff69c9e6387c73df56664a30a453775a152f228798c6b91ba",
+      "repo_relative_path": "docs/fuxi-twrp-data-port.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-key-recovery-live-20261030.md",
+      "bytes": 12247,
+      "sha256": "714eccd64c127edcc98b047c5edc5c0bae306d64b1b2bd9ff370322e9f7b0ea4",
+      "repo_relative_path": "docs/fuxi-m3-key-recovery-live-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-configure-pair-20261030.md",
+      "bytes": 8188,
+      "sha256": "b30c3d341ee1fa7f27bace289ffa080cee7edfa58196559c87c5c9bdce09f30a",
+      "repo_relative_path": "docs/fuxi-m3-configure-pair-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-begin-version-20261030.md",
+      "bytes": 9033,
+      "sha256": "5e03ad07dae14869e27a47f3914470bc39e0465aede4266bf746bb27d23b8d2c",
+      "repo_relative_path": "docs/fuxi-m3-begin-version-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-boot-client-20261030.md",
+      "bytes": 8185,
+      "sha256": "d4837ed7e7c49f3f747a0f30c59dade6267c00e303c46c232a5b8844d840a2c1",
+      "repo_relative_path": "docs/fuxi-m3-boot-client-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-boot-provenance-20261030.md",
+      "bytes": 8381,
+      "sha256": "b23082811e944fa945151699f87ceb048f67384d590125090c644ee8483466d9",
+      "repo_relative_path": "docs/fuxi-m3-boot-provenance-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-firmware-identity-20261030.md",
+      "bytes": 6535,
+      "sha256": "a4c92ff83d4d75837844b497697dedaf8e89c3229abdcd087f12a438016b1e00",
+      "repo_relative_path": "docs/fuxi-m3-firmware-identity-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-sdk-lifecycle-20261030.md",
+      "bytes": 7475,
+      "sha256": "d4e0814114a5da91bf484fca023be3d0689272e107d6a7edf345d947026273d0",
+      "repo_relative_path": "docs/fuxi-m3-sdk-lifecycle-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-deployed-loader-20261030.md",
+      "bytes": 7226,
+      "sha256": "5f96d23f79d632e65c4d349d0d36b9a33b80ea3b8db22400d0478f5d19ad79d6",
+      "repo_relative_path": "docs/fuxi-m3-deployed-loader-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-lookup-arch-20261030.md",
+      "bytes": 6645,
+      "sha256": "69ef3f01435a62a6ae51c11960a1942990948b4bddb73ea14089e6b82266ee5a",
+      "repo_relative_path": "docs/fuxi-m3-lookup-arch-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-twrp-keystore-context-20261030.md",
+      "bytes": 7527,
+      "sha256": "3f527534bdd3f4267d20f622bc05658782cd931dde2481c8d781a9742cd8a2a5",
+      "repo_relative_path": "docs/fuxi-m3-twrp-keystore-context-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-key-recovery-20261030.md",
+      "bytes": 6761,
+      "sha256": "11bed71e6449fc7f448c63fe5dee1daa93ea12eb4a1cb6d46a7db00ea83ab834",
+      "repo_relative_path": "docs/fuxi-m3-key-recovery-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-recovery-backend-20261030.md",
+      "bytes": 7754,
+      "sha256": "fc0631f2a4d9b2f46b47eaf387671826fcd6e8df405ff875a94ad850cc6a79ad",
+      "repo_relative_path": "docs/fuxi-m3-recovery-backend-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-secret-exchange-20261030.md",
+      "bytes": 7652,
+      "sha256": "484783aec18ebde85a24a2960fa1d1b9cea99c5893bc8e0dd43ba6afbfd38409",
+      "repo_relative_path": "docs/fuxi-m3-secret-exchange-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "topic-document",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/docs/fuxi-m3-characteristics-isolation-20261030.md",
+      "bytes": 6402,
+      "sha256": "f0e696aca779214f2bb3e190acfeb37809f34fcb28227becc0a21d3fc0d3f208",
+      "repo_relative_path": "docs/fuxi-m3-characteristics-isolation-20261030.md",
+      "baseline_commit": "fc598637388a40728d21d30ad5330aff6fde75ac",
+      "matches_baseline_git_blob": true
+    },
+    {
+      "role": "historical-boot-image",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-a-v1/Mu-fuxi-ufs-m1.img",
+      "bytes": 1888256,
+      "sha256": "169e7401d2fa3fcce8347f50232b253c11bf884773b474fb2365b3b52185e44b",
+      "repo_relative_path": "out/m3-configure-context-a-v1/Mu-fuxi-ufs-m1.img",
+      "expected_sha256": "169e7401d2fa3fcce8347f50232b253c11bf884773b474fb2365b3b52185e44b",
+      "expected_match": true
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-a-v1/REVIEW.md",
+      "bytes": 7241,
+      "sha256": "a6e1d8793ac06041bc9c6258c609f1dad45d65ae960bdb84a529a68c58c2793d",
+      "repo_relative_path": "out/m3-configure-context-a-v1/REVIEW.md"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-a-v1/sources.json",
+      "bytes": 11585,
+      "sha256": "bea893ba9bd4eb84e39380e15e2c1f5356050dc37592957403443a2c037cdd48",
+      "repo_relative_path": "out/m3-configure-context-a-v1/sources.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-a-v1/committed-source-bindings.json",
+      "bytes": 11975,
+      "sha256": "4c408910cb66d55ce040a48ddef52ee969d917acb19ffaddae360c768a8a42e6",
+      "repo_relative_path": "out/m3-configure-context-a-v1/committed-source-bindings.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-a-v1/qualification.json",
+      "bytes": 538,
+      "sha256": "d881b6411269490ff5e902cd234b440a4bdcd58fad37f2377c9ea0dfdd143981",
+      "repo_relative_path": "out/m3-configure-context-a-v1/qualification.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-a-v1/check-exit-codes.json",
+      "bytes": 13241,
+      "sha256": "13f3f82b79cb39e74066f1834a87bc5c7f448da528769dd059d356a58bcfbb68",
+      "repo_relative_path": "out/m3-configure-context-a-v1/check-exit-codes.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-a-v1/attempt-01/device-test.json",
+      "bytes": 1934,
+      "sha256": "f2f31961ed2261d69d34abeb2f190c7972ba2a425f618cf35d40c5d10c00b99d",
+      "repo_relative_path": "out/m3-configure-context-a-v1/attempt-01/device-test.json"
+    },
+    {
+      "role": "device-photo-local-only",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-a-v1/attempt-01/screen-01.HEIC",
+      "bytes": 3136849,
+      "sha256": "441249db29cc2ce4997a7fa692c87e7a08ab1848a0506c1d957f48b28c1962f3",
+      "repo_relative_path": "out/m3-configure-context-a-v1/attempt-01/screen-01.HEIC"
+    },
+    {
+      "role": "historical-boot-image",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-b-v1/Mu-fuxi-ufs-m1.img",
+      "bytes": 1888256,
+      "sha256": "81e1abd43ec63d27abd970be69943557d388b61e72ce6274f1684b9a977474f5",
+      "repo_relative_path": "out/m3-configure-context-b-v1/Mu-fuxi-ufs-m1.img",
+      "expected_sha256": "81e1abd43ec63d27abd970be69943557d388b61e72ce6274f1684b9a977474f5",
+      "expected_match": true
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-b-v1/REVIEW.md",
+      "bytes": 6246,
+      "sha256": "16f7cd3436164025b0fff12d2b602130c464cc9a2451526365aa7f687fd14fb5",
+      "repo_relative_path": "out/m3-configure-context-b-v1/REVIEW.md"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-b-v1/sources.json",
+      "bytes": 11585,
+      "sha256": "bea893ba9bd4eb84e39380e15e2c1f5356050dc37592957403443a2c037cdd48",
+      "repo_relative_path": "out/m3-configure-context-b-v1/sources.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-b-v1/committed-source-bindings.json",
+      "bytes": 11975,
+      "sha256": "7248c21ee27d1bdf936bb90cb572c2420518d394461f81e9085b6856b7feee65",
+      "repo_relative_path": "out/m3-configure-context-b-v1/committed-source-bindings.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-b-v1/qualification.json",
+      "bytes": 538,
+      "sha256": "d881b6411269490ff5e902cd234b440a4bdcd58fad37f2377c9ea0dfdd143981",
+      "repo_relative_path": "out/m3-configure-context-b-v1/qualification.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-b-v1/check-exit-codes.json",
+      "bytes": 13241,
+      "sha256": "6b39a34162576be40083c74a35065525b711490a0c0742669af82973b5f0b7e2",
+      "repo_relative_path": "out/m3-configure-context-b-v1/check-exit-codes.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-b-v1/attempt-01/device-test.json",
+      "bytes": 1934,
+      "sha256": "73b344b7b2ae3b1098dd61f3d82fcca7d9c5f2d65509e9e5caf31f84722f70af",
+      "repo_relative_path": "out/m3-configure-context-b-v1/attempt-01/device-test.json"
+    },
+    {
+      "role": "device-photo-local-only",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-configure-context-b-v1/attempt-01/screen-01.HEIC",
+      "bytes": 3125779,
+      "sha256": "9bf467c6b99cb118a4cc30c691dcfdf448af00b243ac8c5547ae425497aa14b5",
+      "repo_relative_path": "out/m3-configure-context-b-v1/attempt-01/screen-01.HEIC"
+    },
+    {
+      "role": "historical-boot-image",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-lookup-arch-v1/Mu-fuxi-ufs-m1.img",
+      "bytes": 1880064,
+      "sha256": "2c140f174ed784b398bbcd9cb3b73b09ea4cb484c87de53917c183366b75b542",
+      "repo_relative_path": "out/m3-lookup-arch-v1/Mu-fuxi-ufs-m1.img",
+      "expected_sha256": "2c140f174ed784b398bbcd9cb3b73b09ea4cb484c87de53917c183366b75b542",
+      "expected_match": true
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-lookup-arch-v1/REVIEW.md",
+      "bytes": 5450,
+      "sha256": "8d6d9efec381c98a4261112d37c8ec7eb809cb74cf50f08fcf3603380f3a0006",
+      "repo_relative_path": "out/m3-lookup-arch-v1/REVIEW.md"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-lookup-arch-v1/sources.json",
+      "bytes": 12146,
+      "sha256": "62a34b10160f5b1f2a33be10ba979f2c36136443ed04cc5987f8ef22f517a775",
+      "repo_relative_path": "out/m3-lookup-arch-v1/sources.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-lookup-arch-v1/committed-source-bindings.json",
+      "bytes": 259,
+      "sha256": "70e9be40b2fb53489fc129a630551e95ccdced62823e20006eafe5e86411edcc",
+      "repo_relative_path": "out/m3-lookup-arch-v1/committed-source-bindings.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-lookup-arch-v1/qualification.json",
+      "bytes": 538,
+      "sha256": "56bc2af0ecf9fc9db9b448691ee4d133346beb48c2c470a7dded5cd6d95d9060",
+      "repo_relative_path": "out/m3-lookup-arch-v1/qualification.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-lookup-arch-v1/check-exit-codes.json",
+      "bytes": 9046,
+      "sha256": "2dd731e8a38d254144f68a7c507168fdfbc596f5123f08420bb6e3bd1fd785f7",
+      "repo_relative_path": "out/m3-lookup-arch-v1/check-exit-codes.json"
+    },
+    {
+      "role": "historical-candidate-report",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-lookup-arch-v1/attempt-01/device-test.json",
+      "bytes": 1932,
+      "sha256": "de970ebf240e72c0703eaa0b2bf9b173afe434e5a856b936e368b4c96387bca3",
+      "repo_relative_path": "out/m3-lookup-arch-v1/attempt-01/device-test.json"
+    },
+    {
+      "role": "device-photo-local-only",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-lookup-arch-v1/attempt-01/IMG_7296.HEIC",
+      "bytes": 3112104,
+      "sha256": "e8af1bce1d4b7e6604eb10a5d1611ce7f674873153914b64988d6849b7e602af",
+      "repo_relative_path": "out/m3-lookup-arch-v1/attempt-01/IMG_7296.HEIC"
+    },
+    {
+      "role": "local-audit-review",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-begin-version-audit-v1/REVIEW.md",
+      "bytes": 2165,
+      "sha256": "cd395d019eff42a074e514dacfc620195153161d8989eb75f5e7a16684d53408",
+      "repo_relative_path": "out/m3-begin-version-audit-v1/REVIEW.md"
+    },
+    {
+      "role": "local-audit-review",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-boot-client-audit-v1/REVIEW.md",
+      "bytes": 1437,
+      "sha256": "7ce3055703fd02d7c150148ec58493bda287b2ef83ab98b4ac594184ddc83e38",
+      "repo_relative_path": "out/m3-boot-client-audit-v1/REVIEW.md"
+    },
+    {
+      "role": "local-audit-review",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-boot-provenance-audit-v1/REVIEW.md",
+      "bytes": 2088,
+      "sha256": "8aaf8eaa9f450e9e450fdf4ac0522501365cc98abbb8594b737b4d701c6e8ae1",
+      "repo_relative_path": "out/m3-boot-provenance-audit-v1/REVIEW.md"
+    },
+    {
+      "role": "local-audit-review",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-firmware-identity-v1/REVIEW.md",
+      "bytes": 1536,
+      "sha256": "ad309a9871d6b27dc09d0a623e1368dc1bbc6f5fa41aa3cc1d4feae5e31ecba7",
+      "repo_relative_path": "out/m3-firmware-identity-v1/REVIEW.md"
+    },
+    {
+      "role": "local-audit-review",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-sdk-lifecycle-audit-v1/REVIEW.md",
+      "bytes": 1655,
+      "sha256": "ef7e5ea8604a11c7984488959b9cee2f998a97d931cc98570827404d541f0655",
+      "repo_relative_path": "out/m3-sdk-lifecycle-audit-v1/REVIEW.md"
+    },
+    {
+      "role": "local-audit-review",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-deployed-loader-audit-v1/REVIEW.md",
+      "bytes": 1513,
+      "sha256": "7991e7880ae99d5f640d5c7114d79ef618e53d3f17602723876f7a1ead294207",
+      "repo_relative_path": "out/m3-deployed-loader-audit-v1/REVIEW.md"
+    },
+    {
+      "role": "earlier-recovery-boot-image",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-key-recovery-status-v2/Mu-fuxi-ufs-m1.img",
+      "repo_relative_path": "out/m3-key-recovery-status-v2/Mu-fuxi-ufs-m1.img",
+      "bytes": 1884160,
+      "sha256": "c32884767117277ff89beb68b2fe2c4eedb6b7e675805ad0eafaf908320fc83e",
+      "expected_sha256": "c32884767117277ff89beb68b2fe2c4eedb6b7e675805ad0eafaf908320fc83e",
+      "expected_match": true
+    },
+    {
+      "role": "earlier-recovery-boot-image",
+      "absolute_path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-key-recovery-configured-v3/Mu-fuxi-ufs-m1.img",
+      "repo_relative_path": "out/m3-key-recovery-configured-v3/Mu-fuxi-ufs-m1.img",
+      "bytes": 1888256,
+      "sha256": "5620674f194370b0ac480296c0df4986d28af1ba6c0d2fdee0894608e5f01888",
+      "expected_sha256": "5620674f194370b0ac480296c0df4986d28af1ba6c0d2fdee0894608e5f01888",
+      "expected_match": true
+    }
+  ],
+  "historical_candidates": [
+    {
+      "name": "m3-configure-context-a-v1",
+      "source_commit": "09bc89e1d3dd733a30f86fca1e953a06ee11a36b",
+      "image_sha256": "169e7401d2fa3fcce8347f50232b253c11bf884773b474fb2365b3b52185e44b",
+      "sources_count": 91,
+      "all_sources_match_historical_commit": true,
+      "current_tree_equality_required": false
+    },
+    {
+      "name": "m3-configure-context-b-v1",
+      "source_commit": "09bc89e1d3dd733a30f86fca1e953a06ee11a36b",
+      "image_sha256": "81e1abd43ec63d27abd970be69943557d388b61e72ce6274f1684b9a977474f5",
+      "sources_count": 91,
+      "all_sources_match_historical_commit": true,
+      "current_tree_equality_required": false
+    },
+    {
+      "name": "m3-lookup-arch-v1",
+      "source_commit": "530596c2ebf83dba03c04882b61ffc69609a5414",
+      "image_sha256": "2c140f174ed784b398bbcd9cb3b73b09ea4cb484c87de53917c183366b75b542",
+      "sources_count": 96,
+      "all_sources_match_historical_commit": true,
+      "current_tree_equality_required": true
+    }
+  ],
+  "checks": {
+    "keymaster_prefix_and_zero_tail": true,
+    "tz_zero_padded_identity": true
+  },
+  "exclusions": [
+    "No raw metadata key files, nonce, application ID, seed, key material or decrypted plaintext.",
+    "Pre-existing dirty docs/fuxi-m3-date-support-20261029.md excluded; use baseline git blob if needed.",
+    "Local binary and photo files are NOT embedded or published; fresh clones lack ignored out inputs.",
+    "Hashes bind local files and historical commits, not real secure-world state or the -62 return PC."
+  ]
+}
