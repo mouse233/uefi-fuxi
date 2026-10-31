@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-31",
+  "candidate": "m3-root-trust-query-v1",
+  "attempt": "attempt-01",
+  "result": "boot-context-observation-success; finite-session-cleanup-observed",
+  "image_sha256": "0388aae26ec4df740ecc8aa523a7f6329b4525daf27b16b1b9dd3797bfb913da",
+  "source_commit": "6cfdfec8590f92640a2f07ad94f6a71c92c0d53e",
+  "boot_evidence": "fuxi-m3-root-trust-query-boot-20261031.json",
+  "boot_evidence_sha256": "3f21f92b3e31f231345336c7cb18eeb43099b592ac22f85cd0eac7bdba324892",
+  "observation": {
+    "schema_version": 1,
+    "method": "Manual transcription of user JPEG; cached display wraps, reordered by bound source. Not serial capture.",
+    "photo_original": "codex-clipboard-ca458c4c-76f0-4c7b-9713-f9eb83af4df6.jpg",
+    "photo_sha256": "7f1f34aa2874b6cf66a6c8d49ebbd9f72144212c4ad86a9113effb930abea246",
+    "get_version": {
+      "fields": [
+        4,
+        1,
+        4,
+        1012
+      ],
+      "app": 4
+    },
+    "configure": {
+      "app": 4,
+      "os_version": 170000,
+      "os_patch": 20261005,
+      "vendor_patch": 20261005,
+      "smc_a0_a3": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "resumes": 0,
+      "status_hex": "00000000",
+      "payload_bytes": 40912,
+      "wire_bytes": 40920,
+      "result": "Success"
+    },
+    "query": {
+      "app": 4,
+      "command": "0x311f",
+      "smc_a0_a3": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "resumes": 0,
+      "status_hex": "00000000",
+      "payload_bytes": 127,
+      "wire_bytes": 40920,
+      "boot_patch": 202607,
+      "structural_parse_passed": true,
+      "mac_verified": false,
+      "private_mac_cache_initialization": "not observed; may have occurred internally"
+    },
+    "cleanup": {
+      "app_release": {
+        "handle": 4,
+        "result": "Success"
+      },
+      "loader_release": {
+        "handle": 3,
+        "result": "Success"
+      },
+      "environment_release": {
+        "handle": 2,
+        "result": "Success"
+      },
+      "bridge_delete": {
+        "handle_hex": "229802A",
+        "a0_a3": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "batch_stop": "complete",
+      "passed_hex": "CFF",
+      "env": 0,
+      "loader": 0,
+      "retained": false,
+      "registered_bytes_released_hex": "82000",
+      "ta_extent_bytes_released_hex": "64000",
+      "result": "Success"
+    },
+    "ufs": {
+      "stop": 1,
+      "doorbell": 0,
+      "task_doorbell": 0,
+      "run": 0,
+      "hcs_hex": "10F",
+      "interrupt_status": 0,
+      "gfsr": 0,
+      "fsr_hex": "400"
+    },
+    "final": {
+      "stage": "m3-root-context",
+      "poisoned": 0,
+      "ready": 0,
+      "smmu_configured": 1,
+      "file_result": "Success",
+      "decrypt": "UNIMPLEMENTED",
+      "handoff": 0,
+      "park": "no USB receiver; no handoff"
+    },
+    "limits": [
+      "MAC unverified: structural boot observation, not attestation.",
+      "No recovery inputs/begin were used in this candidate; -62 was not retried here.",
+      "Prior blob boot202610 and query boot202607 are from different boots.",
+      "Finite cleanup statuses visible; photo alone does not prove physical zeroization or complete DMA/route restoration.",
+      "FSR400 remains visible; M3/M4/M5 not passed."
+    ]
+  },
+  "observation_sha256": "6f542ffe5b9083314e93f8292df47ad58e519233bb479f0784dacf3419835c2b",
+  "boot_header_comparison": {
+    "result": "matched-numeric-fields",
+    "headers": [
+      {
+        "candidate": "m3-root-trust-query-v1",
+        "image_sha256": "0388aae26ec4df740ecc8aa523a7f6329b4525daf27b16b1b9dd3797bfb913da",
+        "header_version": 3,
+        "os_version_raw": "0x220001a7",
+        "field_offset": 16,
+        "os_parts": [
+          17,
+          0,
+          0
+        ],
+        "header_patch": "2026-07",
+        "normalized_header_patch": 202607
+      },
+      {
+        "candidate": "m3-sameboot-public-v1",
+        "image_sha256": "035fb1adeb3adc2718ec0896539467ce4bd37ec8042061845ccdc5064a432b15",
+        "header_version": 3,
+        "os_version_raw": "0x220001a7",
+        "field_offset": 16,
+        "os_parts": [
+          17,
+          0,
+          0
+        ],
+        "header_patch": "2026-07",
+        "normalized_header_patch": 202607
+      }
+    ],
+    "root_query_boot": 202607,
+    "sameboot_public_blob_boot": 202610,
+    "same_boot_comparison": false,
+    "root_query_matches_own_header": true,
+    "abl_header_fallback_execution_proven": false,
+    "scope": "Direct boot-header decode and separately observed photos; not an actual ABL branch trace or historical TA state."
+  },
+  "boot_header_comparison_sha256": "3944c62220febdf8271afcb24675f0191dc54bbfdee440fe93715286cda43a3b",
+  "prior_blob_observation_evidence": "fuxi-m3-sameboot-public-device-20261031.json",
+  "prior_blob_evidence_sha256": "f23d5e0caaaa1dcd2b1c6eb40ab49c4e11b60fab33e5a92424598b012a2338bb",
+  "interpretation": [
+    "Current 311f response parsed as boot202607, with status0/payload127 and finite cleanup.",
+    "The queried value equals this delivered image header normalized202607; numeric agreement does not trace actual ABL input source or selection.",
+    "Earlier actual recovery blob public boot202610 differs; separate boot and unverified MAC do not prove historical gate operands or actual -62 origin.",
+    "Under matched effective-context/authenticated-decode/version-gate assumptions, boot202607 vs blob202610 can explain -62 before the later vendor comparison; those live assumptions remain unproven.",
+    "A future same-boot/same-App query plus allowlisted blob observation before one begin can narrow correlation without changing platform versions; this has not been implemented or run."
+  ],
+  "limits": [
+    "No native RootOfTrust/VBH/MAC payload or material digest collected.",
+    "No independent MAC verification or attestation.",
+    "No query of effective vendor slot or runtime selector, no actual -62 return PC.",
+    "No platform version/header changes, upgrade/generateKey/201/208/ICE or userdata decryption.",
+    "Historical FSR400 and M3/M4/M5 remain unresolved."
+  ]
+}

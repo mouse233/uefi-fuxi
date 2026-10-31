@@ -118,3 +118,48 @@ fastboot boot，Sending0.040s、Booting1.539s、总1.580s，exit0。没有重试
 当前没有屏幕照片，不能据工具成功判断UFS停止、ROOTCTX configure/query状态、
 boot值、retained/清理或PARK。已请用户发送完整画面；不再次启动或续发命令。
 实际SDK/boot/vendor/selector/-62返回PC仍未验证，M3/M4/M5未通过。
+
+
+## 最终照片：boot202607，观察与有限会话清理完成
+
+用户JPEG原图归档attempt-01/screen-01.jpg，SHA256
+`7f1f34aa2874b6cf66a6c8d49ebbd9f72144212c4ad86a9113effb930abea246`；人工逐项转录screen-observation.json，最终结论hardware-result.json。
+画面为回绕的缓存报告，下面按绑定源码顺序整理，不冒充串口原始日志。
+
+- GetVersion为4/1/4/1012；App4上configure170000/20261005/20261005成功，
+  SMC a0..a3=0、resumes0，status0/payload40912/wire40920。
+- 同App4单次311f query返回a0..a3=0、resumes0，status0/payload127/wire40920，
+  生产解析器输出**boot-patch=202607**；结构观察，MAC明确未验证。
+- App4、loader3、env2释放Success，bridge229802A delete返回全0；
+  BATCH stop=complete/passedCFF/env0/loader0/retained0，released bytes82000，
+  SMCI resultSuccess，TA extent released64000。照片支持有限会话清理成功；注册
+  页实际清零仍依赖绑定源码/主机检查，不仅凭照片证明物理擦除与完整DMA归属。
+- UFS stop1/db0/tdb0/run0/hcs10F/is0/gfsr0；历史FSR400仍在。最终
+  stage=m3-root-context/poisoned0/ready0/smmu-configured1，file-resultSuccess、
+  decrypt UNIMPLEMENTED/handoff0，PARK（no USB receiver/no handoff）。
+
+本轮完成boot结构观察，未读取恢复输入、未发begin，也没有复测-62或取得元数据
+明文。TA是否走首次PRNG缓存初始化分支不可从照片判断，不能把“may initialize”
+的说明日志当实际初始化轨迹。MAC未独立验证，不作attestation或完整SDK通过声明。
+
+### 与公开blob及镜像头的关联边界
+
+上一轮m3-sameboot-public-v1/IMG_7303实际恢复CPU输入的公开boot为202610，本轮
+311f返回202607；这提供boot差异的实机证据，但两次启动不同，不能倒填旧A/B或
+上一轮begin所用的实际getter。公开blob仍未认证，实际-62返回PC也未取得。
+
+另直接读取并绑定本轮交付镜像以及上一轮同次观测镜像：两者均Android boot v3，
+offset16的os_version_raw=0x220001a7，解码OS17.0.0、头日期2026-07→202607。
+本轮返回与自身头日期数值吻合，也与此前离线头回退模型相容；**不证明本轮ABL
+实际选择头回退、使用哪份记录或底层TA实例身份**。原始检查归档
+attempt-01/boot-header-comparison.json，无修改镜像头或平台字段。
+
+在认证后结构/实际有效槽/版本门路径满足静态模型时，boot202607与blob202610
+可使较早boot比较失败，后面vendor差异未必先执行；当前仍是带前提解释，不能
+据此把vendor或boot任一项定为唯一根因，更不能直接改头/平台日期来过门。
+
+下一步应在独立新候选中把一次boot查询、同次实际blob白名单与首次begin绑定到
+同一App/同次启动，保持A配置、原认证和隔离规则；此组合尚未实现或上机。
+若之后要定位boot来源，还需另证ABL字段选择/提供者，不能用数值相同代替调用链。
+规范实机证据docs/evidence/fuxi-m3-root-trust-query-device-20261031.json。
+历史FSR400、实际vendor/selector/-62返回PC与M3/M4/M5仍未解决。

@@ -667,3 +667,23 @@ qsee_SW_Hmac；不是无状态查询，实际SDK未在主机执行，不能泛�
 与续调耗尽保留注册范围停止。114源、固件/默认/query模块、最终26资格、32入口/
 1170解析/27恢复回归通过；尚未上机，vendor/selector/-62实际PC与M3/M4/M5仍缺证。
 未以此推断当前手机boot值，未按blob改平台字段，未接升级/生成/201/208/ICE。
+
+
+## 20. 2026-10-31追加：首次实机boot结构观察为202607
+
+[独立311f候选最终照片](fuxi-m3-root-trust-query-20261031.md)确认：固定A配置成功，
+同App4 query status0/payload127/wire40920/resumes0，boot-patch202607，MAC未验证；
+App/loader/env release及bridge delete完成，passedCFF/retained0、PARK。没有读取
+恢复输入或发begin，本轮并未复测-62。历史FSR400仍可见，M3/M4/M5未通过。
+
+这使“当前可查询上下文boot为0”的默认映像猜测不再适用于本次观察结果，但不能
+倒填历史A/B或上轮begin的getter。上轮IMG_7303的实际CPU blob公开boot202610，
+两次启动形成202607/202610差异；仍缺同次/同App的查询＋blob＋begin关联、认证后
+实际结构和返回PC。若版本门等静态前提满足，boot比较在vendor比较之前即可失败，
+因此先前仅以vendor锁定根因的推断仍不成立。
+
+直接核验本轮与上轮交付镜像头均v3、offset16原始值0x220001a7（OS17.0.0、
+2026-07），与本轮返回数值吻合；不能因此断言实际ABL走头回退或据此改变平台值。
+下一步保持版本/认证/隔离约束，在独立新候选中做同次关联，组合尚未实现或上机。
+[规范实机证据](evidence/fuxi-m3-root-trust-query-device-20261031.json)包含照片摘要、
+公开转录、原镜像头解码和有限清理边界，无原始ROT/VBH/MAC或材料摘要。

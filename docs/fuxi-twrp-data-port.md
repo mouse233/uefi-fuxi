@@ -655,3 +655,17 @@ UFS停机/版本门控，仅A组固定configure与一次311f，不读恢复密�
 总1.580s；无重试/flash/分区写/slot变更。尚无屏幕证据，ROOTCTX查询/boot整数与
 最终保留/清理/PARK均待确认，不据启动命令成功作硬件通过声明。原始启动记录与
 规范摘要见[boot观察候选](fuxi-m3-root-trust-query-20261031.md)。M3/M4/M5未通过。
+
+
+## 2026-10-31：boot查询返回202607，有限清理完成
+
+m3-root-trust-query-v1/attempt-01用户照片确认App4固定A配置成功后，311f返回
+status0/payload127/wire40920/resumes0，结构解析boot-patch202607，MAC未验证。
+App4/loader3/env2 release成功、bridge delete全0，complete/passedCFF/retained0，
+注册范围released82000、PARK；UFS队列停止可见，历史FSR400仍在，不当完整DMA/
+路由恢复或M3通过。本轮没有读取恢复输入/发begin，未复测-62。
+
+上轮实际blob公开boot202610与本轮202607不同，但跨启动；本轮镜像头也为
+0x220001a7（2026-07），只有数值吻合，未证明ABL来源选择/真实实例。下一步
+应在同次启动/同App关联查询、实际blob白名单与一次begin；暂不改头/平台日期。
+规范证据与边界见[boot观察结果](fuxi-m3-root-trust-query-20261031.md)。M3/M4/M5未通过。
