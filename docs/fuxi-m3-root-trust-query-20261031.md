@@ -104,3 +104,17 @@ ROOTCTX初版合成monitor沿旧版本测试填1/2/3/4，已在完整构建前�
 启动与源码提交绑定见out/m3-root-trust-query-v1/REVIEW.md。本轮尚未上机。
 照片需要ROOTCTX configure/query状态、boot整数或失败状态、resumes、retained、
 UFS stop与最后PARK。即使得到boot值，也不宣称vendor/selector/真实-62分支已解决。
+
+
+## 2026-10-31 12:22：attempt-01 临时启动返回0，等待照片
+
+用户确认已进入FASTBOOT后，互斥无其他任务，fcde91e可见；固定镜像/源码/114源/
+26资格 --verify-only再次exit0。脚本核验product=fuxi、unlocked=yes、slot=a、
+max-download-size=805306368。12:22:20–12:22:22 Asia/Shanghai，仅一次
+fastboot boot，Sending0.040s、Booting1.539s、总1.580s，exit0。没有重试、flash、
+分区写或slot变更。原始记录attempt-01/device-test.json，SHA256
+`38fd82d49a03aafa7522c59298a2d5a28ca647b3dc4dcb8f09fd3610c8e1b055`；规范摘要docs/evidence/fuxi-m3-root-trust-query-boot-20261031.json。
+
+当前没有屏幕照片，不能据工具成功判断UFS停止、ROOTCTX configure/query状态、
+boot值、retained/清理或PARK。已请用户发送完整画面；不再次启动或续发命令。
+实际SDK/boot/vendor/selector/-62返回PC仍未验证，M3/M4/M5未通过。

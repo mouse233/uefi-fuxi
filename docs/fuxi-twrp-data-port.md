@@ -646,3 +646,12 @@ UFS停机/版本门控，仅A组固定configure与一次311f，不读恢复密�
 计划字符串，修正并保留失败记录后重查通过，固件未变。SHA与边界见
 [boot观察候选](fuxi-m3-root-trust-query-20261031.md)。尚未上机，-62/M3/M4/M5和
 历史FSR400未解决；实际SDK与完整查询结果需照片，不用主机片段代替认证成功。
+
+
+## 2026-10-31 12:22：独立boot查询候选已临时启动，待照片
+
+用户确认FASTBOOT后，m3-root-trust-query-v1/attempt-01固定镜像/源码/114源/26资格、
+设备互斥及fcde91e/product/unlocked/slot_a/容量通过，仅一次fastboot boot返回0，
+总1.580s；无重试/flash/分区写/slot变更。尚无屏幕证据，ROOTCTX查询/boot整数与
+最终保留/清理/PARK均待确认，不据启动命令成功作硬件通过声明。原始启动记录与
+规范摘要见[boot观察候选](fuxi-m3-root-trust-query-20261031.md)。M3/M4/M5未通过。

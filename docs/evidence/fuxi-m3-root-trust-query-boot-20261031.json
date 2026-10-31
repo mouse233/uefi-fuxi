@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-31",
+  "candidate": "m3-root-trust-query-v1",
+  "attempt": "attempt-01",
+  "result": "temporary-boot-command-completed",
+  "hardware_result": "awaiting-screen-evidence",
+  "source_commit": "6cfdfec8590f92640a2f07ad94f6a71c92c0d53e",
+  "image_sha256": "0388aae26ec4df740ecc8aa523a7f6329b4525daf27b16b1b9dd3797bfb913da",
+  "image_bytes": 1884160,
+  "boot_script_sha256": "39a06ea99b2d596aed15cf9a69702319d603f3ede604cb63139a01e61128dd4f",
+  "raw_boot_record_sha256": "38fd82d49a03aafa7522c59298a2d5a28ca647b3dc4dcb8f09fd3610c8e1b055",
+  "raw_boot_record": {
+    "image_sha256": "0388aae26ec4df740ecc8aa523a7f6329b4525daf27b16b1b9dd3797bfb913da",
+    "source_commit": "6cfdfec8590f92640a2f07ad94f6a71c92c0d53e",
+    "patch": 20261005,
+    "profile": "usb-ram",
+    "serial": "fcde91e",
+    "status": "awaiting screen evidence",
+    "queries": [
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "devices"
+        ],
+        "returncode": 0,
+        "output": "fcde91e\t fastboot\n"
+      },
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "-s",
+          "fcde91e",
+          "getvar",
+          "product"
+        ],
+        "returncode": 0,
+        "output": "product: fuxi\nFinished. Total time: 0.004s\n"
+      },
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "-s",
+          "fcde91e",
+          "getvar",
+          "unlocked"
+        ],
+        "returncode": 0,
+        "output": "unlocked: yes\nFinished. Total time: 0.003s\n"
+      },
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "-s",
+          "fcde91e",
+          "getvar",
+          "current-slot"
+        ],
+        "returncode": 0,
+        "output": "current-slot: a\nFinished. Total time: 0.005s\n"
+      },
+      {
+        "command": [
+          "/opt/homebrew/bin/fastboot",
+          "-s",
+          "fcde91e",
+          "getvar",
+          "max-download-size"
+        ],
+        "returncode": 0,
+        "output": "max-download-size: 805306368\nFinished. Total time: 0.005s\n"
+      }
+    ],
+    "started_utc": "2026-10-31T04:22:20.995303+00:00",
+    "command": [
+      "/opt/homebrew/bin/fastboot",
+      "-s",
+      "fcde91e",
+      "boot",
+      "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-root-trust-query-v1/Mu-fuxi-ufs-m1.img"
+    ],
+    "returncode": 0,
+    "fastboot_output": "Sending 'boot.img' (1840 KB)                       OKAY [  0.040s]\nBooting                                            OKAY [  1.539s]\nFinished. Total time: 1.580s\n",
+    "finished_utc": "2026-10-31T04:22:22.707771+00:00"
+  },
+  "started_shanghai": "2026-10-31T12:22:20.995303+08:00",
+  "finished_shanghai": "2026-10-31T12:22:22.707771+08:00",
+  "preflight": {
+    "mutual_exclusion": "no active device tasks",
+    "verify_only_exit_code": 0,
+    "sources_checked": 114,
+    "qualification_checks": 26,
+    "product": "fuxi",
+    "unlocked": "yes",
+    "current_slot": "a",
+    "max_download_size": 805306368
+  },
+  "temporary_boot_count": 1,
+  "retry": false,
+  "flash": false,
+  "partition_writes": false,
+  "slot_changed": false,
+  "screen_received": false,
+  "boundaries": [
+    "fastboot success does not prove UEFI stage, UFS shutdown, ROOTCTX configure/query result or final PARK.",
+    "No boot integer observed yet; no TA/SDK/MAC or actual -62 branch claim.",
+    "M3/M4/M5 and historical FSR400 remain unresolved."
+  ]
+}
