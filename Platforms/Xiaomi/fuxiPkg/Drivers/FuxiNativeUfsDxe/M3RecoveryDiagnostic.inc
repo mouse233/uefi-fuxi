@@ -3,6 +3,9 @@
 #if FUXI_M3_KEY_RECOVERY
 #include "../FuxiDataProbeDxe/M3KeyRecoveryF2fs.h"
 #include "../FuxiDataProbeDxe/M3SecretExchange.h"
+#if FUXI_M3_RECOVERY_PUBLIC
+#include "M3BlobPublic.h"
+#endif
 typedef struct { FKM_CONTEXT Backend; FSE_CONTEXT Exchange; } FNU_RECOVERY_SESSION;
 STATIC FKR_WORK *mRecoveryWork;
 STATIC FNU_RECOVERY_SESSION *mRecoverySession;
@@ -40,6 +43,23 @@ STATIC EFI_STATUS FnuRunRecovery(UINT64 Raw,UINT8 *Page,UINTN Bytes,UINT64 Bridg
   UINT32 State,Stage;INT32 KeyMintStatus;
   if(!StorageStopped || !mRecoveryVersionOk || EFI_ERROR(mRecoveryStatus) ||
      mRecoveryWork==NULL || mRecoveryWork->State!=FkrPrepared) { mRecoveryStatus=EFI_NOT_READY;return mRecoveryStatus; }
+#if FUXI_M3_RECOVERY_PUBLIC
+  {
+    FBP_PUBLIC Public;UINTN D;
+    if(!FnuReadBlobPublic(mRecoveryWork->Blob,mRecoveryWork->BlobBytes,&Public)) {
+      FnuLog(L"FUXIM3 PUBLIC rejected; no begin");
+      mRecoveryStatus=EFI_COMPROMISED_DATA;FnuDropRecoveryInput();return mRecoveryStatus;
+    }
+    FnuLog(L"FUXIM3 PUBLIC source=loadfrombuffer app=%x; instance freshness unproven",App);
+    FnuLog(L"FUXIM3 PUBLIC format=%lx prefix=%u total=%u; unauthenticated",
+           Public.Format,(UINT32)Public.PrefixBytes,(UINT32)mRecoveryWork->BlobBytes);
+    for(D=0;D<2;++D) {
+      FBP_DOMAIN *Row=&Public.Domain[D];
+      FnuLog(L"FUXIM3 PUBLIC domain=%u mask=%x os=%u os-patch=%u boot-patch=%u vendor-patch=%u algorithm=%u fbe=%u",
+             (UINT32)D,Row->Present,Row->Value[0],Row->Value[1],Row->Value[2],Row->Value[3],Row->Value[4],(UINT32)Row->Fbe);
+    }
+  }
+#endif
   mRecoverySession=AllocateZeroPool(sizeof(*mRecoverySession));
   if(mRecoverySession==NULL) { mRecoveryStatus=EFI_OUT_OF_RESOURCES;return mRecoveryStatus; }
   Result=FseInitialize(&mRecoverySession->Exchange,Page,Raw,Bytes,Bridge,App,TRUE);

@@ -89,6 +89,9 @@ def main():
         if candidate.get('m3_configure_recovery'):
             commands.append(('configure-binding', ['python3',str(root/'tools/test_m3_configure_binding.py'),'--report',str(out/'configure-binding-tests.json')]))
             commands.append(('configured-recovery', ['python3',str(root/'tools/test_fuxi_m3_recovery_entry.py'),'--edk2',str(edk2),'--configured','--configure-patch',str(candidate['m3_configure_binding']['os_patch']),'--report',str(out/'configured-recovery-tests.json')]))
+        if candidate.get('m3_recovery_public'):
+            commands.append(('native-public', ['python3',str(root/'tools/test_fuxi_m3_native_public.py'),'--edk2',str(edk2),'--report',str(out/'native-public-tests.json')]))
+            commands.append(('public-recovery-entry', ['python3',str(root/'tools/test_fuxi_m3_recovery_entry.py'),'--edk2',str(edk2),'--configured','--public-observation','--configure-patch',str(candidate['m3_configure_binding']['os_patch']),'--report',str(out/'public-recovery-entry-tests.json')]))
         if candidate.get('m3_characteristics_probe'):
             commands.append(('characteristics', ['python3',str(root/'tools/test_fuxi_m3_characteristics.py'),'--edk2',str(edk2),'--report',str(out/'characteristics-tests.json')]))
             commands.append(('characteristics-entry', ['python3',str(root/'tools/test_fuxi_m3_recovery_entry.py'),'--edk2',str(edk2),'--configured','--configure-patch',str(candidate['m3_configure_binding']['os_patch']),'--characteristics','--report',str(out/'characteristics-entry-tests.json')]))

@@ -44,6 +44,7 @@ def main():
     assert all(defs[n]=='0' for n in ('FUXI_M3_METADATA_KEY','FUXI_M3_SMCI_SETVER','FUXI_M3_SMCI_DATE','FUXI_USB_RAM_SYSTEM_HANDOFF'))
     candidate=json.loads((out/'candidate.json').read_text())
     assert defs['FUXI_M3_CONFIGURE_RECOVERY']==str(int(candidate.get('m3_configure_recovery',False)))
+    assert defs['FUXI_M3_RECOVERY_PUBLIC']==str(int(candidate.get('m3_recovery_public',False)))
     configure=None
     if candidate.get('m3_configure_recovery'):
         from m3_configure_binding import load_configure_evidence

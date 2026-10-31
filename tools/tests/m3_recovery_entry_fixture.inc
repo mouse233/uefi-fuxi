@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BSD-2-Clause-Patent
 // Synthetic filesystem and monitor only. No actual recovery keys or GCM.
+#if FUXI_M3_RECOVERY_PUBLIC
+#include "m3_public_blob_fixture.inc"
+#endif
 static int Scenario,SecretCalls,SecretUnknown,PoolCalls,PoolLive;
 static UINT8 *SecretSnapshot;
 static BOOLEAN mPoisoned,mReady;
@@ -21,7 +24,11 @@ EFI_STATUS FkrReadF2fsFile(VOID *c,FKR_FILE f,VOID *out,UINTN cap,UINTN *n){
  FKR_F2FS_CONTEXT *r=c;assert(r->Volume&&r->Work&&r->WorkBytes==F2R_WORK_BYTES);
  if(Scenario==12&&f==FkrEncryptedKeyFile)return EFI_DEVICE_ERROR;
  *n=f==FkrVersionFile?1:f==FkrSecdiscardableFile?16384:f==FkrKeymasterBlobFile?208:276;
- assert(cap>=*n);memset(out,0x65,*n);if(f==FkrVersionFile)*(UINT8*)out='1';return EFI_SUCCESS;
+ assert(cap>=*n);memset(out,0x65,*n);if(f==FkrVersionFile)*(UINT8*)out='1';
+#if FUXI_M3_RECOVERY_PUBLIC
+ if(f==FkrKeymasterBlobFile)memcpy(out,PublicBlob,sizeof(PublicBlob));
+#endif
+ return EFI_SUCCESS;
 }
 VOID *EFIAPI WriteBackInvalidateDataCacheRange(VOID *p,UINTN n){assert(p==Page&&n==FKM_SHARED_BYTES);return p;}
 VOID *EFIAPI InvalidateDataCacheRange(VOID *p,UINTN n){assert(p==Page&&n==FKM_SHARED_BYTES);return p;}
@@ -29,6 +36,13 @@ static int SecretMonitor(ARM_SMC_ARGS *a){
  UINT32 cmd=*(UINT32*)(Page+96),bo=*(UINT32*)(Page+52);
  if(cmd!=0x310f&&cmd!=0x3111&&cmd!=0x3112&&cmd!=0x2113)return 0;
  assert(!SecretUnknown);++SecretCalls;
+#if FUXI_M3_RECOVERY_PUBLIC
+ assert(*(UINT32*)Page==App());
+ if(cmd==0x310f){
+   UINT32 n=*(UINT32*)(Page+16);assert(n>=sizeof(PublicBlob));
+   assert(!memcmp(Page+96+n-sizeof(PublicBlob),PublicBlob,sizeof(PublicBlob)));
+ }
+#endif
  assert(a->Arg0==0x72000602&&a->Arg1==0x224&&a->Arg2==(UINTN)Page&&a->Arg3==FKM_MESSAGE_BYTES&&a->Arg4==(UINTN)(Page+FKM_MESSAGE_BYTES)&&a->Arg5==4096);
  a->Arg0=a->Arg1=a->Arg2=a->Arg3=0;
  if((Scenario==4&&cmd==0x310f)||(Scenario==5&&cmd==0x3111)||(Scenario==8&&cmd==0x2113))a->Arg0=3;

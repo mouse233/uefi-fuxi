@@ -46,6 +46,7 @@ def main():
     parser.add_argument("--m3-smci-date", action="store_true", help="read-only KeyMint date capability query")
     parser.add_argument("--m3-recover-key", action="store_true", help="recover one existing metadata key, wipe output, close session; no convert/ICE")
     parser.add_argument("--recovery-binding", type=Path, help="exact pinned real Android unbound-context evidence; required for recovery")
+    parser.add_argument("--m3-recovery-public", action="store_true", help="observe same-boot allowlisted blob fields before begin; no new TA command")
     parser.add_argument("--m3-configure-recovery", action="store_true", help="one fixed public configure before first secret request; explicit audited recovery only")
     parser.add_argument("--configure-patch", type=int, choices=(20261005,20991231), default=20261005, help="fixed public OS/vendor patch profile; alternate requires A/B evidence")
     parser.add_argument("--configure-evidence", type=Path, help="exact pinned live -64 / TA gate / QTI date-support proof")
@@ -150,6 +151,8 @@ def main():
     elif args.configure_evidence or args.configure_patch!=20261005:parser.error('configure evidence/profile requires --m3-configure-recovery')
     if args.m3_characteristics_probe and not (args.m3_configure_recovery and args.m3_recover_key):
         parser.error('characteristics probe requires the configured recovery candidate')
+    if args.m3_recovery_public and (not args.m3_configure_recovery or args.m3_characteristics_probe):
+        parser.error("public observation requires configured recovery without characteristics")
     hold = 0 if args.without_ufs or args.m2_metadata_files else args.ufs_report_hold_seconds
     uefi = Path(__file__).resolve().parents[1]
     if args.sources_only:
@@ -229,6 +232,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_DATE"] = str(int(args.m3_smci_date))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_SETVER"] = str(int(args.m3_smci_setver))
     ctx.board["firmware"]["defines"]["FUXI_M3_KEY_RECOVERY"] = str(int(args.m3_recover_key))
+    ctx.board["firmware"]["defines"]["FUXI_M3_RECOVERY_PUBLIC"] = str(int(args.m3_recovery_public))
     ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_RECOVERY"] = str(int(args.m3_configure_recovery))
     ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_PATCH"] = str(args.configure_patch)
     ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_TAG"] = configure_binding['tag'] if configure_binding else '0'
@@ -288,7 +292,7 @@ def main():
                   m3_smci_version=args.m3_smci_version, m3_smci_resume=args.m3_smci_resume, m3_smci_setver=args.m3_smci_setver, m3_smci_date=args.m3_smci_date,
                   m3_recover_key=args.m3_recover_key, m3_recovery_binding=recovery_binding,
                   m3_configure_recovery=args.m3_configure_recovery,m3_configure_binding=configure_binding,
-                  m3_characteristics_probe=args.m3_characteristics_probe,
+                  m3_characteristics_probe=args.m3_characteristics_probe, m3_recovery_public=args.m3_recovery_public,
                   m3_recovery_output_discarded=bool(args.m3_recover_key),
                   m3_smci_mode=("context" if args.m3_smc_context else args.m3_smci_mode) if args.m3_smci_root else None,
                   m3_smci_fnid=("42000601" if args.m3_smc_context else "72000602" if args.m3_smci_mode == "object" else "72000600") if args.m3_smci_root else None,
@@ -386,6 +390,12 @@ def write_sources(uefi, out):
         uefi / "tools/check_fuxi_ufs_report_image.py",
         uefi / "tools/check_fuxi_m3_live_objects.py",
         uefi / "tools/test_m3_recovery_binding.py",
+        uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3BlobPublic.h",
+        uefi / "tools/test_fuxi_m3_native_public.py",
+        uefi / "tools/collect_fuxi_m3_blob_public.py",
+        uefi / "tools/test_fuxi_m3_blob_public.py",
+        uefi / "tools/tests/m3_blob_public_host.c",
+        uefi / "tools/tests/m3_public_blob_fixture.inc",
         uefi / "tools/test_fuxi_m3_recovery_entry.py",
         uefi / "tools/tests/m3_smci_resume_host.c",
         uefi / "tools/tests/m3_recovery_entry_fixture.inc",

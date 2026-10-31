@@ -580,3 +580,18 @@ passed31F/retained0、释放2000字节并PARK。没有加载TA或调用其方法
 M2文件哈希匹配，UFS stop1/db0/tdb0/run0/is0；历史SMMU FSR400仍在，不作路由
 恢复/完整DMA归属声明。下一候选先验证该对象的只读版本方法；-62未重试或
 定位，M3/M4/M5仍未通过。见[候选与实机证据](fuxi-m3-lookup-arch-20261030.md)。
+
+
+## 2026-10-31：-62 同次公开输入观测候选
+
+研究审查后的下一项改为先补同次输入关联：独立 `m3-sameboot-public-v1` 保留
+A 组 load/version/configure/recovery 顺序与170000/20261005/20261005，仅以默认
+关闭的 `FUXI_M3_RECOVERY_PUBLIC` 在首次 begin 前解析实际 CPU blob 的白名单
+公开字段，并记录 configure 与恢复所用 App/source。底层实例新旧、实际 boot
+与初始化仍 unobserved，不合并此前 lookup-only 查询路径。
+
+944项解析器差分/PROT_NONE尾部/ASan/UBSan与29项入口回归通过，完整固件、
+默认/query模块构建及最终31项资格全退出0。首轮主机交付检查的初始化顺序错误
+已修正并保留失败记录，未改变固件。解析不访问加密尾部，不记录材料/未知项/
+摘要，不增加TA命令、不改日期或隔离规则。尚未上机，-62与M3/M4/M5未通过；
+历史FSR400边界保留。详见[同次公开输入观测](fuxi-m3-sameboot-public-20261031.md)。

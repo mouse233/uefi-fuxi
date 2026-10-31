@@ -86,6 +86,12 @@ def main():
         configured=json.loads((out/'configured-recovery-tests.json').read_text())
         assert configured.get('configured') is True and configured.get('cases')==27
         assert configured.get('configure_patch')==candidate['m3_configure_binding']['os_patch']
+    if candidate.get('m3_recovery_public'):
+        assert candidate.get('m3_configure_recovery') and not candidate.get('m3_characteristics_probe')
+        extra += ('native-public-tests.json','public-recovery-entry-tests.json')
+        integrated=json.loads((out/'public-recovery-entry-tests.json').read_text())
+        assert integrated.get('public_observation') is True and integrated.get('configured') is True
+        assert integrated.get('cases')==29
     if candidate.get('m3_characteristics_probe'):
         assert candidate.get('m3_configure_recovery') and 'characteristics-probe' in candidate.get('m3_smci_ops',[])
         assert candidate.get('m3_smci_ops',[])[5] == 'characteristics-probe'
@@ -126,6 +132,11 @@ def main():
     ufs = (out / "FuxiNativeUfsDxe.efi").read_bytes()
     receiver = (out / "FuxiUsbRamDxe.efi").read_bytes()
     assert ufs in inner and receiver in inner
+    public_marker="FUXIM3 PUBLIC source=loadfrombuffer app=%x; instance freshness unproven".encode("utf-16-le")
+    assert (public_marker in ufs)==bool(candidate.get('m3_recovery_public'))
+    if candidate.get('m3_recovery_public'):
+        assert "FUXIM3 PUBLIC rejected; no begin".encode("utf-16-le") in ufs
+        assert "FUXIM3 PUBLIC configure app=%x os=170000 os-patch=%u vendor-patch=%u; boot-state unobserved".encode("utf-16-le") in ufs
     for marker in ("FUXIUFS CACHED REPORT BEGIN (no new UFS IO)", "FUXIUFS REPORT INCOMPLETE dropped=%u truncated=%u"):
         assert marker.encode("utf-16-le") in ufs
     if park:

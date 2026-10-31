@@ -36,6 +36,10 @@ STATIC EFI_STATUS SmciConfigureRecovery(UINT64 Raw,UINT8 *Page,UINTN Bytes,UINT3
   Regs[2]=Raw;Regs[3]=0x15000;Regs[4]=Raw+0x15000;Regs[5]=4096;
   FNU_STAGE("m3-configure-recovery");
   FnuLog(L"FUXIM3 CONFIGURE begin once: os=170000 os-patch=%u vendor-patch=%u evidence=%08x",(UINT32)FUXI_M3_CONFIGURE_PATCH,(UINT32)FUXI_M3_CONFIGURE_PATCH,(UINT32)FUXI_M3_CONFIGURE_TAG);
+#if FUXI_M3_RECOVERY_PUBLIC
+  FnuLog(L"FUXIM3 PUBLIC configure app=%x os=170000 os-patch=%u vendor-patch=%u; boot-state unobserved",
+         App,(UINT32)FUXI_M3_CONFIGURE_PATCH,(UINT32)FUXI_M3_CONFIGURE_PATCH);
+#endif
   FnuCacheCiv(&mOps,Page,Bytes);Resumes=SmciCallWithResume(Regs,&Out);
   FnuLog(L"FUXIM3 CONFIGURE return a0=%lx a1=%lx a2=%lx a3=%lx resumes=%u",
          (UINT64)Out.Arg0,(UINT64)Out.Arg1,(UINT64)Out.Arg2,(UINT64)Out.Arg3,Resumes);

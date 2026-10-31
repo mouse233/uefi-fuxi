@@ -4,7 +4,8 @@ import argparse,hashlib,json,platform,shutil,subprocess,tempfile
 from pathlib import Path
 
 def main():
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--edk2',type=Path,required=True);p.add_argument('--report',type=Path,required=True);p.add_argument('--configured',action='store_true');p.add_argument('--characteristics',action='store_true');p.add_argument('--configure-patch',type=int,choices=(20261005,20991231),default=20261005);a=p.parse_args()
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--edk2',type=Path,required=True);p.add_argument('--report',type=Path,required=True);p.add_argument('--configured',action='store_true');p.add_argument('--characteristics',action='store_true');p.add_argument('--configure-patch',type=int,choices=(20261005,20991231),default=20261005);p.add_argument('--public-observation',action='store_true');a=p.parse_args()
+ if a.public_observation and (not a.configured or a.characteristics):p.error('public observation requires configured recovery without characteristics')
  if a.characteristics and not a.configured:p.error('--characteristics requires --configured')
  if platform.system()!='Linux':raise SystemExit('run in unixnu-fuxi-build-arm64')
  root=Path(__file__).resolve().parents[1];native=root/'Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe';data=native.parent/'FuxiDataProbeDxe'
@@ -14,6 +15,7 @@ def main():
  with tempfile.TemporaryDirectory(prefix='recovery-entry-') as tmp:
   exe=Path(tmp)/'test'
   cmd=[shutil.which('clang'),'-std=c11','-Wall','-Wextra','-Werror','-Wno-macro-redefined','-fshort-wchar','-g','-O1','-fsanitize=address,undefined','-fno-omit-frame-pointer','-DTEST_RECOVERY_ENTRY=1','-DFUXI_M3_SECRET_EXCHANGE=1','-I'+str(a.edk2/'MdePkg/Include'),'-I'+str(a.edk2/'MdePkg/Include/AArch64'),'-I'+str(native),'-I'+str(data),str(test),*(str(x) for x in sources),'-o',str(exe)]
+  cmd.insert(1,'-DFUXI_M3_RECOVERY_PUBLIC='+str(int(a.public_observation)))
   cmd.insert(1,'-DFUXI_M3_CONFIGURE_PATCH='+str(a.configure_patch))
   cmd.insert(1,'-DTEST_CONFIGURE_RECOVERY='+str(int(a.configured)))
   cmd.insert(1,'-DFUXI_M3_CHARACTERISTICS_PROBE='+str(int(a.characteristics)))
@@ -21,6 +23,7 @@ def main():
  files=[*sources,test,root/'tools/tests/m3_recovery_entry_fixture.inc',root/'tools/tests/m3_recovery_entry_cases.inc',native/'M3RecoveryDiagnostic.inc',native/'M3SmciDiagnostic.inc',native/'M3BridgeDiagnostic.inc',data/'M3KeyRecoveryF2fs.h',data/'M3KeyRecovery.h',data/'M3KeyMintBackend.h',data/'M3SecretExchange.h',Path(__file__)]
  files += [native/'M3ConfigureDiagnostic.inc',root/'tools/tests/m3_configure_monitor.inc',root/'tools/tests/m3_configured_recovery_cases.inc']
  files += [native/'M3CharacteristicsDiagnostic.inc',root/'tools/tests/m3_characteristics_monitor.inc',root/'tools/tests/m3_characteristics_entry_cases.inc']
- report=dict(result='passed',cases=13 if a.characteristics else 27 if a.configured else 17,configured=a.configured,configure_patch=a.configure_patch if a.configured else None,characteristics=a.characteristics,sanitizers=['address','undefined'],output=text.strip(),scope='Actual production recovery/session integration, synthetic filesystem/monitor only. No phone or GCM/KeyMint proof.',sources={str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in files})
+ files += [native/'M3BlobPublic.h',root/'tools/tests/m3_public_blob_fixture.inc']
+ report=dict(public_observation=a.public_observation,result='passed',cases=29 if a.public_observation else 13 if a.characteristics else 27 if a.configured else 17,configured=a.configured,configure_patch=a.configure_patch if a.configured else None,characteristics=a.characteristics,sanitizers=['address','undefined'],output=text.strip(),scope='Actual production recovery/session integration, synthetic filesystem/monitor only. No phone or GCM/KeyMint proof.',sources={str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in files})
  a.report.write_text(json.dumps(report,indent=2)+'\n')
 if __name__=='__main__':main()

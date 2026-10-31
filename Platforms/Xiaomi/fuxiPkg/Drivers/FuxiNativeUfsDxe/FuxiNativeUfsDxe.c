@@ -182,6 +182,12 @@
 #ifndef FUXI_M3_CHARACTERISTICS_PROBE
 #define FUXI_M3_CHARACTERISTICS_PROBE 0
 #endif
+#ifndef FUXI_M3_RECOVERY_PUBLIC
+#define FUXI_M3_RECOVERY_PUBLIC 0
+#endif
+#if FUXI_M3_RECOVERY_PUBLIC && (!FUXI_M3_CONFIGURE_RECOVERY || FUXI_M3_CHARACTERISTICS_PROBE || FUXI_M3_SMCI_LOOKUP)
+#error Public recovery observation requires configured load recovery without characteristics
+#endif
 #if FUXI_M3_CHARACTERISTICS_PROBE && (!FUXI_M3_CONFIGURE_RECOVERY || FUXI_M3_SMCI_DATE)
 #error "characteristics probe requires the configured recovery candidate"
 #endif

@@ -33,5 +33,22 @@ int main(void){
    while(PoolLive){free(Pools[--PoolLive].p);}
    mRecoveryWork=NULL;mRecoverySession=NULL;
  }
+#if FUXI_M3_RECOVERY_PUBLIC
+ // Malformed public input after preparation: configure still uses the same
+ // fixed public request; no begin or secret exchange is allowed afterward.
+ for(int bad=0;bad<2;++bad){
+   Scenario=0;Calls=Frees=TaFrees=LogCalls=SecretCalls=SecretUnknown=PoolCalls=ConfigureCalls=ConfigurePending=0;
+   Phase=Fault=Special=ResumeTarget=ResumePending=0;
+   mPoisoned=FALSE;mReady=TRUE;mRecoveryStatus=EFI_NOT_READY;mRecoveryRetained=mRecoveryVersionOk=mRecoveryAttempted=FALSE;
+   memset(&Report,0,sizeof(Report));
+   VOID *scratch=calloc(1,F2R_WORK_BYTES);assert(scratch);FDP_DISK disk={0};FDP_PARTITION part={0};part.Present=TRUE;
+   FnuPrepareRecovery(&disk,&part,scratch);free(scratch);assert(mRecoveryStatus==EFI_SUCCESS);
+   if(bad)mRecoveryWork->BlobBytes=1;else mRecoveryWork->Blob[0]=0xff;
+   mReady=FALSE;SetupTa();FnuSmciRootProbe();
+   assert(EFI_ERROR(mSmciStatus)&&ConfigureCalls==1&&Calls==10&&Frees==1&&TaFrees==1);
+   assert(!SecretCalls&&!mRecoveryAttempted&&!mRecoveryRetained&&!mRecoveryWork&&!mRecoverySession&&!PoolLive&&!Page&&!TaBuf);
+ }
+ puts("PASS 29 public-observation recovery/session cases; same App and submitted blob checked");return 0;
+#endif
  puts("PASS 27 configured recovery/session cases; production flow, monitor/filesystem simulated");return 0;
 }
