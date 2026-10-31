@@ -1,0 +1,1122 @@
+{
+  "result": "passed",
+  "partition_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+  "runtime_sha256": "657093d0991515f91e6ea35192b0cfe66bcbd52196a3b906fabe64086ab1ddcb",
+  "command_entries": [
+    {
+      "index": 0,
+      "command": "0x3108",
+      "flags": "0x1",
+      "handler": "0x2a120",
+      "name": "KEYMINT_GENERATE_KEY"
+    },
+    {
+      "index": 1,
+      "command": "0x3109",
+      "flags": "0x1",
+      "handler": "0x6898",
+      "name": "KEYMINT_GET_KEY_CHARACTERISTICS"
+    },
+    {
+      "index": 2,
+      "command": "0x310b",
+      "flags": "0x1",
+      "handler": "0x2a468",
+      "name": "KEYMINT_IMPORT_KEY"
+    },
+    {
+      "index": 3,
+      "command": "0x310d",
+      "flags": "0x1",
+      "handler": "0x9504",
+      "name": "INVALID"
+    },
+    {
+      "index": 4,
+      "command": "0x310e",
+      "flags": "0x100",
+      "handler": "0x95d4",
+      "name": "INVALID"
+    },
+    {
+      "index": 5,
+      "command": "0x10e",
+      "flags": "0x100",
+      "handler": "0x95d4",
+      "name": "DELETE_ALL_KEYS"
+    },
+    {
+      "index": 6,
+      "command": "0x310f",
+      "flags": "0x1",
+      "handler": "0x8984",
+      "name": "KEYMINT_BEGIN"
+    },
+    {
+      "index": 7,
+      "command": "0x3111",
+      "flags": "0x1",
+      "handler": "0x8fa8",
+      "name": "KEYMINT_UPDATE"
+    },
+    {
+      "index": 8,
+      "command": "0x311b",
+      "flags": "0x1",
+      "handler": "0x9630",
+      "name": "KEYMINT_UPDATE_AAD"
+    },
+    {
+      "index": 9,
+      "command": "0x3112",
+      "flags": "0x1",
+      "handler": "0x9350",
+      "name": "KEYMINT_FINISH"
+    },
+    {
+      "index": 10,
+      "command": "0x3113",
+      "flags": "0x1",
+      "handler": "0x94f0",
+      "name": "KEYMINT_ABORT"
+    },
+    {
+      "index": 11,
+      "command": "0x3114",
+      "flags": "0x1",
+      "handler": "0x9a5c",
+      "name": "KEYMINT_UPGRADE"
+    },
+    {
+      "index": 12,
+      "command": "0x311c",
+      "flags": "0x1",
+      "handler": "0x3f0e8",
+      "name": "KEYMINT_GET_TIMESTAMP_TOKEN"
+    },
+    {
+      "index": 13,
+      "command": "0x311e",
+      "flags": "0x1",
+      "handler": "0x3dbec",
+      "name": "KEYMINT_GENERATE_CSR"
+    },
+    {
+      "index": 14,
+      "command": "0x311f",
+      "flags": "0x1",
+      "handler": "0x31a68",
+      "name": "KEYMINT_GET_ROOT_OF_TRUST"
+    },
+    {
+      "index": 15,
+      "command": "0x2116",
+      "flags": "0x0",
+      "handler": "0xb7b4",
+      "name": "KM_NEW_CONFIGURE"
+    },
+    {
+      "index": 16,
+      "command": "0x3117",
+      "flags": "0x101",
+      "handler": "0x3ee70",
+      "name": "KEYMINT_IMPORT_WRAPPED_KEY"
+    },
+    {
+      "index": 17,
+      "command": "0x3120",
+      "flags": "0x100",
+      "handler": "0x2f798",
+      "name": "INVALID"
+    },
+    {
+      "index": 18,
+      "command": "0x200",
+      "flags": "0x100",
+      "handler": "0xddf4",
+      "name": "GET_VERSION"
+    },
+    {
+      "index": 19,
+      "command": "0x201",
+      "flags": "0x0",
+      "handler": "0xc1b0",
+      "name": "SET_ROT"
+    },
+    {
+      "index": 20,
+      "command": "0x202",
+      "flags": "0x100",
+      "handler": "0x1a7a4",
+      "name": "READ_KM_DEVICE_STATE"
+    },
+    {
+      "index": 21,
+      "command": "0x203",
+      "flags": "0x100",
+      "handler": "0x1aab4",
+      "name": "WRITE_KM_DEVICE_STATE"
+    },
+    {
+      "index": 22,
+      "command": "0x204",
+      "flags": "0x0",
+      "handler": "0x195a0",
+      "name": "MILESTONE_CALL"
+    },
+    {
+      "index": 23,
+      "command": "0x205",
+      "flags": "0x0",
+      "handler": "0x19d30",
+      "name": "GET_AUTH_TOKEN_KEY"
+    },
+    {
+      "index": 24,
+      "command": "0x207",
+      "flags": "0x100",
+      "handler": "0xdeec",
+      "name": "SET_VERSION"
+    },
+    {
+      "index": 25,
+      "command": "0x208",
+      "flags": "0x0",
+      "handler": "0xbb7c",
+      "name": "SET_BOOT_STATE"
+    },
+    {
+      "index": 26,
+      "command": "0x218",
+      "flags": "0x100",
+      "handler": "0xc038",
+      "name": "FBE_SET_SEED"
+    },
+    {
+      "index": 27,
+      "command": "0x220a",
+      "flags": "0x100",
+      "handler": "0x2ea98",
+      "name": "KM_NEW_PROVISION_DEVICE_IDS"
+    },
+    {
+      "index": 28,
+      "command": "0x2217",
+      "flags": "0x100",
+      "handler": "0xbf50",
+      "name": "INVALID"
+    },
+    {
+      "index": 29,
+      "command": "0x220b",
+      "flags": "0x100",
+      "handler": "0x2f788",
+      "name": "KM_NEW_DESTROY_DEVICE_IDS"
+    },
+    {
+      "index": 30,
+      "command": "0x220c",
+      "flags": "0x100",
+      "handler": "0x2f648",
+      "name": "KM_NEW_SET_PROVISIONING_KEYBOX_SUCCESS"
+    },
+    {
+      "index": 31,
+      "command": "0x2218",
+      "flags": "0x100",
+      "handler": "0x2f65c",
+      "name": "KM_NEW_SET_PROVISIONING_DEVICE_ID_SUCCESS"
+    },
+    {
+      "index": 32,
+      "command": "0x20d",
+      "flags": "0x0",
+      "handler": "0x40bb8",
+      "name": "KEYMASTER_SPU_INIT"
+    },
+    {
+      "index": 33,
+      "command": "0x216",
+      "flags": "0x0",
+      "handler": "0x40558",
+      "name": "KEYMASTER_SPU_SSR"
+    },
+    {
+      "index": 34,
+      "command": "0x220e",
+      "flags": "0x0",
+      "handler": "0x71a0",
+      "name": "KM_NEW_GET_HMAC_SHARING_PARAMS"
+    },
+    {
+      "index": 35,
+      "command": "0x220f",
+      "flags": "0x0",
+      "handler": "0x7314",
+      "name": "KM_NEW_COMPUTE_SHARING_HMAC"
+    },
+    {
+      "index": 36,
+      "command": "0x210",
+      "flags": "0x0",
+      "handler": "0x76a8",
+      "name": "GET_PRE_SHARED_SECRET"
+    },
+    {
+      "index": 37,
+      "command": "0x211",
+      "flags": "0x0",
+      "handler": "0xc3a8",
+      "name": "KEYMASTER_SET_VBH"
+    },
+    {
+      "index": 38,
+      "command": "0x214",
+      "flags": "0x0",
+      "handler": "0x2fe14",
+      "name": "KEYMASTER_PROVISION_ATTEST_KEY_NEW"
+    },
+    {
+      "index": 39,
+      "command": "0x215",
+      "flags": "0x0",
+      "handler": "0xdcf8",
+      "name": "KEYMASTER_GET_DATE_SUPPORT"
+    },
+    {
+      "index": 40,
+      "command": "0x2119",
+      "flags": "0x0",
+      "handler": "0x24a50",
+      "name": "KM_NEW_SET_EARLY_BOOT_ENDED"
+    },
+    {
+      "index": 41,
+      "command": "0x311c",
+      "flags": "0x0",
+      "handler": "0x3f0e8",
+      "name": "KEYMINT_GET_TIMESTAMP_TOKEN"
+    },
+    {
+      "index": 42,
+      "command": "0x311d",
+      "flags": "0x0",
+      "handler": "0x29df0",
+      "name": "INVALID"
+    },
+    {
+      "index": 43,
+      "command": "0x21001",
+      "flags": "0x100",
+      "handler": "0x550c",
+      "name": "GK_NEW_ENROLL"
+    },
+    {
+      "index": 44,
+      "command": "0x21002",
+      "flags": "0x100",
+      "handler": "0x5fc8",
+      "name": "GK_NEW_VERIFY"
+    },
+    {
+      "index": 45,
+      "command": "0x21003",
+      "flags": "0x100",
+      "handler": "0x6344",
+      "name": "GK_NEW_DELETE_USER"
+    },
+    {
+      "index": 46,
+      "command": "0x21004",
+      "flags": "0x100",
+      "handler": "0x63fc",
+      "name": "GK_NEW_DELETE_ALL_USERS"
+    },
+    {
+      "index": 47,
+      "command": "0x1501",
+      "flags": "0x100",
+      "handler": "0x3fdc0",
+      "name": "GK_SB_ENROLL"
+    },
+    {
+      "index": 48,
+      "command": "0x1502",
+      "flags": "0x100",
+      "handler": "0x3ff28",
+      "name": "GK_SB_VERIFY"
+    },
+    {
+      "index": 49,
+      "command": "0x1503",
+      "flags": "0x100",
+      "handler": "0x401b0",
+      "name": "GK_SB_DELETE_USER"
+    },
+    {
+      "index": 50,
+      "command": "0x1504",
+      "flags": "0x100",
+      "handler": "0x402b4",
+      "name": "GK_SB_DELETE_ALL_USERS"
+    },
+    {
+      "index": 51,
+      "command": "0x508",
+      "flags": "0x101",
+      "handler": "0x409ac",
+      "name": "SB_GENERATE_KEY"
+    },
+    {
+      "index": 52,
+      "command": "0x509",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_GET_KEY_CHARACTERISTICS"
+    },
+    {
+      "index": 53,
+      "command": "0x50b",
+      "flags": "0x101",
+      "handler": "0x409ac",
+      "name": "SB_IMPORT_KEY"
+    },
+    {
+      "index": 54,
+      "command": "0x50c",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_EXPORT_KEY"
+    },
+    {
+      "index": 55,
+      "command": "0x50d",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_DELETE_KEY"
+    },
+    {
+      "index": 56,
+      "command": "0x50e",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_DELETE_ALL_KEYS"
+    },
+    {
+      "index": 57,
+      "command": "0x50f",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_BEGIN"
+    },
+    {
+      "index": 58,
+      "command": "0x511",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_UPDATE"
+    },
+    {
+      "index": 59,
+      "command": "0x512",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_FINISH"
+    },
+    {
+      "index": 60,
+      "command": "0x513",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "INVALID"
+    },
+    {
+      "index": 61,
+      "command": "0x514",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_UPGRADE"
+    },
+    {
+      "index": 62,
+      "command": "0x515",
+      "flags": "0x101",
+      "handler": "0x2a954",
+      "name": "SB_ATTEST"
+    },
+    {
+      "index": 63,
+      "command": "0x517",
+      "flags": "0x101",
+      "handler": "0x409ac",
+      "name": "SB_SECURE_IMPORT_KEY"
+    },
+    {
+      "index": 64,
+      "command": "0x519",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "IAR_SET_USER_CREDENTIAL"
+    },
+    {
+      "index": 65,
+      "command": "0x51a",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_WRAP"
+    },
+    {
+      "index": 66,
+      "command": "0x51b",
+      "flags": "0x101",
+      "handler": "0x40878",
+      "name": "SB_UNWRAP"
+    },
+    {
+      "index": 67,
+      "command": "0x702",
+      "flags": "0x101",
+      "handler": "0x2f7a8",
+      "name": "SB_PROVISION_ATTEST_KEY_NEW"
+    },
+    {
+      "index": 68,
+      "command": "0x703",
+      "flags": "0x101",
+      "handler": "0x2f5a4",
+      "name": "SB_PROVISION_DEVICE_ID"
+    },
+    {
+      "index": 69,
+      "command": "0x2704",
+      "flags": "0x101",
+      "handler": "0x2f670",
+      "name": "KM_NEW_SB_DESTROY_DEVICE_IDS"
+    },
+    {
+      "index": 70,
+      "command": "0x705",
+      "flags": "0x101",
+      "handler": "0x2f5e0",
+      "name": "SB_SET_PROVISIONING_SUCCESS"
+    },
+    {
+      "index": 71,
+      "command": "0x2706",
+      "flags": "0x0",
+      "handler": "0x7300",
+      "name": "KM_NEW_SB_GET_HMAC_SHARING_PARAMS"
+    },
+    {
+      "index": 72,
+      "command": "0x2707",
+      "flags": "0x0",
+      "handler": "0x7688",
+      "name": "KM_NEW_SB_COMPUTE_SHARING_HMAC"
+    },
+    {
+      "index": 73,
+      "command": "0x2108",
+      "flags": "0x1",
+      "handler": "0x6714",
+      "name": "KM_NEW_GENERATE_KEY"
+    },
+    {
+      "index": 74,
+      "command": "0x2109",
+      "flags": "0x1",
+      "handler": "0x6898",
+      "name": "KM_NEW_GET_KEY_CHARACTERISTICS"
+    },
+    {
+      "index": 75,
+      "command": "0x210b",
+      "flags": "0x1",
+      "handler": "0x7adc",
+      "name": "KM_NEW_IMPORT_KEY"
+    },
+    {
+      "index": 76,
+      "command": "0x210c",
+      "flags": "0x1",
+      "handler": "0x7c90",
+      "name": "KM_NEW_EXPORT_KEY"
+    },
+    {
+      "index": 77,
+      "command": "0x210d",
+      "flags": "0x1",
+      "handler": "0x9504",
+      "name": "KM_NEW_DELETE_KEY"
+    },
+    {
+      "index": 78,
+      "command": "0x210e",
+      "flags": "0x100",
+      "handler": "0x95d4",
+      "name": "KM_NEW_DELETE_ALL_KEYS"
+    },
+    {
+      "index": 79,
+      "command": "0x10e",
+      "flags": "0x100",
+      "handler": "0x95d4",
+      "name": "DELETE_ALL_KEYS"
+    },
+    {
+      "index": 80,
+      "command": "0x210f",
+      "flags": "0x1",
+      "handler": "0x8984",
+      "name": "KM_NEW_BEGIN"
+    },
+    {
+      "index": 81,
+      "command": "0x2111",
+      "flags": "0x1",
+      "handler": "0x8fa8",
+      "name": "KM_NEW_UPDATE"
+    },
+    {
+      "index": 82,
+      "command": "0x2112",
+      "flags": "0x1",
+      "handler": "0x9350",
+      "name": "KM_NEW_FINISH"
+    },
+    {
+      "index": 83,
+      "command": "0x2113",
+      "flags": "0x1",
+      "handler": "0x94f0",
+      "name": "KM_NEW_ABORT"
+    },
+    {
+      "index": 84,
+      "command": "0x2114",
+      "flags": "0x1",
+      "handler": "0x9a5c",
+      "name": "KM_NEW_UPGRADE"
+    },
+    {
+      "index": 85,
+      "command": "0x2115",
+      "flags": "0x1",
+      "handler": "0x2b474",
+      "name": "KM_NEW_ATTEST"
+    },
+    {
+      "index": 86,
+      "command": "0x2116",
+      "flags": "0x0",
+      "handler": "0xb7b4",
+      "name": "KM_NEW_CONFIGURE"
+    },
+    {
+      "index": 87,
+      "command": "0x2117",
+      "flags": "0x101",
+      "handler": "0x10930",
+      "name": "KM_NEW_IMPORT_WRAPPED_KEY"
+    },
+    {
+      "index": 88,
+      "command": "0x2118",
+      "flags": "0x0",
+      "handler": "0x128f4",
+      "name": "KM_NEW_VERIFY_AUTHORIZATION"
+    }
+  ],
+  "command_count": 89,
+  "checked_command_identities": 8,
+  "raw_edges": [
+    {
+      "pc": "0x31af0",
+      "target": "0x39a88",
+      "kind": "BL",
+      "word": "0x94001fe6"
+    },
+    {
+      "pc": "0x31b44",
+      "target": "0xbb10",
+      "kind": "BL",
+      "word": "0x97ff67f3"
+    },
+    {
+      "pc": "0x31b6c",
+      "target": "0xb9f4",
+      "kind": "BL",
+      "word": "0x97ff67a2"
+    },
+    {
+      "pc": "0x31ba8",
+      "target": "0xb9ac",
+      "kind": "BL",
+      "word": "0x97ff6781"
+    },
+    {
+      "pc": "0x31c40",
+      "target": "0x47aa8",
+      "kind": "BL",
+      "word": "0x9400579a"
+    },
+    {
+      "pc": "0x31c44",
+      "target": "0xb850",
+      "kind": "BL",
+      "word": "0x97ff6703"
+    },
+    {
+      "pc": "0x31c5c",
+      "target": "0x47fd8",
+      "kind": "BL",
+      "word": "0x940058df"
+    },
+    {
+      "pc": "0x31d44",
+      "target": "0x490b4",
+      "kind": "BL",
+      "word": "0x94005cdc"
+    },
+    {
+      "pc": "0x31d74",
+      "target": "0x7fd0",
+      "kind": "BL",
+      "word": "0x97ff5897"
+    },
+    {
+      "pc": "0x31db8",
+      "target": "0x16b80",
+      "kind": "BL",
+      "word": "0x97ff9372"
+    },
+    {
+      "pc": "0x16bf4",
+      "target": "0x1c0",
+      "kind": "BL",
+      "word": "0x97ffa573"
+    },
+    {
+      "pc": "0xc458",
+      "target": "0x446b4",
+      "kind": "BL",
+      "word": "0x9400e097"
+    },
+    {
+      "pc": "0x2fe20",
+      "target": "0x2f7f0",
+      "kind": "B",
+      "word": "0x17fffe74"
+    }
+  ],
+  "raw_words": [
+    {
+      "pc": "0xb858",
+      "word": "0xb944f500"
+    },
+    {
+      "pc": "0xb950",
+      "word": "0xf9418508"
+    },
+    {
+      "pc": "0xb954",
+      "word": "0xb9400108"
+    },
+    {
+      "pc": "0xb958",
+      "word": "0xb8687920"
+    },
+    {
+      "pc": "0x31c48",
+      "word": "0x2a0003e4"
+    },
+    {
+      "pc": "0xdf6c",
+      "word": "0xb828794b"
+    },
+    {
+      "pc": "0xe008",
+      "word": "0x3828692b"
+    },
+    {
+      "pc": "0xc448",
+      "word": "0x91140273"
+    },
+    {
+      "pc": "0xbb34",
+      "word": "0x39696108"
+    },
+    {
+      "pc": "0xba10",
+      "word": "0x39548108"
+    }
+  ],
+  "direct_getter_callers": {
+    "0xb82c": [
+      {
+        "pc": "0x66dc",
+        "target": "0xb82c",
+        "kind": "BL",
+        "word": "0x94001454"
+      },
+      {
+        "pc": "0x9924",
+        "target": "0xb82c",
+        "kind": "BL",
+        "word": "0x940007c2"
+      },
+      {
+        "pc": "0x9c1c",
+        "target": "0xb82c",
+        "kind": "BL",
+        "word": "0x94000704"
+      },
+      {
+        "pc": "0x2a078",
+        "target": "0xb82c",
+        "kind": "BL",
+        "word": "0x97ff85ed"
+      },
+      {
+        "pc": "0x381b0",
+        "target": "0xb82c",
+        "kind": "BL",
+        "word": "0x97ff4d9f"
+      },
+      {
+        "pc": "0x3caec",
+        "target": "0xb82c",
+        "kind": "BL",
+        "word": "0x97ff3b50"
+      },
+      {
+        "pc": "0x410f0",
+        "target": "0xb82c",
+        "kind": "BL",
+        "word": "0x97ff29cf"
+      }
+    ],
+    "0xb8ac": [
+      {
+        "pc": "0x66ec",
+        "target": "0xb8ac",
+        "kind": "BL",
+        "word": "0x94001470"
+      },
+      {
+        "pc": "0x9934",
+        "target": "0xb8ac",
+        "kind": "BL",
+        "word": "0x940007de"
+      },
+      {
+        "pc": "0x9c2c",
+        "target": "0xb8ac",
+        "kind": "BL",
+        "word": "0x94000720"
+      },
+      {
+        "pc": "0xc52c",
+        "target": "0xb8ac",
+        "kind": "BL",
+        "word": "0x97fffce0"
+      },
+      {
+        "pc": "0x2a088",
+        "target": "0xb8ac",
+        "kind": "BL",
+        "word": "0x97ff8609"
+      },
+      {
+        "pc": "0x381c8",
+        "target": "0xb8ac",
+        "kind": "BL",
+        "word": "0x97ff4db9"
+      },
+      {
+        "pc": "0x41138",
+        "target": "0xb8ac",
+        "kind": "BL",
+        "word": "0x97ff29dd"
+      },
+      {
+        "pc": "0x412a0",
+        "target": "0xb8ac",
+        "kind": "BL",
+        "word": "0x97ff2983"
+      }
+    ],
+    "0xb850": [
+      {
+        "pc": "0x66e4",
+        "target": "0xb850",
+        "kind": "BL",
+        "word": "0x9400145b"
+      },
+      {
+        "pc": "0x992c",
+        "target": "0xb850",
+        "kind": "BL",
+        "word": "0x940007c9"
+      },
+      {
+        "pc": "0x9c24",
+        "target": "0xb850",
+        "kind": "BL",
+        "word": "0x9400070b"
+      },
+      {
+        "pc": "0x2a080",
+        "target": "0xb850",
+        "kind": "BL",
+        "word": "0x97ff85f4"
+      },
+      {
+        "pc": "0x31c44",
+        "target": "0xb850",
+        "kind": "BL",
+        "word": "0x97ff6703"
+      },
+      {
+        "pc": "0x381f8",
+        "target": "0xb850",
+        "kind": "BL",
+        "word": "0x97ff4d96"
+      },
+      {
+        "pc": "0x3cb3c",
+        "target": "0xb850",
+        "kind": "BL",
+        "word": "0x97ff3b45"
+      },
+      {
+        "pc": "0x41114",
+        "target": "0xb850",
+        "kind": "BL",
+        "word": "0x97ff29cf"
+      }
+    ],
+    "0xb940": [
+      {
+        "pc": "0x66f4",
+        "target": "0xb940",
+        "kind": "BL",
+        "word": "0x94001493"
+      },
+      {
+        "pc": "0x993c",
+        "target": "0xb940",
+        "kind": "BL",
+        "word": "0x94000801"
+      },
+      {
+        "pc": "0x9c34",
+        "target": "0xb940",
+        "kind": "BL",
+        "word": "0x94000743"
+      },
+      {
+        "pc": "0x2a090",
+        "target": "0xb940",
+        "kind": "BL",
+        "word": "0x97ff862c"
+      },
+      {
+        "pc": "0x381e0",
+        "target": "0xb940",
+        "kind": "BL",
+        "word": "0x97ff4dd8"
+      },
+      {
+        "pc": "0x3cb44",
+        "target": "0xb940",
+        "kind": "BL",
+        "word": "0x97ff3b7f"
+      },
+      {
+        "pc": "0x4115c",
+        "target": "0xb940",
+        "kind": "BL",
+        "word": "0x97ff29f9"
+      },
+      {
+        "pc": "0x412a8",
+        "target": "0xb940",
+        "kind": "BL",
+        "word": "0x97ff29a6"
+      }
+    ]
+  },
+  "boot_output_controls": [
+    {
+      "synthetic_boot": 0,
+      "encoder_uint_argument": 0,
+      "memory_writes": 0,
+      "stopped_before": "0x31c5c",
+      "selector_default": 0
+    },
+    {
+      "synthetic_boot": 202607,
+      "encoder_uint_argument": 202607,
+      "memory_writes": 0,
+      "stopped_before": "0x31c5c",
+      "selector_default": 0
+    },
+    {
+      "synthetic_boot": 202610,
+      "encoder_uint_argument": 202610,
+      "memory_writes": 0,
+      "stopped_before": "0x31c5c",
+      "selector_default": 0
+    },
+    {
+      "synthetic_boot": 20261005,
+      "encoder_uint_argument": 20261005,
+      "memory_writes": 0,
+      "stopped_before": "0x31c5c",
+      "selector_default": 0
+    },
+    {
+      "synthetic_boot": 4294967295,
+      "encoder_uint_argument": 4294967295,
+      "memory_writes": 0,
+      "stopped_before": "0x31c5c",
+      "selector_default": 0
+    }
+  ],
+  "disassembly": {
+    "root-of-trust": {
+      "start": "0x31a68",
+      "end": "0x31f10",
+      "code_sha256": "a7351d2a3ef369b192bcfd927f1fbd57b805a000cc39c6f2015c9b3b77384578"
+    },
+    "prerequisites": {
+      "start": "0xb9ac",
+      "end": "0xbb7c",
+      "code_sha256": "3d08d3edb8c29bb56227f598f1a6b6d579981727c27ce1cca04d65f0a1f47ae0"
+    },
+    "set-vbh": {
+      "start": "0xc3a8",
+      "end": "0xc690",
+      "code_sha256": "5f568cbb6cea194bb4e34d6b14d8462d70d79b1f7efa5af76abf369ac114ab6f"
+    },
+    "set-version": {
+      "start": "0xdeec",
+      "end": "0xe098",
+      "code_sha256": "7945ac33b7e764951902fe57093e359478ac1928f4a22de58da1c064eb483037"
+    },
+    "set-seed": {
+      "start": "0xc038",
+      "end": "0xc1b0",
+      "code_sha256": "154b5f705bb93aa70e54121d3be0625ec9ed646522130ccc75afc6854ff8a333"
+    },
+    "crypto-service": {
+      "start": "0x16b80",
+      "end": "0x16c2c",
+      "code_sha256": "e3f14f2707c9b84a8103aed39ca60c92b0a3587a06c98c8b87be1ea9cc69b2d1"
+    },
+    "version-accessors": {
+      "start": "0xb808",
+      "end": "0xb964",
+      "code_sha256": "49c9f905536bca67d803d3b0c35b727a4836aa8cc02096e4af66104657168773"
+    }
+  },
+  "vendor_words": {
+    "0x32a9c": "0x528623e1",
+    "0x3a70c": "0x52800082",
+    "0x1ba28": "0x12800c60"
+  },
+  "vendor_edges": [
+    {
+      "pc": "0x32ab0",
+      "target": "0x3d988",
+      "kind": "BL",
+      "word": "0x94002bb6"
+    },
+    {
+      "pc": "0x32aec",
+      "target": "0x3d5b0",
+      "kind": "BL",
+      "word": "0x94002ab1"
+    },
+    {
+      "pc": "0x3a71c",
+      "target": "0x3de08",
+      "kind": "BL",
+      "word": "0x94000dbb"
+    }
+  ],
+  "public_request_parser_controls": [
+    {
+      "name": "challenge16",
+      "status": 0,
+      "decoded_length": 16
+    },
+    {
+      "name": "challenge0",
+      "status": 0,
+      "decoded_length": 0
+    },
+    {
+      "name": "challenge15",
+      "status": 0,
+      "decoded_length": 15
+    },
+    {
+      "name": "challenge17",
+      "status": 0,
+      "decoded_length": 17
+    },
+    {
+      "name": "challenge130",
+      "status": 0,
+      "decoded_length": 130
+    },
+    {
+      "name": "challenge131",
+      "status": 0,
+      "decoded_length": 131
+    },
+    {
+      "name": "missing",
+      "status": 6,
+      "decoded_length": null
+    },
+    {
+      "name": "wrong-type",
+      "status": -1,
+      "decoded_length": null
+    }
+  ],
+  "findings": {
+    "boot_query_route": "0x311f -> 0x31a68 -> 0x31c44 -> 0xb850 -> w4 -> 0x47fd8",
+    "root_of_trust_configured_gate": true,
+    "prerequisites": [
+      "5ba58 boot-state flag / bb10",
+      "5b520 initialized flag / b9f4",
+      "selected VBH / b9ac"
+    ],
+    "vendor_direct_getter_in_root_handler": false,
+    "selector_runtime_query_identified_in_checked_routes": false,
+    "full_handler_readonly_contract_proven": false,
+    "firmware_candidate_built": false,
+    "phone_accessed": false
+  },
+  "limits": [
+    "Direct callers are not an exhaustive indirect/inlined dataflow proof.",
+    "No claim that every possible external route is absent; only named routes checked.",
+    "Synthetic boot values are injected into private emulator memory, never phone or firmware.",
+    "Boot fragment stops before encoding. Isolated public request parsing tested, but full handler, response packaging, MAC/crypto service and failure cleanup not validated.",
+    "No raw ROT/VBH/seed/crypto payload or digest is obtained or logged.",
+    "No authentication success, live selector/boot/vendor, TA return PC or M3/M4/M5 proof."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_effective_context.py": "aeec4a2f635dc2a6ab010cadb0f12b539c0c44898e98b69f96a23f279928865f",
+    "tools/audit_fuxi_m3_boot_client.py": "d65b43b1945cf9d61e139f9e2ad0908ef353e83e9fc74062dfef3f6ea5574a71",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3",
+    "tools/audit_fuxi_m3_begin_version.py": "09a4181f38a9200974073d2696d26e1bf1dd85e87019eb0b5b66165686281e34",
+    "tools/audit_fuxi_m3_configure_gate.py": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e",
+    "tools/collect_fuxi_m3_blob_public.py": "57177a8e9495f7b7530ed427617cefc77daca7c44aab5620a1384e4694c55bff"
+  }
+}

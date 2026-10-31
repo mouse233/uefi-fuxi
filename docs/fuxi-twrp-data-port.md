@@ -616,3 +616,18 @@ state5/stage1/fault7/commands1/resumes1/retained1并PARK。公开输入与当前
 vendor公开值与configure请求确有差异，实际boot/vendor有效槽仍未知，不能唯一
 归因或直接升级。FSR400仍在，M3/M4/M5未通过；下一步优先核验有效上下文/
 选择槽的只读可观测性。详见[照片结论](fuxi-m3-sameboot-public-20261031.md)。
+
+
+## 2026-10-31：锁定boot输出查询路径，完整只读契约仍待核验
+
+离线核验89项固定TA命令表和匹配HAL后确认311f=KEYMINT_GET_ROOT_OF_TRUST，
+其31c44调用boot getter b850，再把真实返回值送入整数编码器参数；5组编码前
+公开合成控制通过。HAL输入为标签4字节串，AIDL子集16字节，但孤立TA parser
+还接受其他长度，不能把parser成功当完整方法成功。311e是生成CSR，218设置
+FBE seed，207设置版本，211设置VBH，都不是查询替代。
+
+311f仍有configured/boot-state/初始化前置及后续封装/加密服务链，完整响应/
+回调/失败收尾与只读属性未闭合；vendor有效槽和实际selector未读到。16原始边、
+13指令字、5boot片段、8公开parser控制及命令身份检查通过，未修改固件、构建
+新镜像或访问手机。下一门槛是补完整311f契约，不直接发送未知请求。M3/M4/M5、
+真实-62分支与FSR400未通过。见[有效上下文审计](fuxi-m3-effective-context-20261031.md)。

@@ -639,3 +639,15 @@ hardware mask1F、software空。configure App4、170000/20261005/20261005成功�
 [新实机规范证据](evidence/fuxi-m3-sameboot-public-device-20261031.json)。
 下一步优先核验有效boot/vendor上下文及选择槽的只读可观测性；认证后实际返回链
 仍需另证。历史FSR400与M3/M4/M5未解决，未接入升级/生成/201/208/ICE。
+
+
+## 18. 2026-10-31追加：有效boot上下文的输出入口已找到
+
+[新离线审计](fuxi-m3-effective-context-20261031.md)绑定固定TA/HAL，确认
+311f=KEYMINT_GET_ROOT_OF_TRUST，有独立boot getter b850→响应整数编码参数路径。
+HAL使用标签4字节串请求；公开parser/5组合成boot片段已验证，但完整响应/
+加密服务与失败收尾尚未验证，未新增固件或访问手机。它不读取已证实的全部
+vendor/selector上下文，也不能把多个前置都可返回的-30当唯一boot状态探针。
+311e=KEYMINT_GENERATE_CSR、218=FBE_SET_SEED、207=SET_VERSION、211=SET_VBH，
+不能当只读查询替代。完整只读契约是下一门槛，当前尚未取得真实boot值、有效
+vendor槽/selector或实际-62返回PC，M3/M4/M5与FSR400仍未解决。
