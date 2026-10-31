@@ -617,3 +617,25 @@ BROOT/out/m3-lookup-arch-v1/attempt-01/       最新照片、人工转录和硬�
 证据，不能直接读出boot或证明完整初始化。这是已有记录中的建议；各agent可以
 根据独立研究重新评估其价值，提出其他方向或指出现有材料不足。任何后续设备
 实验建议均留待独立审阅，本轮仍限主机离线研究。
+
+
+## 17. 2026-10-31追加：同次公开输入与-62关联已取得
+
+新增独立m3-sameboot-public-v1/attempt-01，仅在A组恢复流程首次begin前观察实际
+CPU blob的白名单公开字段，配置和隔离规则不变。31项主机资格、944项解析差分/
+尾部保护及29项入口检查通过。11:12仅一次临时启动；用户IMG_7303照片确认：
+format0x400000005、OS170000/OS patch202610/boot202610/vendor20260801、algorithm32，
+hardware mask1F、software空。configure App4、170000/20261005/20261005成功后，
+首次begin仍外层FFFFFFC2（-62）、state5/stage1/commands1/resumes1/retained1并PARK。
+
+这比后采TWRP快照增加“当前实际输入与当前-62同次关联”证据，但不证明历史A/B
+全字节相同、公开值已经认证、实际TA有效槽或返回PC。公开格式达门槛，OS patch
+与A规范化模型相容；vendor与实际配置请求确有差异，仍只能在认证后结构/槽/
+路径满足前提时解释版本门错误。boot/vendor运行态未知，不支持唯一归因、按blob
+改平台值或直接执行升级。此前第7–12节中的缺口应按这个新增范围理解，历史
+实验原始事实和原输入manifest保持不变。
+
+后续研究应同时读取[同次观测与照片结论](fuxi-m3-sameboot-public-20261031.md)及
+[新实机规范证据](evidence/fuxi-m3-sameboot-public-device-20261031.json)。
+下一步优先核验有效boot/vendor上下文及选择槽的只读可观测性；认证后实际返回链
+仍需另证。历史FSR400与M3/M4/M5未解决，未接入升级/生成/201/208/ICE。

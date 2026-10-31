@@ -103,3 +103,41 @@ Asia/Shanghai 仅一次 fastboot boot，Sending0.040s、Booting1.592s、总1.633
 真实 -62 状态或最后PARK。保持等待照片，不再次启动。照片应清晰覆盖PUBLIC两域/
 mask/format、CONFIGURE同App/日期、RECOVERY响应status与state/stage/commands/
 resumes/retained及最终停点。真实分支/boot/实例与M3/M4/M5仍未通过。
+
+
+## IMG_7303：同次公开输入已捕获，首次 begin 仍 -62
+
+用户照片IMG_7303.HEIC已归档attempt-01/screen-01.HEIC，查看图为screen-01-view.jpg，
+逐项人工转录为screen-observation.json；原图SHA256 `0fcf7734595c7353b2e68417abf56ba129383775e16564ce6ee1326ef41aa162`。
+照片为回绕的缓存报告，以下按绑定源码顺序整理，不冒充串口原始日志。
+沙箱内sips虽退出0但仅生成无像素JPEG，已保留；沙箱外仅转换该主机照片成功，
+原图未变，没有后续设备命令。
+
+- configure与恢复观测均App4，source=loadfrombuffer；configure实际
+  OS170000 / OS patch20261005 / vendor20261005，a0..a3=0、resumes0、status0、
+  payload40912/wire40920，Success。boot-state仍unobserved。
+- PUBLIC format400000005（十六进制）、prefix142/total208，unauthenticated。
+  software域mask0，版本项缺失，打印0不是实际版本0；hardware域mask1F，
+  OS170000 / OS patch202610 / boot202610 / vendor20260801 / algorithm32，fbe0。
+- 随后RECOVERY begin，Not Ready、state5/stage1/km0/bytes0/retained1，
+  fault7/exchange1/commands1/resumes1；response-header1、wrapperFFFFFFC2（-62）、
+  payload40616/wire40624。km0不是已接受的TA成功状态。
+- batch stop=key-recovery、passed4A3、env2/loader3/retained1，no retry；
+  attempted1/retained1，最终stage=m3-key-recovery、poisoned0/ready0/
+  smmu-configured1、decrypt UNIMPLEMENTED/handoff0、PARK。
+- UFS stop1/db0/tdb0/run0/hcs10F/is0/gfsr0，历史FSR400仍在。
+  M2已知文件10527字节哈希匹配，不能当userdata明文或M3通过。
+
+这次补齐了同次恢复实际CPU输入的公开字段与-62关联；字段与20:22 TWRP公开
+快照相符，但不证明历史A/B全blob字节相同。公开格式达静态门槛，不能再仅凭
+“当前公开blob格式旧”解释本轮；仍无认证后结构/实际返回PC证据。OS patch按
+已核验getter规范化后与A配置相容，不能把20261005与202610直接判为错误。
+
+vendor公开值20260801与实际配置请求20261005确有差异；若认证后的结构、实际
+选择槽和版本门路径均符合静态模型，它能解释-62。但TA有效vendor槽与boot状态
+仍未读取，boot不匹配及其他负状态传播尚未排除，不能唯一归因为vendor或直接
+宣告必须升级。下一步应优先核验有效boot/vendor上下文及选择槽的只读可观测性，
+并继续区分认证前后与版本门返回，不用blob字段伪造平台配置，不直接接入升级。
+
+实机规范证据：docs/evidence/fuxi-m3-sameboot-public-device-20261031.json。
+观测目标已取得，恢复仍被-62阻塞；M3/M4/M5与历史FSR400问题仍未解决。

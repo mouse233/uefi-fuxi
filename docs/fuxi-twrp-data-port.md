@@ -604,3 +604,15 @@ fcde91e/product/unlocked/slot_a/容量和互斥通过，仅一次fastboot boot�
 总1.633s，无重试或分区写。尚无屏幕证据，PUBLIC字段、configure、恢复状态/
 -62与最终PARK均待确认，不据启动命令成功作硬件通过声明。原始启动记录和
 规范摘要见[同次观测记录](fuxi-m3-sameboot-public-20261031.md)。M3/M4/M5未通过。
+
+
+## 2026-10-31：IMG_7303确认同次公开字段，恢复仍-62
+
+m3-sameboot-public-v1/attempt-01照片确认configure App4成功、固定A配置后，实际
+CPU blob公开format0x400000005、OS170000/OS patch202610/boot202610/vendor20260801，
+hardware mask1F、software mask0。随后首个begin wrapperFFFFFFC2（-62），
+state5/stage1/fault7/commands1/resumes1/retained1并PARK。公开输入与当前错误
+已同次关联；不是认证后结构或实际返回PC证据，也不倒填历史A/B全输入相同。
+vendor公开值与configure请求确有差异，实际boot/vendor有效槽仍未知，不能唯一
+归因或直接升级。FSR400仍在，M3/M4/M5未通过；下一步优先核验有效上下文/
+选择槽的只读可观测性。详见[照片结论](fuxi-m3-sameboot-public-20261031.md)。

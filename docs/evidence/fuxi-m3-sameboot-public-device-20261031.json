@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-31",
+  "candidate": "m3-sameboot-public-v1",
+  "attempt": "attempt-01",
+  "result": "public-observation-completed; recovery-blocked-minus62",
+  "image_sha256": "035fb1adeb3adc2718ec0896539467ce4bd37ec8042061845ccdc5064a432b15",
+  "source_commit": "da479d0ab5d17e6d78a86a3218035df046f4f252",
+  "boot_evidence": "fuxi-m3-sameboot-public-boot-20261031.json",
+  "boot_evidence_sha256": "c91af972ea21046c536e6e642f6f2f0e1c05781984f93eaf538ae69778640e19",
+  "observation": {
+    "schema_version": 1,
+    "method": "Manual transcription of user photo; wrapped cached report, ordered using bound source. Not serial capture.",
+    "photo_original": "IMG_7303.HEIC",
+    "photo_sha256": "0fcf7734595c7353b2e68417abf56ba129383775e16564ce6ee1326ef41aa162",
+    "view_sha256": "e0c6c00c9f7df142ac2aa6996b7b6608fd03f897f2e25cfcc4aaf2faf3b12145",
+    "public": {
+      "authenticated": false,
+      "source": "loadfrombuffer",
+      "app": 4,
+      "instance_freshness": "unproven",
+      "format_version": "0x400000005",
+      "public_prefix_bytes": 142,
+      "blob_bytes": 208,
+      "software": {
+        "mask": "0x0",
+        "version_fields_present": false,
+        "fbe_present": false
+      },
+      "hardware": {
+        "mask": "0x1f",
+        "os_version": 170000,
+        "os_patch": 202610,
+        "boot_patch": 202610,
+        "vendor_patch": 20260801,
+        "algorithm": 32,
+        "fbe_present": false
+      }
+    },
+    "configure": {
+      "app": 4,
+      "os_version": 170000,
+      "os_patch": 20261005,
+      "vendor_patch": 20261005,
+      "boot_state": "unobserved",
+      "evidence": "3CC89865",
+      "smc_a0_a3": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "resumes": 0,
+      "status": "0x00000000",
+      "payload_bytes": 40912,
+      "wire_bytes": 40920,
+      "result": "Success"
+    },
+    "recovery": {
+      "result": "Not Ready",
+      "state": 5,
+      "stage": 1,
+      "km_field": 0,
+      "km_field_is_accepted_status": false,
+      "bytes": 0,
+      "retained": true,
+      "fault": 7,
+      "exchange": 1,
+      "commands": 1,
+      "resumes": 1,
+      "response_header_seen": true,
+      "wrapper_status_hex": "FFFFFFC2",
+      "wrapper_status_signed": -62,
+      "payload_bytes": 40616,
+      "wire_bytes": 40624,
+      "attempted": true
+    },
+    "batch": {
+      "stop": "key-recovery",
+      "passed_hex": "4A3",
+      "environment": 2,
+      "loader": 3,
+      "retained": true,
+      "no_retry_visible": true
+    },
+    "ufs": {
+      "stop": 1,
+      "doorbell": 0,
+      "task_doorbell": 0,
+      "run": 0,
+      "hcs_hex": "10F",
+      "interrupt_status": 0,
+      "gfsr": 0,
+      "fsr_hex": "400"
+    },
+    "final": {
+      "stage": "m3-key-recovery",
+      "poisoned": 0,
+      "ready": 0,
+      "smmu_configured": 1,
+      "decrypt": "UNIMPLEMENTED",
+      "handoff": 0,
+      "park": "no USB receiver; no handoff"
+    },
+    "m2_file": {
+      "path": "/aconfig/maps/system.package.map",
+      "bytes": 10527,
+      "sha256": "14f3d8675423917e383a71c936f4d9a81a29480f34ae3c550e0f4c34e53a0991",
+      "visible_match": true
+    },
+    "limits": [
+      "This records the actual CPU input public fields in the current boot; no authenticated decoded structure or TA return PC.",
+      "No equality of historical A/B full blob bytes is established.",
+      "App=4 in multiple steps is consistent with bound source/host integration; it does not attest underlying secure instance identity.",
+      "No raw shared page preservation or route restoration proof can be obtained from a photo alone.",
+      "Recovery km=0 is not an accepted successful KeyMint reply; outer wrapper is -62."
+    ]
+  },
+  "observation_sha256": "51a03b511088c693b728869cdc6e3f8abc5d5ec473d65ccb32d7e06fbe765e2e",
+  "conversion_note": "Sandbox sips returned 0 but produced metadata-only JPEG (6961 bytes) with no pixel dimensions; preserved. Escalated local sips conversion to screen-01-view.jpg succeeded and was visually inspected; original unchanged.",
+  "interpretation": [
+    "Current boot actual public input and first begin outer -62 are now associated, unlike the later TWRP snapshot alone.",
+    "Public format equals static minimum 0x400000005; this does not prove the internal authenticated format/return PC.",
+    "OS and normalized OS patch are consistent with A-profile static getter model; 20261005 versus 202610 alone is not an OS patch failure.",
+    "Public vendor patch 20260801 differs from the actual configure request 20261005; TA effective slot/vendor and boot remain unobserved, so vendor is a conditional explanation rather than proven unique cause.",
+    "This observation does not establish a basis for changing platform version fields, bypassing authentication, running upgrades or relaxing isolation."
+  ],
+  "boundaries": [
+    "Historical full A/B input equality remains unproved.",
+    "Boot/SDK initialization/secure instance/actual return PC unresolved.",
+    "FSR400 remains visible; no complete DMA/route restoration assertion.",
+    "M3/M4/M5 not passed; no userdata decryption or RAM handoff."
+  ]
+}
