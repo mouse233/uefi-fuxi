@@ -1,0 +1,275 @@
+{
+  "result": "passed",
+  "partition_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+  "service_imports": {
+    "0x5a048": "qsee_prng_getdata",
+    "0x5a0e8": "qsee_SW_Hmac"
+  },
+  "checked_edges": [
+    {
+      "pc": "0x31d74",
+      "target": "0x7fd0",
+      "kind": "BL",
+      "word": "0x97ff5897"
+    },
+    {
+      "pc": "0x8238",
+      "target": "0x12bdc",
+      "kind": "BL",
+      "word": "0x94002a69"
+    },
+    {
+      "pc": "0x12be0",
+      "target": "0x80",
+      "kind": "B",
+      "word": "0x17ffb528"
+    },
+    {
+      "pc": "0x31db8",
+      "target": "0x16b80",
+      "kind": "BL",
+      "word": "0x97ff9372"
+    },
+    {
+      "pc": "0x16bf4",
+      "target": "0x1c0",
+      "kind": "BL",
+      "word": "0x97ffa573"
+    },
+    {
+      "pc": "0x31eb4",
+      "target": "0x49204",
+      "kind": "BL",
+      "word": "0x94005cd4"
+    },
+    {
+      "pc": "0x31ee4",
+      "target": "0x39bcc",
+      "kind": "BL",
+      "word": "0x94001f3a"
+    },
+    {
+      "pc": "0x31e34",
+      "target": "0x4474c",
+      "kind": "BL",
+      "word": "0x94004a46"
+    },
+    {
+      "pc": "0x31e44",
+      "target": "0x4474c",
+      "kind": "BL",
+      "word": "0x94004a42"
+    },
+    {
+      "pc": "0x31e54",
+      "target": "0x4474c",
+      "kind": "BL",
+      "word": "0x94004a3e"
+    }
+  ],
+  "codec_controls": [
+    {
+      "boot": 0,
+      "payload_bytes": 75,
+      "mac_structure_bytes": 104,
+      "response_bytes": 123,
+      "authenticated": false
+    },
+    {
+      "boot": 23,
+      "payload_bytes": 75,
+      "mac_structure_bytes": 104,
+      "response_bytes": 123,
+      "authenticated": false
+    },
+    {
+      "boot": 24,
+      "payload_bytes": 76,
+      "mac_structure_bytes": 105,
+      "response_bytes": 124,
+      "authenticated": false
+    },
+    {
+      "boot": 255,
+      "payload_bytes": 76,
+      "mac_structure_bytes": 105,
+      "response_bytes": 124,
+      "authenticated": false
+    },
+    {
+      "boot": 256,
+      "payload_bytes": 77,
+      "mac_structure_bytes": 106,
+      "response_bytes": 125,
+      "authenticated": false
+    },
+    {
+      "boot": 65535,
+      "payload_bytes": 77,
+      "mac_structure_bytes": 106,
+      "response_bytes": 125,
+      "authenticated": false
+    },
+    {
+      "boot": 65536,
+      "payload_bytes": 79,
+      "mac_structure_bytes": 108,
+      "response_bytes": 127,
+      "authenticated": false
+    },
+    {
+      "boot": 202607,
+      "payload_bytes": 79,
+      "mac_structure_bytes": 108,
+      "response_bytes": 127,
+      "authenticated": false
+    },
+    {
+      "boot": 202610,
+      "payload_bytes": 79,
+      "mac_structure_bytes": 108,
+      "response_bytes": 127,
+      "authenticated": false
+    },
+    {
+      "boot": 20261005,
+      "payload_bytes": 79,
+      "mac_structure_bytes": 108,
+      "response_bytes": 127,
+      "authenticated": false
+    },
+    {
+      "boot": 4294967295,
+      "payload_bytes": 79,
+      "mac_structure_bytes": 108,
+      "response_bytes": 127,
+      "authenticated": false
+    }
+  ],
+  "failure_controls": [
+    {
+      "name": "boot-flag-missing",
+      "instructions": 1839,
+      "failure_services": [],
+      "global_writes": [],
+      "cleanup_reached": true,
+      "status": -30
+    },
+    {
+      "name": "init-flag-missing",
+      "instructions": 1922,
+      "failure_services": [],
+      "global_writes": [],
+      "cleanup_reached": true,
+      "status": -30
+    },
+    {
+      "name": "cache-miss-boundary",
+      "instructions": 8042,
+      "failure_services": [],
+      "global_writes": [
+        {
+          "va": "0x5b4c8",
+          "bytes": 8
+        }
+      ],
+      "cleanup_reached": false,
+      "stopped_before": "0x80",
+      "status": null
+    },
+    {
+      "name": "cache-hit-boundary",
+      "instructions": 8155,
+      "failure_services": [],
+      "global_writes": [],
+      "cleanup_reached": false,
+      "stopped_before": "0x1c0",
+      "status": null
+    },
+    {
+      "name": "prng-short-failure",
+      "instructions": 8307,
+      "failure_services": [
+        "0x80"
+      ],
+      "global_writes": [
+        {
+          "va": "0x5b4c8",
+          "bytes": 8
+        }
+      ],
+      "cleanup_reached": true,
+      "status": -49
+    },
+    {
+      "name": "hmac-service-failure",
+      "instructions": 8406,
+      "failure_services": [
+        "0x1c0"
+      ],
+      "global_writes": [],
+      "cleanup_reached": true,
+      "status": -1
+    }
+  ],
+  "capacity_controls": [
+    {
+      "output_capacity": 4096,
+      "cose_capacity": 130,
+      "status": 0,
+      "bytes": 127
+    },
+    {
+      "output_capacity": 126,
+      "cose_capacity": 130,
+      "status": 1,
+      "bytes": 0
+    },
+    {
+      "output_capacity": 0,
+      "cose_capacity": 130,
+      "status": 1,
+      "bytes": 0
+    },
+    {
+      "output_capacity": 4096,
+      "cose_capacity": 121,
+      "status": 1,
+      "bytes": 0
+    },
+    {
+      "output_capacity": 4096,
+      "cose_capacity": 0,
+      "status": 1,
+      "bytes": 0
+    }
+  ],
+  "schema": "map{36:bstr(tag17 array[protected=a10105,map{},payload=bstr(tag40001 array[bstr32,bool,uint0..3,bstr32,boot:uint32]),tag:bstr32])}",
+  "cache": {
+    "type_selector": 4,
+    "miss_target": "0x80a4",
+    "storage": "TA private RAM",
+    "bytes": 32,
+    "flag": "0x5b4e8",
+    "buffer": "0x5b488",
+    "metadata_length": "0x5b4c8",
+    "initialized_only_after_exact_prng_count": true
+  },
+  "limits": [
+    "No device/SMC/full successful method or successful PRNG/HMAC stub.",
+    "Pre-crypto handler and independent post-MAC codec are separate synthetic controls, not an authenticated end-to-end result.",
+    "Fixed TA local RAM writes and failure propagation checked; external SDK implementation and all callbacks/persistence not executed.",
+    "COSE MAC is unverified; public boot may be structurally parsed only and is not attestation.",
+    "No real ROT/VBH/MAC cache/output bytes or material digest read or logged."
+  ],
+  "sources": {
+    "tools/audit_fuxi_m3_root_trust_contract.py": "1041e57c4567ca58169003453bd28fd5a6742b3a924bb71a697a17cbd2bb8365",
+    "tools/audit_fuxi_m3_metadata_read.py": "c7daf2c334ac4c52d94cb8f4ed1cb4d387e3d2a4658af1ab2cf378a1ffd7f4cb",
+    "tools/audit_fuxi_m3_boot_client.py": "d65b43b1945cf9d61e139f9e2ad0908ef353e83e9fc74062dfef3f6ea5574a71",
+    "tools/audit_fuxi_m3_begin_version.py": "09a4181f38a9200974073d2696d26e1bf1dd85e87019eb0b5b66165686281e34",
+    "tools/audit_fuxi_m3_key_recovery.py": "e01e49dab6392263d9314cd2cc372fd509184310fc3d85af70d0fdc6b81bc7e3",
+    "tools/audit_fuxi_m3_effective_context.py": "aeec4a2f635dc2a6ab010cadb0f12b539c0c44898e98b69f96a23f279928865f",
+    "tools/audit_fuxi_m3_configure_gate.py": "9f95ea0c90994f66a707dd301a169984bc067042a69ae49b3c0b46a4177cc63e",
+    "tools/collect_fuxi_m3_blob_public.py": "57177a8e9495f7b7530ed427617cefc77daca7c44aab5620a1384e4694c55bff"
+  }
+}

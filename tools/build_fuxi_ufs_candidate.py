@@ -46,6 +46,8 @@ def main():
     parser.add_argument("--m3-smci-date", action="store_true", help="read-only KeyMint date capability query")
     parser.add_argument("--m3-recover-key", action="store_true", help="recover one existing metadata key, wipe output, close session; no convert/ICE")
     parser.add_argument("--recovery-binding", type=Path, help="exact pinned real Android unbound-context evidence; required for recovery")
+    parser.add_argument("--m3-root-trust-query", action="store_true", help="one fixed configure + 311f boot observation, no recovery inputs/begin")
+    parser.add_argument("--root-trust-evidence", type=Path, help="pinned ROT codec/service/failure contract")
     parser.add_argument("--m3-recovery-public", action="store_true", help="observe same-boot allowlisted blob fields before begin; no new TA command")
     parser.add_argument("--m3-configure-recovery", action="store_true", help="one fixed public configure before first secret request; explicit audited recovery only")
     parser.add_argument("--configure-patch", type=int, choices=(20261005,20991231), default=20261005, help="fixed public OS/vendor patch profile; alternate requires A/B evidence")
@@ -143,9 +145,17 @@ def main():
         from m3_recovery_binding import load_binding
         recovery_binding=load_binding(args.recovery_binding)
     elif args.recovery_binding:parser.error("binding evidence is only valid with --m3-recover-key")
+    root_trust_binding=None
+    if args.m3_root_trust_query:
+        if not (args.m3_smci_version and args.m3_smci_resume and args.m3_smci_mode=='object' and args.m2_metadata_files and args.m3_bridge_hlos) or any((args.m3_recover_key,args.m3_configure_recovery,args.m3_smci_lookup,args.m3_smci_date,args.m3_smci_setver,args.m3_metadata_key,args.m3_characteristics_probe,args.m3_recovery_public)):
+            parser.error('ROOTCTX requires parked HLOS/version/resume object load, excludes key/lookup/date operations')
+        if args.configure_patch!=20261005 or not args.root_trust_evidence:parser.error('ROOTCTX requires fixed A profile and pinned --root-trust-evidence')
+        from m3_root_trust_binding import load_binding
+        root_trust_binding=load_binding(args.root_trust_evidence)
+    elif args.root_trust_evidence:parser.error('ROT evidence requires explicit --m3-root-trust-query')
     configure_binding=None
-    if args.m3_configure_recovery:
-        if not args.m3_recover_key or not args.configure_evidence:parser.error('configure requires recovery and explicit --configure-evidence')
+    if args.m3_configure_recovery or args.m3_root_trust_query:
+        if not (args.m3_recover_key or args.m3_root_trust_query) or not args.configure_evidence:parser.error('configure requires recovery and explicit --configure-evidence')
         from m3_configure_binding import load_configure_evidence
         configure_binding=load_configure_evidence(args.configure_evidence,args.configure_patch)
     elif args.configure_evidence or args.configure_patch!=20261005:parser.error('configure evidence/profile requires --m3-configure-recovery')
@@ -184,6 +194,8 @@ def main():
     binding["framework_ref"] = subprocess.check_output(["git", "-C", str(base), "rev-parse", "HEAD"], text=True).strip()
     binding["framework_dirty"] = bool(subprocess.check_output(["git", "-C", str(base), "status", "--porcelain"], text=True))
     (out / "build-inputs.json").write_text(json.dumps(binding, indent=2) + "\n")
+    if root_trust_binding:
+        shutil.copyfile(args.root_trust_evidence,out/"root-trust-evidence.json")
     if recovery_binding:
         shutil.copyfile(args.recovery_binding,out/"recovery-binding.json")
     if configure_binding:
@@ -232,6 +244,7 @@ def main():
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_DATE"] = str(int(args.m3_smci_date))
     ctx.board["firmware"]["defines"]["FUXI_M3_SMCI_SETVER"] = str(int(args.m3_smci_setver))
     ctx.board["firmware"]["defines"]["FUXI_M3_KEY_RECOVERY"] = str(int(args.m3_recover_key))
+    ctx.board["firmware"]["defines"]["FUXI_M3_ROOT_TRUST_QUERY"] = str(int(args.m3_root_trust_query))
     ctx.board["firmware"]["defines"]["FUXI_M3_RECOVERY_PUBLIC"] = str(int(args.m3_recovery_public))
     ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_RECOVERY"] = str(int(args.m3_configure_recovery))
     ctx.board["firmware"]["defines"]["FUXI_M3_CONFIGURE_PATCH"] = str(args.configure_patch)
@@ -290,6 +303,8 @@ def main():
                   m3_smci_lookup=args.m3_smci_lookup, m3_smci_load=args.m3_smci_load,
                   m3_smci_lookup_arch=args.m3_smci_lookup_arch,m3_lookup_arch_binding=lookup_binding,
                   m3_smci_version=args.m3_smci_version, m3_smci_resume=args.m3_smci_resume, m3_smci_setver=args.m3_smci_setver, m3_smci_date=args.m3_smci_date,
+                  m3_root_trust_query=args.m3_root_trust_query,m3_root_trust_binding=root_trust_binding,
+                  m3_reads_recovery_inputs=args.m3_recover_key,
                   m3_recover_key=args.m3_recover_key, m3_recovery_binding=recovery_binding,
                   m3_configure_recovery=args.m3_configure_recovery,m3_configure_binding=configure_binding,
                   m3_characteristics_probe=args.m3_characteristics_probe, m3_recovery_public=args.m3_recovery_public,
@@ -299,7 +314,7 @@ def main():
                   m3_smci_arginfo=("1" if args.m3_smc_context else "224") if args.m3_smci_root else None,
                   m3_smci_ops=(["standard-info-control"] if args.m3_smc_context else ["root-register-null", "open-loader-uid122", "lookup-keymaster64", "lookup-keymaster", "ta-release", "loader-release", "environment-release"] if args.m3_smci_lookup else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "set-version-200", "ta-release", "loader-release", "environment-release"] if args.m3_smci_setver else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "date-support", "ta-release", "loader-release", "environment-release"] if args.m3_smci_date else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "ta-release", "loader-release", "environment-release"] if args.m3_smci_version else ["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "ta-release", "loader-release", "environment-release"] if args.m3_smci_load else ["root-register-null", "open-loader-uid122", "loader-release", "environment-release"] if args.m3_smci_loader else ["root-register-null", "remote-release"]) if args.m3_smci_root else None,
                   m3_smci_ta_bytes=0x63058 if args.m3_smci_load else None,
-                  m3_smci_no_keys=(not args.m3_recover_key) if args.m3_smci_root else None,
+                  m3_smci_no_keys=(not (args.m3_recover_key or args.m3_root_trust_query)) if args.m3_smci_root else None,
                   m3_bridge_abi="standard64-a0-status-a1-service-a2-handle64" if args.m3_bridge_call else None,
                   m3_bridge_fnids=["42000c1c","42000c1e","42000c1d"] if args.m3_bridge_call and not args.m3_smc_context else [],
                   m3_bridge_hlos=args.m3_bridge_hlos,
@@ -336,6 +351,9 @@ def main():
         if args.m3_configure_recovery:report['m3_smci_ops'].insert(4,'configure-public-once')
         if args.m3_characteristics_probe:report['m3_smci_ops'].insert(5,'characteristics-probe')
         report['native_ufs_takeover']='read-only diagnostic; existing key recovery, no convert/ICE or userdata decryption'
+    if args.m3_root_trust_query:
+        report['m3_smci_ops']=['root-register-null','open-loader-uid122','loadfrombuffer-keymaster64','get-version','configure-public-once','root-context-query-once','ta-release','loader-release','environment-release']
+        report['native_ufs_takeover']='read-only storage; boot observation may initialize TA private MAC cache; no recovery input/begin/ICE'
     (out / "candidate.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 
@@ -389,6 +407,19 @@ def write_sources(uefi, out):
         uefi / "tools/qualify_fuxi_ufs_candidate.py",
         uefi / "tools/check_fuxi_ufs_report_image.py",
         uefi / "tools/check_fuxi_m3_live_objects.py",
+        uefi / 'Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3RootTrustPublic.h',
+        uefi / 'Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3RootTrustDiagnostic.inc',
+        uefi / 'tools/m3_root_trust_binding.py',
+        uefi / 'tools/audit_fuxi_m3_root_trust_contract.py',
+        uefi / 'tools/test_fuxi_m3_root_trust_entry.py',
+        uefi / 'tools/test_fuxi_m3_root_trust_public.py',
+        uefi / 'tools/check_fuxi_m3_root_trust_objects.py',
+        uefi / 'tools/tests/m3_root_trust_monitor.inc',
+        uefi / 'tools/tests/m3_root_trust_cases.inc',
+        uefi / 'tools/tests/m3_root_trust_fixture.inc',
+        uefi / 'tools/tests/m3_root_trust_public_host.c',
+        uefi / 'docs/evidence/fuxi-m3-root-trust-contract-20261031.json',
+
         uefi / "tools/test_m3_recovery_binding.py",
         uefi / "Platforms/Xiaomi/fuxiPkg/Drivers/FuxiNativeUfsDxe/M3BlobPublic.h",
         uefi / "tools/test_fuxi_m3_native_public.py",

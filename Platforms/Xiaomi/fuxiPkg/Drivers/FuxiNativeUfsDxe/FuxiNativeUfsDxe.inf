@@ -19,6 +19,8 @@
   M3BridgeDiagnostic.inc
   M3SmciDiagnostic.inc
   M3RecoveryDiagnostic.inc
+  M3RootTrustDiagnostic.inc
+  M3RootTrustPublic.h
   M3ConfigureDiagnostic.inc
   M3CharacteristicsDiagnostic.inc
   M3SmcContext.inc

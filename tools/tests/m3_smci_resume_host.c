@@ -2,6 +2,9 @@
 // Production gated C2/C3 load stage; monitor is simulated, never a real SMC.
 #define _GNU_SOURCE
 #define _POSIX_C_SOURCE 200112L
+#ifndef FUXI_M3_ROOT_TRUST_QUERY
+#define FUXI_M3_ROOT_TRUST_QUERY 0
+#endif
 #ifndef TEST_RECOVERY_ENTRY
 #define TEST_RECOVERY_ENTRY 0
 #endif
@@ -39,6 +42,9 @@
 #include <Library/CacheMaintenanceLib.h>
 #include <sys/mman.h>
 #endif
+#if FUXI_M3_ROOT_TRUST_QUERY
+#include <sys/mman.h>
+#endif
 #include <Library/ArmSmcLib.h>
 #include <assert.h>
 #include <stdio.h>
@@ -66,7 +72,7 @@ static EFI_STATUS AllocatePages(int t,int m,UINTN n,EFI_PHYSICAL_ADDRESS *p){
  (void)t;(void)m;
  if(Phase==99)return EFI_OUT_OF_RESOURCES;
  assert(n==TEST_PAGES && !Page);
- #if TEST_RECOVERY_ENTRY
+ #if TEST_RECOVERY_ENTRY || FUXI_M3_ROOT_TRUST_QUERY
  Page=mmap((void*)0x20000000,TEST_BYTES,PROT_READ|PROT_WRITE,MAP_ANON|MAP_PRIVATE,-1,0);
  assert(Page!=MAP_FAILED && (UINTN)Page+TEST_BYTES<=0x100000000ULL);
 #else
@@ -84,7 +90,7 @@ static EFI_STATUS FreePages(EFI_PHYSICAL_ADDRESS raw,UINTN n){
  assert(n==TEST_PAGES && (UINTN)Page==raw);
  for(UINTN i=0;i<TEST_BYTES;++i)assert(!Page[i]);
  ++Frees;
- #if TEST_RECOVERY_ENTRY
+ #if TEST_RECOVERY_ENTRY || FUXI_M3_ROOT_TRUST_QUERY
  munmap(Page,TEST_BYTES);
 #else
  free(Page);
@@ -107,7 +113,13 @@ static int ConfigureMonitor(ARM_SMC_ARGS *a);
 #include "m3_characteristics_monitor.inc"
 #endif
 #endif
+#if FUXI_M3_ROOT_TRUST_QUERY
+#include "m3_root_trust_monitor.inc"
+#endif
 VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
+#if FUXI_M3_ROOT_TRUST_QUERY
+ if(Page && RootMonitor(a))return;
+#endif
 #if TEST_RECOVERY_ENTRY
 #if FUXI_M3_CHARACTERISTICS_PROBE
  if(Page && *(UINT32*)(Page+96)==0x2109 && CharacteristicsMonitor(a))return;
@@ -184,6 +196,8 @@ VOID EFIAPI ArmCallSmc(ARM_SMC_ARGS *a){
  if(Calls==6){Put(Page+56,20);
 #if TEST_RECOVERY_ENTRY
    Put(Page+0xa07c,4);Put(Page+0xa080,1);Put(Page+0xa084,4);Put(Page+0xa088,Scenario==10?1013:1012);
+#elif FUXI_M3_ROOT_TRUST_QUERY
+   Put(Page+0xa07c,4);Put(Page+0xa080,1);Put(Page+0xa084,4);Put(Page+0xa088,1012);
 #else
    Put(Page+0xa07c,1);Put(Page+0xa080,2);Put(Page+0xa084,3);Put(Page+0xa088,4);
 #endif
@@ -237,7 +251,9 @@ static void SetupTa(void){
  memcpy(TaBuf,"\177ELF\002\001",6);
  mTaImage=TaBuf;mTaImageBytes=TA_BYTES;mTaImagePages=TA_PAGES;
 }
-#if !TEST_RECOVERY_ENTRY
+#if FUXI_M3_ROOT_TRUST_QUERY
+#include "m3_root_trust_cases.inc"
+#elif !TEST_RECOVERY_ENTRY
 static int Vectors,MaxLogCalls;
 static void Run(int phase,int fault){
  Phase=phase;Fault=fault;Special=0;Calls=Frees=TaFrees=LogCalls=0;assert(!Page);assert(!TaBuf);

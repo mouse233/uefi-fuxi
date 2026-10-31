@@ -173,8 +173,14 @@
 #if FUXI_M3_SMCI_DATE && (!FUXI_M3_SMCI_VERSION || !FUXI_M3_SMCI_RESUME || FUXI_M3_SMCI_SETVER)
 #error Date capability requires version and resume, and forbids setVersion
 #endif
+#ifndef FUXI_M3_ROOT_TRUST_QUERY
+#define FUXI_M3_ROOT_TRUST_QUERY 0
+#endif
 #ifndef FUXI_M3_KEY_RECOVERY
 #define FUXI_M3_KEY_RECOVERY 0
+#endif
+#if FUXI_M3_ROOT_TRUST_QUERY && (!FUXI_M3_SMCI_VERSION || !FUXI_M3_SMCI_RESUME || !FUXI_M3_SMCI_OBJECT || !FUXI_M3_BRIDGE_HLOS || !FUXI_UFS_M2_FILES || FUXI_M3_KEY_RECOVERY || FUXI_M3_METADATA_KEY || FUXI_M3_SMCI_SETVER || FUXI_M3_SMCI_DATE || FUXI_M3_SMCI_LOOKUP)
+#error Root context observation requires version/resume HLOS object load without key operations
 #endif
 #ifndef FUXI_M3_CONFIGURE_RECOVERY
 #define FUXI_M3_CONFIGURE_RECOVERY 0

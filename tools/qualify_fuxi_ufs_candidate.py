@@ -98,6 +98,11 @@ def main():
         commands.append(('secret-exchange', ['python3',str(root/'tools/test_fuxi_m3_secret_exchange.py'),'--edk2',str(edk2),'--report',str(out/'secret-exchange-tests.json')]))
         commands.append(('keymint-backend', ['python3',str(root/'tools/test_fuxi_m3_keymint_backend.py'),'--edk2',str(edk2),'--vendor-vectors',str(root/'out/m3-recovery-backend-v1/vendor-codec'),'--report',str(out/'keymint-backend-tests.json')]))
         commands.append(('live-objects', ['python3',str(root/'tools/check_fuxi_m3_live_objects.py'),'--output',str(out)]))
+    if candidate.get('m3_root_trust_query'):
+        commands.append(('root-context-entry',['python3',str(root/'tools/test_fuxi_m3_root_trust_entry.py'),'--edk2',str(edk2),'--report',str(out/'root-context-entry-tests.json')]))
+        commands.append(('root-context-public',['python3',str(root/'tools/test_fuxi_m3_root_trust_public.py'),'--edk2',str(edk2),'--vectors',str(root/'out/m3-root-trust-contract-v1/synthetic-codec-vectors.json'),'--report',str(out/'root-context-public-tests.json')]))
+        commands.append(('root-context-objects',['python3',str(root/'tools/check_fuxi_m3_root_trust_objects.py'),'--output',str(out)]))
+        commands.append(('recovery-regression',['python3',str(root/'tools/test_fuxi_m3_recovery_entry.py'),'--edk2',str(edk2),'--configured','--report',str(out/'recovery-regression-tests.json')]))
     if candidate.get('m3_smc_context'):
         commands.append(('m3-context', ['python3', str(root / 'tools/test_fuxi_m3_smc_context.py'),
                                       '--edk2', str(edk2), '--report', str(out / 'm3-context-tests.json')]))

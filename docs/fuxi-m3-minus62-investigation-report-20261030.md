@@ -651,3 +651,19 @@ vendor/selector上下文，也不能把多个前置都可返回的-30当唯一bo
 311e=KEYMINT_GENERATE_CSR、218=FBE_SET_SEED、207=SET_VERSION、211=SET_VBH，
 不能当只读查询替代。完整只读契约是下一门槛，当前尚未取得真实boot值、有效
 vendor槽/selector或实际-62返回PC，M3/M4/M5与FSR400仍未解决。
+
+
+## 19. 2026-10-31追加：boot查询封装/失败契约与独立候选
+
+[单次boot观察候选](fuxi-m3-root-trust-query-20261031.md)完成。固定TA的ROT载体为
+tag40001五项数组，COSE_Mac0 tag17包裹后经map36字节串返回；boot202610时实码
+合成payload79/MAC输入108/COSE122/最终payload127字节。11组前加密路径与独立
+post-MAC片段、6组边界/失败、5组容量检查通过，没有任何成功PRNG/HMAC桩。
+首次真实311f可能经qsee_prng_getdata初始化TA私有32字节MAC缓存，再调用
+qsee_SW_Hmac；不是无状态查询，实际SDK未在主机执行，不能泛化其全部副作用。
+
+独立m3-root-trust-query-v1只在UFS已停和精确协议版本通过后发固定A配置与311f，
+不读恢复输入、不发begin，只提取boot整数，MAC明确未验证；错误/畸形/未知回调
+与续调耗尽保留注册范围停止。114源、固件/默认/query模块、最终26资格、32入口/
+1170解析/27恢复回归通过；尚未上机，vendor/selector/-62实际PC与M3/M4/M5仍缺证。
+未以此推断当前手机boot值，未按blob改平台字段，未接升级/生成/201/208/ICE。

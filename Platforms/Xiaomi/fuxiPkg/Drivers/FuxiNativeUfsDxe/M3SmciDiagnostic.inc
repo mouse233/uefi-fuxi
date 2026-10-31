@@ -5,6 +5,9 @@
 // callback execution or retry.
 #if FUXI_M3_SMCI_ROOT && !FUXI_M3_SMC_CONTEXT
 STATIC EFI_STATUS mSmciStatus = EFI_NOT_READY;
+#if FUXI_M3_ROOT_TRUST_QUERY
+STATIC BOOLEAN mRootTrustVersionOk,mRootTrustBatchStarted;
+#endif
 STATIC UINT32 SmciU32(CONST UINT8 *P) {
   return P[0] | ((UINT32)P[1]<<8) | ((UINT32)P[2]<<16) | ((UINT32)P[3]<<24);
 }
@@ -383,6 +386,11 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
                         SmciU32(Page+0xa084)==4 && SmciU32(Page+0xa088)==1012);
     if(!mRecoveryVersionOk)return EFI_UNSUPPORTED;
 #endif
+#if FUXI_M3_ROOT_TRUST_QUERY
+    mRootTrustVersionOk=(SmciU32(Page+0xa07c)==4 && SmciU32(Page+0xa080)==1 &&
+                        SmciU32(Page+0xa084)==4 && SmciU32(Page+0xa088)==1012);
+    if(!mRootTrustVersionOk)return EFI_UNSUPPORTED;
+#endif
     return EFI_SUCCESS;
   }
 #endif
@@ -468,6 +476,7 @@ STATIC EFI_STATUS SmciInvoke(UINT64 Raw, UINT8 *Page, UINTN Bytes, UINT32 Object
 }
 
 #include "M3ConfigureDiagnostic.inc"
+#include "M3RootTrustDiagnostic.inc"
 STATIC VOID FnuSmciRootProbe(VOID) {
   EFI_PHYSICAL_ADDRESS Raw=SIZE_4GB-1;
   UINT8 *Page;
@@ -492,6 +501,10 @@ STATIC VOID FnuSmciRootProbe(VOID) {
   EFI_STATUS RecoveryResult=EFI_NOT_READY;
 #endif
   mSmciStatus=EFI_NOT_READY;
+#if FUXI_M3_ROOT_TRUST_QUERY
+  if(mRootTrustBatchStarted || mReady || mPoisoned) { SmciReleaseTaImage();return; }
+  mRootTrustBatchStarted=TRUE;
+#endif
 #if FUXI_M3_SMCI_LOOKUP
   FNU_STAGE("m3-smci-lookup");
 #if FUXI_M3_SMCI_LOOKUP_ARCH
@@ -501,7 +514,9 @@ STATIC VOID FnuSmciRootProbe(VOID) {
 #endif
 #elif FUXI_M3_SMCI_LOAD
   FNU_STAGE("m3-smci-load");
-#if FUXI_M3_KEY_RECOVERY
+#if FUXI_M3_ROOT_TRUST_QUERY
+  FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/version/configure/root-context/release/delete; no recovery");
+#elif FUXI_M3_KEY_RECOVERY
 #if FUXI_M3_CONFIGURE_RECOVERY && FUXI_M3_CHARACTERISTICS_PROBE
   FnuLog(L"FUXIM3 BATCH plan=root/open122/load64/version/configure/characteristics/recover/wipe/release/delete");
 #elif FUXI_M3_CONFIGURE_RECOVERY
@@ -639,6 +654,16 @@ STATIC VOID FnuSmciRootProbe(VOID) {
 #else
   FnuLog(L"FUXIM3 BATCH loader-load=Success app=%x; continue app-release",App);
 #endif
+#if FUXI_M3_ROOT_TRUST_QUERY
+  Step="rootctx-configure";
+  mSmciStatus=SmciRootTrustExchange((UINT64)Raw,Page,Bytes,App,TRUE);
+  if(EFI_ERROR(mSmciStatus))goto Done;
+  Passed|=0x400;
+  Step="rootctx-query";
+  mSmciStatus=SmciRootTrustExchange((UINT64)Raw,Page,Bytes,App,FALSE);
+  if(EFI_ERROR(mSmciStatus))goto Done;
+  Passed|=0x800;
+#endif
 #if FUXI_M3_KEY_RECOVERY
 #if FUXI_M3_CONFIGURE_RECOVERY
   Step="configure-recovery";
@@ -710,7 +735,9 @@ Done:
     FnuLog(L"FUXIM3 SMCI released bytes=%x",(UINT32)Bytes);
   }
 #if FUXI_M3_SMCI_LOAD
-#if FUXI_M3_KEY_RECOVERY
+#if FUXI_M3_ROOT_TRUST_QUERY
+  FnuLog(L"FUXIM3 SMCI result=%r retained=%u; boot context observation only",mSmciStatus,(UINT32)Retain);
+#elif FUXI_M3_KEY_RECOVERY
   FnuLog(L"FUXIM3 SMCI result=%r retained=%u; existing-key recovery diagnostic only",mSmciStatus,(UINT32)Retain);
   if(!mRecoveryAttempted)mRecoveryStatus=EFI_ERROR(mSmciStatus)?mSmciStatus:EFI_NOT_READY;
   FnuDropRecoveryInput();

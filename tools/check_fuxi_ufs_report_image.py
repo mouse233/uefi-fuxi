@@ -101,6 +101,15 @@ def main():
         integrated=json.loads((out/'characteristics-entry-tests.json').read_text())
         assert integrated.get('configured') is True and integrated.get('characteristics') is True
         assert integrated.get('cases')==13
+    if candidate.get('m3_root_trust_query'):
+        from m3_root_trust_binding import load_binding,VECTORS_PIN
+        from m3_configure_binding import load_configure_evidence
+        assert candidate['m3_root_trust_binding']==load_binding(out/'root-trust-evidence.json')
+        assert candidate['m3_configure_binding']==load_configure_evidence(out/'configure-evidence.json')
+        assert not any(candidate.get(k) for k in ('m3_recover_key','m3_reads_recovery_inputs','m3_smci_lookup','m3_configure_recovery','m3_smci_date','m3_smci_setver'))
+        extra += ('root-context-entry-tests.json','root-context-public-tests.json','root-context-object-tests.json','recovery-regression-tests.json')
+        assert json.loads((out/'root-context-public-tests.json').read_text())['vectors_sha256']==VECTORS_PIN
+        assert json.loads((out/'root-context-entry-tests.json').read_text())['cases']==32
     if candidate.get("m3_smc_context"):
         extra += ("m3-context-tests.json",)
     for filename in ("report-cache-tests.json", "ufs-core-tests.json", "data-port-tests.json") + extra:
@@ -132,6 +141,11 @@ def main():
     ufs = (out / "FuxiNativeUfsDxe.efi").read_bytes()
     receiver = (out / "FuxiUsbRamDxe.efi").read_bytes()
     assert ufs in inner and receiver in inner
+    root_marker="FUXIM3 ROOTCTX boot-patch=%u; structural observation only, MAC unverified".encode('utf-16-le')
+    assert (root_marker in ufs)==bool(candidate.get('m3_root_trust_query'))
+    if candidate.get('m3_root_trust_query'):
+        assert 'FUXIM3 RECOVERY begin: decrypt existing key; no persistence'.encode('utf-16-le') not in ufs
+        assert bytes.fromhex('16210000'+candidate['m3_configure_binding']['configure_cbor_hex']) in ufs
     public_marker="FUXIM3 PUBLIC source=loadfrombuffer app=%x; instance freshness unproven".encode("utf-16-le")
     assert (public_marker in ufs)==bool(candidate.get('m3_recovery_public'))
     if candidate.get('m3_recovery_public'):
@@ -185,7 +199,7 @@ def main():
     if candidate.get("m3_smci_root") and not candidate.get("m3_smc_context"):
         assert candidate["m3_bridge_call"] and candidate["m3_scm_invoke"] and park
         assert candidate["m3_bridge_bytes"] == (0x82000 if candidate.get("m3_bridge_large") else 8192)
-        assert candidate["m3_smci_no_keys"] == (not candidate.get("m3_recover_key", False))
+        assert candidate["m3_smci_no_keys"] == (not (candidate.get("m3_recover_key", False) or candidate.get("m3_root_trust_query",False)))
         if candidate.get("m3_bridge_large"):
             assert candidate["lun4_keymaster"] and candidate["m3_bridge_hlos"]
         assert not candidate["m3_bridge_blob"] and not candidate["m3_metadata_key"]
@@ -199,6 +213,8 @@ def main():
             expected_ops=["root-register-null", "open-loader-uid122", "loadfrombuffer-keymaster64", "get-version", "recover-existing-key", "wipe-recovered-key", "ta-release", "loader-release", "environment-release"]
             if candidate.get('m3_configure_recovery'):expected_ops.insert(4,'configure-public-once')
             if candidate.get('m3_characteristics_probe'):expected_ops.insert(5,'characteristics-probe')
+        if candidate.get('m3_root_trust_query'):
+            expected_ops=['root-register-null','open-loader-uid122','loadfrombuffer-keymaster64','get-version','configure-public-once','root-context-query-once','ta-release','loader-release','environment-release']
         assert candidate["m3_smci_ops"] == expected_ops
         if candidate.get("m3_smci_loader"):
             assert candidate["m3_bridge_hlos"] and candidate["m3_smci_mode"] == "object"
@@ -218,6 +234,7 @@ def main():
             assert candidate.get("m3_smci_loader") and candidate["m3_bridge_hlos"] and candidate["m3_bridge_large"]
             assert candidate["m3_smci_ta_bytes"] == 0x63058
             plan=("FUXIM3 BATCH plan=root/open122/load64/version/recover/wipe/release/delete; no persistence" if candidate.get("m3_recover_key") else "FUXIM3 BATCH plan=root/open122/load64/ta-release/release-loader/release-env/delete; gated, no retry")
+            if candidate.get('m3_root_trust_query'):plan='FUXIM3 BATCH plan=root/open122/load64/version/configure/root-context/release/delete; no recovery'
             if candidate.get('m3_configure_recovery'):plan='FUXIM3 BATCH plan=root/open122/load64/version/configure/recover/wipe/release/delete; one configure'
             if candidate.get('m3_characteristics_probe'):plan='FUXIM3 BATCH plan=root/open122/load64/version/configure/characteristics/recover/wipe/release/delete'
             for marker in (plan,
@@ -298,7 +315,8 @@ def main():
                        "FUXIM3 SMCI bridge-delete return a0=%lx a1=%lx a2=%lx a3=%lx",
                        "FUXIM3 SMCI retained bridge=%lx object=%x; unknown/error state, no retry"):
             assert marker.encode("utf-16-le") in ufs, marker
-        result_marker = ("FUXIM3 SMCI result=%r retained=%u; existing-key recovery diagnostic only" if candidate.get("m3_recover_key") else
+        result_marker = ("FUXIM3 SMCI result=%r retained=%u; boot context observation only" if candidate.get('m3_root_trust_query') else
+                         "FUXIM3 SMCI result=%r retained=%u; existing-key recovery diagnostic only" if candidate.get("m3_recover_key") else
                          "FUXIM3 SMCI result=%r retained=%u; one load, no key, no decrypt"
                          if candidate.get("m3_smci_load") else
                          "FUXIM3 SMCI result=%r retained=%u; no TA, no key, no decrypt")
