@@ -595,3 +595,12 @@ A 组 load/version/configure/recovery 顺序与170000/20261005/20261005，仅以
 已修正并保留失败记录，未改变固件。解析不访问加密尾部，不记录材料/未知项/
 摘要，不增加TA命令、不改日期或隔离规则。尚未上机，-62与M3/M4/M5未通过；
 历史FSR400边界保留。详见[同次公开输入观测](fuxi-m3-sameboot-public-20261031.md)。
+
+
+## 2026-10-31 11:12：同次公开输入候选已临时启动，等待照片
+
+用户确认FASTBOOT后，m3-sameboot-public-v1/attempt-01固定镜像/102源/31资格及
+fcde91e/product/unlocked/slot_a/容量和互斥通过，仅一次fastboot boot返回0，
+总1.633s，无重试或分区写。尚无屏幕证据，PUBLIC字段、configure、恢复状态/
+-62与最终PARK均待确认，不据启动命令成功作硬件通过声明。原始启动记录和
+规范摘要见[同次观测记录](fuxi-m3-sameboot-public-20261031.md)。M3/M4/M5未通过。

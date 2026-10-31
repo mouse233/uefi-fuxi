@@ -87,3 +87,19 @@ M3/M4/M5 未通过，无免 USB 重传声明。
 规范摘要见 `evidence/fuxi-m3-sameboot-public-candidate-20261031.json`；源码提交、
 精确启动命令、固定输入和剩余实机边界见 `out/m3-sameboot-public-v1/REVIEW.md`。
 硬件结果仍 pending，本轮尚未发起设备操作，不能宣称 -62 已解除。
+
+
+## 2026-10-31 11:12：attempt-01 临时启动完成，等待照片
+
+用户确认FASTBOOT后，互斥检查无活动设备任务，fcde91e可见。固定镜像/源码提交/
+102项源/31项资格的 --verify-only 再次退出0；启动脚本核验 product=fuxi、
+unlocked=yes、slot=a、max-download-size=805306368。11:12:44–11:12:46
+Asia/Shanghai 仅一次 fastboot boot，Sending0.040s、Booting1.592s、总1.633s，退出0。
+没有重试、flash、分区写或slot变更。原始记录 attempt-01/device-test.json，SHA256
+`4e54b946c42c3d4351d22610c9b84c660754a6095cb854b066ec1c03b5b95499`；规范摘要
+`docs/evidence/fuxi-m3-sameboot-public-boot-20261031.json`。
+
+当前没有屏幕照片，不能据工具成功判断到达PUBLIC/CONFIGURE/RECOVERY、UFS停机、
+真实 -62 状态或最后PARK。保持等待照片，不再次启动。照片应清晰覆盖PUBLIC两域/
+mask/format、CONFIGURE同App/日期、RECOVERY响应status与state/stage/commands/
+resumes/retained及最终停点。真实分支/boot/实例与M3/M4/M5仍未通过。
