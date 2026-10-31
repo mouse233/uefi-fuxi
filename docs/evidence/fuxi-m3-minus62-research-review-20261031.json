@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-31",
+  "result": "separate-reviews-complete-revisions-required",
+  "source_baseline_commit": "33b786aa4ba49276c01f7c893aa778360f03c0cc",
+  "review_path": "docs/fuxi-m3-minus62-research-review-20261031.md",
+  "review_sha256": "7b85babdbcdd57e2aa310a7fca890df128a3c50bc63c6c6827b9b43ad8d8748e",
+  "input_bindings": [
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-date-support-v1/keymaster-partition-verified.img",
+      "sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/uefi-twrp-data/out/m3-firmware-identity-v1/LinuxLoader-a.efi",
+      "sha256": "48de0c341840c30e99d483ebbbdc0df4de67bc971d76bd05477587ace87aab3b"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-glm/keymaster64.elf",
+      "sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-glm/abl-a.efi",
+      "sha256": "48de0c341840c30e99d483ebbbdc0df4de67bc971d76bd05477587ace87aab3b"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-glm/keystore2.bin",
+      "sha256": "c969b1d32054d05943a7a101eb0ea92c2063aec5d0cb2a555226197c5f4f5f4a"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-ds/COUNTEREXAMPLES.md",
+      "sha256": "a6db7d72017015640a81096fa6db1037be81f634665d291b600947cda451126c"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-ds/NEXT.md",
+      "sha256": "5e3fe474fc7bbd7cd9f0c82cdfc95c93a7ebde5cd890cd92824ae414fcf802d6"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-ds/PATHS.md",
+      "sha256": "f52eb66fe9c3ad19a624ac52c78b5de65936c3f91dfa5fe0eb56a0381edf18a1"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-ds/PROGRESS.md",
+      "sha256": "1ed661f83367105e269d9d84688d2fc95c3d69aeb59cd31ec00c13e8408e40fc"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-ds/RESULT.md",
+      "sha256": "d29f8d0ea3edd0c6c127957fd3fb56ed0f9003e75f5326cc18d5b8bc6d378ff2"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-glm/COUNTEREXAMPLES.md",
+      "sha256": "98c9dfb882dc9d481dd6abc999486491e02493ec08909388d887f5971a3fda05"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-glm/NEXT.md",
+      "sha256": "4d3a0649d74a1281eb4b2b820b5a4719e79d770a251d053bf055d4c22af3e346"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-glm/PATHS.md",
+      "sha256": "70583397003a0150ac8a74c86790eb040ca1fcf61cfe4640e825fbf19cbb9f0e"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-glm/PROGRESS.md",
+      "sha256": "637d034af432b3fa8d017c16fc9a4545aed1a71d755682f58549f21842b7b2a5"
+    },
+    {
+      "path": "/Volumes/External/VSCode/UniXNU/ramdisk-test/unixnu-62-research-glm/RESULT.md",
+      "sha256": "db52e77e84cb0f9afb74aa6d454b9d086716c56f4d2a2ca230d1344d6cc3f152"
+    }
+  ],
+  "static_checks": {
+    "result": "passed",
+    "scope": "Local binary identity, raw instructions and direct BL/B edges only; no native vendor execution, emulator, device, SMC or firmware build.",
+    "ta_sha256": "2fc838a8f0ed572ec77b7db2fe39ab4e81d0aa038bfad482b88087a27bf43cc6",
+    "abl_a_pe_sha256": "48de0c341840c30e99d483ebbbdc0df4de67bc971d76bd05477587ace87aab3b",
+    "checks": {
+      "begin_calls_b9f4_before_blob_unpack": true,
+      "upgrade_parser_calls_b9f4_before_version_gate": true,
+      "later_upgrade_recheck_maps_failure_to_minus1000": true,
+      "upgrade_explicit_minus62_test": true,
+      "boot_context_written_before_completion_call": true,
+      "abl_first_request_201_header": true,
+      "tail_caller_zeroes_w1_and_w2": true,
+      "abl_earlier_gate_uses_w1": true
+    },
+    "branches": [
+      {
+        "pc": "0x8b72c",
+        "kind": "B",
+        "target": "0x2a700",
+        "word": "0x17fe7bf5"
+      },
+      {
+        "pc": "0x8e74c",
+        "kind": "BL",
+        "target": "0x2a700",
+        "word": "0x97fe6fed"
+      },
+      {
+        "pc": "0x2abe0",
+        "kind": "BL",
+        "target": "0x2b4ac",
+        "word": "0x94000233"
+      },
+      {
+        "pc": "0x2d0d0",
+        "kind": "BL",
+        "target": "0x41d28",
+        "word": "0x94005316"
+      }
+    ],
+    "manifest_files_verified": 110,
+    "raw_disassembly_files": 25,
+    "limits": [
+      "Does not attest actual historical -62 PC, authenticated input equality, runtime slot values or secure App identity.",
+      "The early upgrade parser can propagate -30; later upgrade recheck maps errors to -1000. Do not collapse the two sites.",
+      "Direct branch scan includes B and BL but is not a complete proof about indirect calls or external protocol behavior."
+    ]
+  },
+  "findings": {
+    "ds": [
+      {
+        "id": "DS-1",
+        "priority": 1,
+        "source": "RESULT.md:357",
+        "finding": "Conditional version model promoted to proven historical root cause and production upgrade remedy."
+      },
+      {
+        "id": "DS-2",
+        "priority": 1,
+        "source": "NEXT.md:23",
+        "finding": "Upgrade result codes do not uniquely identify boot state or ensure a returned new blob; begin also calls b9f4 before the gate."
+      },
+      {
+        "id": "DS-3",
+        "priority": 2,
+        "source": "RESULT.md:269",
+        "finding": "ABL caller completeness misses B tail call at 8b72c; it also supplies zero w1/w2, so do not infer 208 executes."
+      },
+      {
+        "id": "DS-4",
+        "priority": 2,
+        "source": "COUNTEREXAMPLES.md:203",
+        "finding": "Unwithdrawn text contradicts final model about matching boot with mismatching vendor."
+      }
+    ],
+    "glm": [
+      {
+        "id": "GLM-1",
+        "priority": 1,
+        "source": "RESULT.md:12",
+        "finding": "Later unauthenticated fields and immediate scans do not close historical input/authentication/PC or external error propagation."
+      },
+      {
+        "id": "GLM-2",
+        "priority": 1,
+        "source": "NEXT.md:13",
+        "finding": "Claimed CmdBoot-to-208 closure lacks function connection and the earlier w1 gate."
+      },
+      {
+        "id": "GLM-3",
+        "priority": 1,
+        "source": "NEXT.md:73",
+        "finding": "Blob-derived vendor/boot state injection is not a platform-verified readonly fix; 208 mutates state before completion."
+      },
+      {
+        "id": "GLM-4",
+        "priority": 1,
+        "source": "NEXT.md:39",
+        "finding": "Unknown payload SHA/count proposal cannot be certified as non-secret before classifying the buffer."
+      },
+      {
+        "id": "GLM-5",
+        "priority": 2,
+        "source": "RESULT.md:38",
+        "finding": "b2a0 is a command dispatcher upstream of handlers, not blob-authorization traversal."
+      }
+    ]
+  },
+  "scope_limits": [
+    "No original research file changed.",
+    "No device, native vendor code, emulator, build, key or upgrade operation.",
+    "Static-only evidence does not identify real historical -62 PC, actual initialized state or a validated repair."
+  ]
+}
